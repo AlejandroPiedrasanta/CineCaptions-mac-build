@@ -340,6 +340,64 @@ def _tarea_verificar(estado):
         if falla:
             raise RuntimeError(falla)
 
+    # v5.85 (Mac «no abre»): las librerías lanzan hijos con ESTE ejecutable como si fuera Python («-B -S -I -c …»: el resource_tracker de
+    # multiprocessing al bajar el modelo, y otras). Si el programa no los atiende (arranque_seguro.atender_hijo) arrancan CineCaptions entero,
+    # invisible y con el candado de una sola ventana. Se prueba con el ejecutable de verdad (desde el código no aplica): si vuelve a pasar, la
+    # compilación falla en vez de llegar a los clientes.
+    @prueba('Procesos auxiliares (no reabren el programa)', critica=bool(getattr(sys, 'frozen', False)))
+    def _():
+        if not getattr(sys, 'frozen', False):
+            return
+        import subprocess
+        with tempfile.TemporaryDirectory() as tmp:
+            marca = Path(tmp) / 'hijo.txt'
+            codigo = "import sys; open(sys.argv[1], 'w', encoding='utf-8').write('hijo-ok')"
+            try:
+                subprocess.run([sys.executable, '-B', '-S', '-I', '-c', codigo, str(marca)], capture_output=True, timeout=60)
+            except subprocess.TimeoutExpired:
+                raise RuntimeError('un hijo «-c» no terminó en 60 s: abrió el programa en vez de correr su código') from None
+            if (marca.read_text(encoding='utf-8') if marca.is_file() else '') != 'hijo-ok':
+                raise RuntimeError('un hijo «-c» no corrió su código: abriría el programa sin ventana')
+        if sys.platform != 'win32':
+            _resource_tracker_no_toma_el_candado()
+
+    def _resource_tracker_no_toma_el_candado():
+        """Fuera de Windows, el resource_tracker DE VERDAD (multiprocessing lo arranca con este ejecutable) sigue vivo como tracker y nadie se
+        lleva ~/.cinecaptions.lock (lo que pasaba en la 5.84). Con el programa abierto (candado ya ocupado) no se puede saber: se salta."""
+        import fcntl
+        import multiprocessing.resource_tracker as rt
+        candado = Path.home() / '.cinecaptions.lock'
+
+        def libre():
+            try:
+                with open(candado, 'a+', encoding='utf-8') as f:
+                    fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                return True
+            except OSError:
+                return False
+
+        if not libre():
+            return
+        rt.ensure_running()
+        pid = getattr(rt._resource_tracker, '_pid', None)
+        time.sleep(8)                                     # un hijo que abre el programa toma el candado en 1-3 s
+        if not libre():
+            raise RuntimeError('el resource_tracker de multiprocessing abrió el programa y se quedó con el candado de una sola ventana')
+        if pid:
+            try:
+                terminado, _ = os.waitpid(pid, os.WNOHANG)
+            except ChildProcessError:                     # (no es hijo nuestro o ya se recogió): ¿sigue existiendo?
+                try:
+                    os.kill(pid, 0)
+                    terminado = 0
+                except ProcessLookupError:
+                    terminado = pid
+                except OSError:
+                    terminado = 0
+            if terminado:
+                raise RuntimeError('el resource_tracker de multiprocessing se cerró en vez de quedarse vigilando')
+
     @prueba('Licencia')
     def _():
         # v5.2.1: la ventana «Activa tu licencia» se DIBUJA en memoria (sin mostrarla ni hablar con

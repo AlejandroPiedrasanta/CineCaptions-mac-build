@@ -348,12 +348,12 @@ def _registrar(detalle, archivos, error):
             texto = (carpeta / 'CineCaptions_Puente.lua').read_text(encoding='utf-8', errors='replace')
         except OSError:
             return '(no esta)'
-        version = paquete = None
-        for linea in texto.splitlines()[:80]:
-            if version is None and 'VERSION' in linea and '"' in linea:
-                version = linea.split('"')[1]
-            elif paquete is None and 'PAQUETE' in linea and '"' in linea:
-                paquete = linea.split('"')[1]
+        import re
+        # v5.85 (auditoría): solo las declaraciones («local VERSION = "1.0.42"»); antes valía la primera línea con VERSION y comillas, que era un
+        # COMENTARIO del Puente («…"sin_lectura"… VERSION_PUENTE_ESPERADA»): el informe decía «sin_lectura (del programa v5.84)»
+        v = re.search(r'^\s*local\s+VERSION\s*=\s*"([^"]*)"', texto, re.M)
+        p = re.search(r'^\s*local\s+PAQUETE\s*=\s*"([^"]*)"', texto, re.M)
+        version, paquete = (v.group(1) if v else None), (p.group(1) if p else None)
         if version and paquete:
             return f'{version} (del programa v{paquete})'
         return version or '?'

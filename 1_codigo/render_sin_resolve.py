@@ -216,7 +216,10 @@ def _capas_de_cue(cue, s, dx, dy, ancho, alto, emoji_arriba, estilo, otro_tema, 
         arriba = cy + T.CENTRO_CAP * em - base
         capas.append({'rgb': rgb, 'a': a, 'x': int(round(izq)), 'y': int(round(arriba)),
                       't0': max(ini, float(r.get('t', ini))), 't1': fin, 'entrada': ENTRADA_S,
-                      'tipo': 'tema4', 'rol': r.get('rol'), 'em': em, 'cue_t0': ini})          # (v5.5.10: para animarla en Creativo)
+                      'tipo': 'tema4', 'rol': r.get('rol'), 'em': em, 'cue_t0': ini,           # (v5.5.10: para animarla en Creativo)
+                      # v5.85 (Premiere con textos): la ficha de la palabra; ancla = centro del avance y línea de base, desde la esquina de la capa
+                      'espec': dict(txt=texto, par=tuple(fuente or T.FUENTE), em=em, color=color or (1.0, 1.0, 1.0), degradado=degradado,
+                                    esp=T.ESPACIADO, halo=HALO, ancla=(x_ini + total / 2.0, base))})
         if con_letra:                                          # v5.55: la línea se recoloca con los huecos del planificador (render_temas.reespaciar)
             an = RT.anchos(T.FUENTE, em_tema, fuente or T.FUENTE, em, texto)
             if an:

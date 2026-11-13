@@ -396,7 +396,11 @@ class _Servidor:
                     raise RuntimeError(str(detalle))
                 if tipo == 'FIN':
                     break
-            detalle = self.errores[-1] if self.errores else 'El motor auxiliar se cerró.'
+            try:                                  # v5.85: la última línea que diga algo (no la barra de descarga de Whisper)
+                from motor_voz import motivo_de_errores
+                detalle = motivo_de_errores(self.errores, 'El motor auxiliar se cerró.')
+            except Exception:
+                detalle = self.errores[-1] if self.errores else 'El motor auxiliar se cerró.'
             raise RuntimeError(detalle)
 
     def cerrar(self):

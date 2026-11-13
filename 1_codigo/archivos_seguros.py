@@ -66,15 +66,16 @@ def escribir_json(ruta, datos, respaldo=False, **opciones):
     return escribir_texto(ruta, json.dumps(datos, **opciones), respaldo=respaldo)
 
 
-def _leer(ruta):
-    """Lee el JSON; si Windows lo tiene bloqueado justo ahora (otro hilo lo está cambiando) reintenta unos milisegundos."""
-    for intento in range(8):
+def _leer(ruta, intentos=16):
+    """Lee el JSON; si Windows lo tiene bloqueado justo ahora (otro hilo, el antivirus o una copia de seguridad) reintenta hasta ~1 s.
+    v5.85: antes 8 intentos (~0,3 s); un antivirus que lo abría en exclusiva 0,45 s hacía fallar la lectura."""
+    for intento in range(intentos):
         try:
             return json.loads(Path(ruta).read_text(encoding='utf-8'))
         except PermissionError:
-            if intento == 7:
+            if intento == intentos - 1:
                 raise
-            time.sleep(0.01 * (intento + 1))
+            time.sleep(min(0.08, 0.01 * (intento + 1)))
 
 
 def leer_json(ruta, defecto=None, con_respaldo=False):
@@ -226,7 +227,10 @@ def leer_json_cediendo(ruta, niveles=1, cada_s=0.002):
 
 
 def mezclar_json(ruta, cambios, **opciones):
-    """Mezcla `cambios` en el diccionario guardado (sin tocar el resto de claves) y lo escribe de forma atómica. True si se guardó."""
+    """Mezcla `cambios` en el diccionario guardado (sin tocar el resto de claves) y lo escribe de forma atómica. True si se guardó.
+    v5.85 (auditoría): si el archivo existe pero NO se puede leer (bloqueado más de ~1 s por el antivirus, una copia de seguridad u otro
+    programa) no se escribe nada y devuelve False. Antes contaba como «roto»: la copia .roto fallaba por el mismo bloqueo y se guardaba solo
+    `cambios`: se perdían TODAS las demás preferencias (reproducido con un bloqueo de 0,45 s)."""
     ruta = Path(ruta)
     with _CERROJO:
         actual = None
@@ -234,6 +238,8 @@ def mezclar_json(ruta, cambios, **opciones):
             actual = _leer(ruta)
         except FileNotFoundError:
             actual = {}
+        except OSError:
+            return False
         except Exception:
             # existía pero no se pudo leer: se aparta (para poder recuperarlo) en vez de pisarlo con un diccionario casi vacío
             try:

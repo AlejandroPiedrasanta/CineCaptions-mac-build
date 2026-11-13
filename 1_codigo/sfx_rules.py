@@ -47,9 +47,40 @@ def _leer_json(archivo):
     firma = (st.st_mtime_ns, st.st_size)
     hecho = _JSON.get(p)
     if hecho is None or hecho[0] != firma:
-        hecho = (firma, json.loads(Path(p).read_text(encoding='utf-8')))
+        import archivos_seguros
+        hecho = (firma, archivos_seguros._leer(p))          # v5.85: con reintentos mientras otro programa lo tenga abierto
         _JSON[p] = hecho
     return copy.deepcopy(hecho[1])
+def _se_puede_reescribir(archivo):
+    """v5.85 (auditoría): False si existe pero AHORA no se puede leer (bloqueado por el antivirus o una copia de seguridad): no se pisa con los
+    valores de fábrica. Si está roto (a medias), se aparta como «.roto» antes de reescribirlo."""
+    import archivos_seguros
+    archivo = Path(archivo)
+    try:
+        archivos_seguros._leer(archivo)
+        return True
+    except FileNotFoundError:
+        return True
+    except OSError:
+        return False
+    except Exception:
+        try:
+            shutil.copy2(archivo, archivo.with_name(archivo.name + '.roto'))
+        except OSError:
+            pass
+        return True
+def _guardar_json(archivo, datos):
+    """v5.85 (auditoría): el estado del usuario de Sonido (modo, favoritos, carpetas propias, volúmenes, recortes…) con archivos_seguros,
+    atómico. Antes write_text: un corte a mitad dejaba el JSON a medias, se leía como «de fábrica» y el guardado siguiente lo pisaba (se
+    perdían los sonidos elegidos, las carpetas de SFX y los interruptores de las tarjetas)."""
+    import archivos_seguros
+    try:
+        if not _se_puede_reescribir(archivo):
+            return None
+        archivos_seguros.escribir_json(Path(archivo), datos, indent=2)
+        return True
+    except Exception:
+        return None
 def _leer_lista(archivo):
     try:
         datos = _leer_json(archivo)
@@ -59,12 +90,7 @@ def _leer_lista(archivo):
         pass
     return []
 def _escribir_lista(archivo, lista):
-    try:
-        archivo = Path(archivo)
-        archivo.parent.mkdir(parents=True, exist_ok=True)
-        archivo.write_text(json.dumps(list(lista), ensure_ascii=False, indent=2), encoding='utf-8')
-    except Exception:
-        return None
+    return _guardar_json(archivo, list(lista))
 def cargar_favoritos():
     return set(_leer_lista(ARCHIVO_FAVORITOS))
 def guardar_favoritos(favoritos):
@@ -92,6 +118,8 @@ def cargar_modo():
     return salida
 def guardar_modo(modo=None, sonidos=None, intro=None, final=None, donde=None, principal=None, activas=None):
     """Guarda el modo, en qué palabras suena el modo simple, los sonidos de cada sección, el sonido elegido para la principal y/o los interruptores de las tarjetas (lo que no se pasa se conserva)."""
+    if not _se_puede_reescribir(ARCHIVO_MODO):           # v5.85: bloqueado ahora: cargar_modo daría «de fábrica» y se pisaría lo elegido
+        return None
     actual = cargar_modo()
     if modo in ('simple', 'avanzado'):
         actual['modo'] = modo
@@ -104,11 +132,7 @@ def guardar_modo(modo=None, sonidos=None, intro=None, final=None, donde=None, pr
         actual['principal'] = [str(x) for x in principal][:1]
     if isinstance(activas, dict):
         actual['activas'] = {k: bool(activas.get(k, actual['activas'].get(k, True))) for k in TARJETAS_SONIDO}
-    try:
-        CARPETA_USUARIO.mkdir(parents=True, exist_ok=True)
-        ARCHIVO_MODO.write_text(json.dumps(actual, ensure_ascii=False, indent=2), encoding='utf-8')
-    except Exception:
-        return None
+    return _guardar_json(ARCHIVO_MODO, actual)
 def sonido_principal():
     """El efecto sonoro que el usuario eligió para la palabra principal (Path), o None = automático (el sonido propio de cada efecto del estilo)."""
     for r in cargar_modo()['principal']:
@@ -277,12 +301,7 @@ def _leer_dic(archivo):
     except Exception:
         return {}
 def _escribir_dic(archivo, datos):
-    try:
-        archivo = Path(archivo)
-        archivo.parent.mkdir(parents=True, exist_ok=True)
-        archivo.write_text(json.dumps(datos, ensure_ascii=False, indent=2), encoding='utf-8')
-    except Exception:
-        return None
+    return _guardar_json(archivo, datos)
 def cargar_volumenes():
     return {str(k): float(v) for k, v in _leer_dic(ARCHIVO_VOLUMENES).items() if isinstance(v, (int, float))}
 def _clave_ruta(ruta):

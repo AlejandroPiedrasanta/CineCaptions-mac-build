@@ -1,11 +1,20 @@
 // CineCaptions · By Cinema Productions
 // 2_recursos/premiere/com.cinecaptions.premiere/jsx/colocar.jsx — ExtendScript (ES3) de Premiere Pro: toma el pedido de GO y lo coloca.
-// Pedido (1_codigo/premiere.py → armar_pedido): video, capa (ProRes 4444 con alfa), sfx [{ruta, t, dur}], secuencia, bin, proyecto_nuevo.
+// Pedido (1_codigo/premiere.py → armar_pedido): video, capa (ProRes 4444 con alfa), sfx [{ruta, t, dur}], secuencia, bin, proyecto_nuevo,
+// proyectos_cc (v5.85: los .prproj que escribió CineCaptions para abrir Premiere con ellos: si es el abierto, se guarda al terminar).
 // Cola: Folder.userData/CineCaptions/premiere: pedido.json → pedido.en_curso.json (tomado: nunca se coloca dos veces) → resultado.json;
 // latido.json cada ~3 s (CineCaptions sabe así que Premiere y el panel están vivos).
 // Resultado en la secuencia nueva (carpeta «CineCaptions» del proyecto): V1 + A1 el video, V2 los captions, A2… los sonidos sin pisarse.
+// v5.85 (el usuario: «quiero los textos que se vayan armando en la línea de tiempo»): con `textos` en el pedido (1_codigo/premiere_textos.py)
+// cada texto es un clip de la plantilla «Basic Title» de Premiere con su letra, tamaño, color, contorno y sombra; `imagenes` (cajas, aros,
+// emojis) van como PNG en las pistas de debajo. Sin capa de video.
 
 var CC = (typeof CC !== 'undefined' && CC) ? CC : {};
+CC.PANEL = 2;                                    // protocolo del panel (latido.panel): 2 = textos editables
+CC.REV = 14;                                 // revisión de ESTE archivo (latido.rev): CineCaptions sabe si Premiere corre un panel viejo
+// (sin recarga en caliente: probado en Premiere 26.5, `$.evalFile` del panel desde CC.revisar da «Stack overrun» al sustituir las funciones
+// en marcha y deja ExtendScript tocado; un panel nuevo entra al reiniciar Premiere, como siempre)
+CC.TICKS = 254016000000;                         // ticks de Premiere por segundo
 
 CC.carpeta = function () {
     var f = new Folder(Folder.userData.fsName + '/CineCaptions/premiere');
@@ -87,7 +96,7 @@ CC.hayProyecto = function () {
 };
 
 CC.latido = function () {
-    var info = { t: new Date().getTime(), version: String(app.version), proyecto: '' };
+    var info = { t: new Date().getTime(), version: String(app.version), proyecto: '', panel: CC.PANEL, rev: CC.REV };
     try {
         if (CC.hayProyecto()) { info.proyecto = String(app.project.name); }
     } catch (e) {}
@@ -210,6 +219,252 @@ CC.asegurarPistas = function (seq, nVideo, nAudio) {
     return app.project.activeSequence || seq;
 };
 
+// ---------------------------------------------------------------------------------------------- v5.85: textos editables e imágenes sueltas
+CC.ticks = function (seg) {
+    return String(Math.round(seg * CC.TICKS));
+};
+
+CC.componente = function (item, nombres) {      // por matchName (no cambia con el idioma) o por nombre visible
+    try {
+        for (var i = 0; i < item.components.numItems; i++) {
+            var c = item.components[i];
+            for (var j = 0; j < nombres.length; j++) {
+                if (String(c.matchName) === nombres[j] || String(c.displayName) === nombres[j]) { return c; }
+            }
+        }
+    } catch (e) {}
+    return null;
+};
+
+CC.propiedad = function (comp, nombres, indice) {   // por nombre visible (inglés o español) y si no, por su posición
+    if (!comp) { return null; }
+    try {
+        for (var i = 0; i < comp.properties.numItems; i++) {
+            var n = String(comp.properties[i].displayName);
+            for (var j = 0; j < nombres.length; j++) {
+                if (n === nombres[j]) { return comp.properties[i]; }
+            }
+        }
+        if (indice !== undefined && indice < comp.properties.numItems) { return comp.properties[indice]; }
+    } catch (e) {}
+    return null;
+};
+
+CC.clipEn = function (track, seg) {               // el clip de esa pista que empieza en `seg` (el último si hay varios)
+    var mejor = null;
+    try {
+        for (var i = 0; i < track.clips.numItems; i++) {
+            var c = track.clips[i];
+            if (Math.abs(c.start.seconds - seg) < 0.02) { mejor = c; }
+        }
+    } catch (e) {}
+    return mejor;
+};
+
+CC.fijarFin = function (it, t1) {
+    var bien = function () { try { return Math.abs(it.end.seconds - t1) < 0.02; } catch (e) { return false; } };
+    try { it.end = CC.tiempo(t1); } catch (e1) {}
+    if (bien()) { return true; }
+    try { it.end = t1; } catch (e2) {}
+    if (bien()) { return true; }
+    try { it.outPoint = CC.tiempo(it.inPoint.seconds + (t1 - it.start.seconds)); } catch (e3) {}
+    return bien();
+};
+
+CC.fundido = function (it, entrada) {             // la entrada de cada pieza: de 0 a 100 de opacidad en `entrada` segundos
+    if (!(entrada > 0)) { return; }
+    try {
+        var op = CC.propiedad(CC.componente(it, ['AE.ADBE Opacity']), ['Opacity', 'Opacidad'], 0);
+        if (!op) { return; }
+        var t0 = it.inPoint.seconds;
+        op.setTimeVarying(true);
+        op.addKey(t0);
+        op.setValueAtKey(t0, 0, true);
+        op.addKey(t0 + entrada);
+        op.setValueAtKey(t0 + entrada, 100, true);
+    } catch (e) {}
+};
+
+CC.colocarTexto = function (it, t, ancho, alto, diag) {   // la capa de texto: al 100 % (la plantilla la adapta al ancho de la secuencia), en su sitio y con su giro
+    var comp = CC.componente(it, ['AE.ADBE Text']);
+    try {
+        var escala = CC.propiedad(comp, ['Scale', 'Escala'], 3);
+        if (diag) { diag.escala_antes = String(escala.getValue()); }
+        escala.setValue(100, true);                 // (el tamaño de la letra ya va en píxeles de la secuencia)
+    } catch (e0) {
+        if (diag) { diag.error_escala = String(e0.message || e0); }
+    }
+    var pos = CC.propiedad(comp, ['Position', 'Posición'], 2);
+    try {
+        var v = pos.getValue();
+        if (diag) { diag.pos_antes = String(v); }
+        var norm = (v instanceof Array) && Math.abs(v[0]) <= 2 && Math.abs(v[1]) <= 2;
+        pos.setValue(norm ? [t.x / ancho, t.y / alto] : [t.x, t.y], true);       // (ancla: centro del avance, línea de base)
+    } catch (e) {
+        if (diag) { diag.error_pos = String(e.message || e); }
+        try {                                     // sin la capa de texto: Movimiento (el gráfico entero, centrado en el cuadro)
+            var mov = CC.propiedad(CC.componente(it, ['AE.ADBE Motion']), ['Position', 'Posición'], 0);
+            mov.setValue([0.5 + (t.x - ancho / 2) / ancho, 0.5 + (t.y - alto / 2) / alto], true);
+        } catch (e2) {}
+    }
+    if (t.rot) {
+        try {
+            var giro = CC.propiedad(comp, ['Rotation', 'Rotación'], 6);
+            if (giro) { giro.setValue(t.rot, true); }
+        } catch (e3) {}
+    }
+};
+
+CC.recortar = function (it, t, fps) {             // v5.85, Estilo 5: la línea se destapa palabra a palabra («Recortar hacia la derecha» de Movimiento)
+    var pasos = t.recorte;
+    if (!pasos || pasos.length < 2) { return; }
+    try {
+        var pr = CC.propiedad(CC.componente(it, ['AE.ADBE Motion']), ['Crop Right', 'Recortar hacia la derecha'], 9);
+        if (!pr) { return; }
+        var base = it.inPoint.seconds - it.start.seconds, cuadro = 1 / (fps || 30), i;   // (tiempo del clip = entrada + (tiempo de la secuencia − inicio))
+        pr.setTimeVarying(true);
+        for (i = 0; i < pasos.length; i++) {
+            var ti = base + pasos[i][0];
+            if (i > 0) {                          // un fotograma antes, lo que se veía: el cambio va en escalón (no se desliza)
+                pr.addKey(ti - cuadro);
+                pr.setValueAtKey(ti - cuadro, pasos[i - 1][1], true);
+            }
+            pr.addKey(ti);
+            pr.setValueAtKey(ti, pasos[i][1], true);
+        }
+    } catch (e) {}
+};
+
+CC.diagnostico = function (it) {                 // qué expone el clip de texto (para ajustar sin adivinar)
+    var d = { comps: [] };
+    try {
+        for (var i = 0; i < it.components.numItems; i++) {
+            var c = it.components[i], props = [];
+            for (var j = 0; j < c.properties.numItems && j < 16; j++) {
+                var nombre = String(c.properties[j].displayName), val = '';
+                try { val = String(c.properties[j].getValue()).substring(0, 60); } catch (e) { val = '?'; }
+                props.push(nombre + '=' + val);
+            }
+            d.comps.push(String(c.displayName) + ' | ' + String(c.matchName) + ' | ' + props.join(' ; '));
+        }
+        d.inicio = it.start.seconds;
+        d.fin = it.end.seconds;
+        d.entrada_clip = it.inPoint.seconds;
+        d.nombre = String(it.name);
+    } catch (e2) {
+        d.error = String(e2.message || e2);
+    }
+    return d;
+};
+
+CC.totalPiezas = function (p) {
+    return (p.textos ? p.textos.length : 0) + (p.imagenes ? p.imagenes.length : 0);
+};
+
+CC.avance = function (p, hechos, total) {        // v5.85: mientras coloca no hay latido (ExtendScript hace una cosa a la vez): el avance, cada 10 piezas
+    if (hechos % 10 !== 0 && hechos !== total) { return; }
+    try {
+        CC.escribir(new File(CC.carpeta().fsName + '/progreso.json'), CC.aTexto({ id: p.id || '', hechos: hechos, total: total, t: new Date().getTime() }));
+    } catch (e) {}
+};
+
+CC.ponerTextos = function (seq, p, primera, res) {
+    // v5.85: cada texto trae SU plantilla (premiere_textos.mogrt_de_texto: la «Basic Title» del propio Premiere con el texto y el estilo dentro;
+    // en Premiere 26 escribir el «Texto de origen» por ExtendScript no se dibuja). Al importarla, Premiere la convierte en un texto normal.
+    var textos = p.textos || [], ancho = seq.frameSizeHorizontal || p.ancho, alto = seq.frameSizeVertical || p.alto;
+    var diag = {}, puestos = 0, i;
+    res.diag = diag;
+    for (i = 0; i < textos.length; i++) {
+        var t = textos[i], v = primera + (t.pista || 0);
+        if (v >= seq.videoTracks.numTracks || !t.mogrt) { continue; }
+        var it = null;
+        try { it = seq.importMGT(t.mogrt, CC.ticks(t.t0), v, 0); } catch (e) { if (!diag.error_importar) { diag.error_importar = String(e.message || e); } }
+        if (!it) { it = CC.clipEn(seq.videoTracks[v], t.t0); }
+        if (!it) {
+            if (puestos === 0) { return { ok: false, causa: 'textos', error: 'Premiere no puso la plantilla del texto «' + t.texto + '»' }; }
+            continue;
+        }
+        CC.fijarFin(it, t.t1);
+        CC.colocarTexto(it, t, ancho, alto, puestos === 0 ? diag : null);
+        CC.fundido(it, t.entrada);
+        CC.recortar(it, t, p.fps);
+        if (puestos === 0) { diag.clip = CC.diagnostico(it); }
+        try { it.name = t.texto; } catch (e4) {}
+        if (p.depurar) {                          // (pruebas) dónde quedó cada texto
+            if (!res.clips) { res.clips = []; }
+            var posd = '';
+            try { posd = String(CC.propiedad(CC.componente(it, ['AE.ADBE Text']), ['Position', 'Posición'], 2).getValue()); } catch (ed) {}
+            res.clips.push([i, t.texto, v, it.start.seconds, it.end.seconds, posd, String(it.name)]);
+        }
+        puestos++;
+        CC.avance(p, puestos, CC.totalPiezas(p));
+    }
+    if (!puestos && textos.length) { return { ok: false, causa: 'textos', error: 'Premiere no puso ningún texto' }; }
+    res.textos = puestos;
+    res.textos_total = textos.length;
+    res.textos_estilo = puestos;
+    return null;
+};
+
+CC.ponerImagenes = function (seq, proj, bin, p, primera, res) {
+    var imagenes = p.imagenes || [], ancho = seq.frameSizeHorizontal || p.ancho, alto = seq.frameSizeVertical || p.alto;
+    var rutas = [], vistas = {}, i, puestas = 0;
+    for (i = 0; i < imagenes.length; i++) {
+        var k = CC.norma(imagenes[i].ruta);
+        if (!vistas[k]) { vistas[k] = true; rutas.push(imagenes[i].ruta); }
+    }
+    var mapa = rutas.length ? CC.importar(proj, CC.bin(bin, 'Elementos'), rutas) : {};
+    for (i = 0; i < imagenes.length; i++) {
+        var im = imagenes[i], item = mapa[CC.norma(im.ruta)], v = primera + (im.pista || 0);
+        if (!item || v >= seq.videoTracks.numTracks) { continue; }
+        var track = seq.videoTracks[v];
+        if (!CC.poner(track, item, im.t0)) { continue; }
+        var it = CC.clipEn(track, im.t0);
+        if (!it) { continue; }
+        CC.fijarFin(it, im.t1);
+        try {
+            var mov = CC.componente(it, ['AE.ADBE Motion']);
+            CC.propiedad(mov, ['Position', 'Posición'], 0).setValue([im.x / ancho, im.y / alto], true);
+            CC.propiedad(mov, ['Scale', 'Escala'], 1).setValue(100, true);
+        } catch (e) {}
+        CC.fundido(it, im.entrada);
+        puestas++;
+        CC.avance(p, (res.textos || 0) + puestas, CC.totalPiezas(p));
+    }
+    res.imagenes = puestas;
+    res.imagenes_total = imagenes.length;
+};
+
+CC.fotos = function (seq, p, res) {              // (pruebas) cuadros de la secuencia en PNG, para compararlos con el dibujo de CineCaptions
+    if (!p.fotos || !p.fotos.length || !p.carpeta_fotos) { return; }
+    res.fotos = [];
+    try {
+        app.enableQE();
+        var qs = qe.project.getActiveSequence();
+        for (var i = 0; i < p.fotos.length; i++) {
+            seq.setPlayerPosition(CC.ticks(p.fotos[i]));
+            var tc = String(qs.CTI.timecode);
+            var formas = p.fotos_formas || ['tc'];          // (medido en Premiere 26.5: con «:»; sin ellos —como el ejemplo PProPanel— o en ticks, siempre el 1.er cuadro)
+            for (var f = 0; f < formas.length; f++) {
+                var arg = formas[f] === 'tc' ? tc : (formas[f] === 'tc_' ? tc.replace(/:|;/g, '_') : CC.ticks(p.fotos[i]));
+                var ruta = new File(p.carpeta_fotos + '/foto_' + i + '_' + formas[f]).fsName;
+                try { qs.exportFramePNG(arg, ruta); res.fotos.push(formas[f] + ' ' + arg); } catch (e) { res.fotos.push(formas[f] + ' error ' + (e.message || e)); }
+            }
+        }
+    } catch (e2) {
+        res.fotos.push('error: ' + (e2.message || e2));
+    }
+};
+
+CC.propio = function (p) {                       // v5.85: ¿el proyecto abierto es uno que escribió CineCaptions (premiere.crear_proyecto)?
+    try {                                        // (por el nombre: la ruta puede venir con «\\?\» o con «Usuarios» en vez de «Users»)
+        var nombre = function (r) { return CC.norma(r).replace(/^.*\//, ''); };
+        var abierto = nombre(app.project.path), lista = (p.proyectos_cc || []).concat(p.proyecto_nuevo ? [p.proyecto_nuevo] : []);
+        for (var i = 0; i < lista.length; i++) { if (nombre(lista[i]) === abierto) { return true; } }
+    } catch (e) {}
+    return false;
+};
+
 CC.colocar = function (p) {
     var nuevo = false, i;
     if (!CC.hayProyecto()) {                     // sin proyecto abierto: uno nuevo junto al video
@@ -217,14 +472,17 @@ CC.colocar = function (p) {
         app.newProject(p.proyecto_nuevo);
         nuevo = true;
         if (!CC.hayProyecto()) { throw new Error('no pude crear el proyecto ' + p.proyecto_nuevo); }
+    } else if (CC.propio(p)) {                   // v5.85: Premiere se abrió con el proyecto que GO dejó junto al video: se guarda al terminar
+        nuevo = true;
     }
     var proj = app.project;
     var bin = CC.bin(proj.rootItem, p.bin || 'CineCaptions');
     var sfx = p.sfx || [], musica = p.musica || [];
-    var mapa = CC.importar(proj, bin, [p.video, p.capa]);
-    var video = mapa[CC.norma(p.video)], capa = mapa[CC.norma(p.capa)];
+    var conTextos = !!(p.textos && p.textos.length && p.plantilla && !p.solo_audio);    // v5.85: textos editables en vez de la capa
+    var mapa = CC.importar(proj, bin, conTextos ? [p.video] : [p.video, p.capa]);
+    var video = mapa[CC.norma(p.video)], capa = conTextos ? null : mapa[CC.norma(p.capa)];
     if (!video) { throw new Error('Premiere no pudo importar el video ' + p.video); }
-    if (!capa) { throw new Error('Premiere no pudo importar los subtítulos ' + p.capa); }
+    if (!capa && !conTextos) { throw new Error('Premiere no pudo importar los subtítulos ' + p.capa); }
     var unicas = [], vistas = {}, todos = sfx.concat(musica);
     for (i = 0; i < todos.length; i++) {
         var k = CC.norma(todos[i].ruta);
@@ -255,9 +513,24 @@ CC.colocar = function (p) {
     }
     var baseA = Math.max(1, CC.ultimaOcupada(seq.audioTracks) + 1);     // (un video con dos canales sueltos ocupa A1 y A2)
     var baseV = Math.max(1, CC.ultimaOcupada(seq.videoTracks) + 1);
-    seq = CC.asegurarPistas(seq, p.solo_audio ? 1 : baseV + 1, baseA + fin.length + (musica.length ? 1 : 0));
+    var nImg = conTextos ? (p.carriles_imagen || 0) : 0, nTxt = conTextos ? (p.carriles_texto || 1) : 0;
+    seq = CC.asegurarPistas(seq, p.solo_audio ? 1 : (conTextos ? baseV + nImg + nTxt : baseV + 1), baseA + fin.length + (musica.length ? 1 : 0));
+    var res = { ok: true };
 
-    if (p.solo_audio) {                          // un audio suelto: la capa es la imagen (V1) y el audio va en A1
+    if (conTextos) {                             // v5.85: los textos encima (primero: si Premiere no deja, se vuelve a la capa) y las piezas debajo
+        if (seq.videoTracks.numTracks < baseV + nImg + nTxt) {
+            try { proj.deleteSequence(seq); } catch (e5) {}
+            return { ok: false, causa: 'textos', error: 'Premiere no creó las pistas para los textos', version: String(app.version) };
+        }
+        var fallo = CC.ponerTextos(seq, p, baseV + nImg, res);
+        if (fallo) {
+            try { proj.deleteSequence(seq); } catch (e6) {}
+            fallo.version = String(app.version);
+            fallo.diag = res.diag;
+            return fallo;
+        }
+        CC.ponerImagenes(seq, proj, bin, p, baseV, res);
+    } else if (p.solo_audio) {                   // un audio suelto: la capa es la imagen (V1) y el audio va en A1
         CC.poner(seq.audioTracks[0], video, 0);
     } else if (seq.videoTracks.numTracks <= baseV || !CC.poner(seq.videoTracks[baseV], capa, 0)) {
         throw new Error('Premiere no pudo poner los subtítulos encima del video');
@@ -275,12 +548,22 @@ CC.colocar = function (p) {
         var m = sonidos[CC.norma(musica[i].ruta)];
         if (m && pistaM < seq.audioTracks.numTracks && CC.poner(seq.audioTracks[pistaM], m, musica[i].t)) { conMusica++; }
     }
+    CC.fotos(seq, p, res);
     try { seq.setPlayerPosition('0'); } catch (e3) {}
     if (nuevo) {
         try { proj.save(); } catch (e4) {}
     }
-    return { ok: true, secuencia: String(seq.name), sfx: puestos, sfx_total: sfx.length, musica: conMusica, musica_total: musica.length,
-             proyecto: String(proj.name), proyecto_nuevo: nuevo, version: String(app.version) };
+    res.secuencia = String(seq.name);
+    res.sfx = puestos;
+    res.sfx_total = sfx.length;
+    res.musica = conMusica;
+    res.musica_total = musica.length;
+    res.proyecto = String(proj.name);
+    res.proyecto_nuevo = nuevo;
+    res.version = String(app.version);
+    res.panel = CC.PANEL;
+    res.con_textos = conTextos;
+    return res;
 };
 
 CC.revisar = function (conLatido) {

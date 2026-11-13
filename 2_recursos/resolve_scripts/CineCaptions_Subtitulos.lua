@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.84 (subtitulos)"
+local VERSION = "5.85 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -5747,7 +5747,8 @@ local function place_guion(timeline, media_pool, track, fps, start_frame, projec
         if cue.emoji then
             local arriba_y, abajo_y = nil, nil
             local caja = cue.caja
-            if type(caja) == "table" and tonumber(caja[1]) and tonumber(caja[2]) then
+            -- v5.85 (auditoria): solo la caja de 2 valores (arriba, abajo), como el .py; con la de 4 (la linea de los Estilos 3 y 7) tomaba x0 por «arriba»
+            if type(caja) == "table" and #caja == 2 and tonumber(caja[1]) and tonumber(caja[2]) then
                 arriba_y, abajo_y = 0.5 - tonumber(caja[1]), 0.5 - tonumber(caja[2])
             else
                 local ymin, ymax = nil, nil
@@ -6046,7 +6047,8 @@ local function place_kinetic(timeline, media_pool, track, fps, start_frame, proj
         if cue.emoji then
             local arriba_y, abajo_y = nil, nil
             local caja = cue.caja
-            if type(caja) == "table" and tonumber(caja[1]) and tonumber(caja[2]) then
+            -- v5.85 (auditoria): solo la caja de 2 valores (arriba, abajo), como el .py; con la de 4 (la linea de los Estilos 3 y 7) tomaba x0 por «arriba»
+            if type(caja) == "table" and #caja == 2 and tonumber(caja[1]) and tonumber(caja[2]) then
                 arriba_y, abajo_y = 0.5 - tonumber(caja[1]), 0.5 - tonumber(caja[2])
             else
                 local ymin, ymax = nil, nil

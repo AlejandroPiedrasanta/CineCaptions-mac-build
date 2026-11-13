@@ -59,10 +59,24 @@ def leer_prefs():
         return {}
 
 
+_PREFS_FALLO_DICHO = [False]
+
+
 def guardar_prefs(cambios):
-    """Mezcla 'cambios' en preferencias.json sin tocar lo demas."""
+    """Mezcla 'cambios' en preferencias.json sin tocar lo demas.
+    v5.85 (auditoría): si no se pudo guardar (otro programa lo tenía abierto más de ~1 s, disco lleno…) lo dice el Registro, una vez por sesión:
+    antes nadie miraba el False y los ajustes volvían atrás al reiniciar sin ninguna explicación."""
     import archivos_seguros
-    return archivos_seguros.mezclar_json(PREFS, cambios)       # atómico y bajo cerrojo (antes un cierre a medias vaciaba las preferencias)
+    ok = archivos_seguros.mezclar_json(PREFS, cambios)       # atómico y bajo cerrojo (antes un cierre a medias vaciaba las preferencias)
+    if not ok and not _PREFS_FALLO_DICHO[0]:
+        _PREFS_FALLO_DICHO[0] = True
+        try:
+            import registro
+            registro.error(tr('No pude guardar tus ajustes: otro programa (como el antivirus o una copia de seguridad) tenía abierto «preferencias.json». '
+                              'Lo que ya tenías sigue intacto; vuelve a cambiar el ajuste en un momento.'), 'ajustes')
+        except Exception:
+            pass
+    return ok
 
 
 def _version():
@@ -578,6 +592,13 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.85', [
+        'Premiere Pro: los captions llegan como textos editables en la línea de tiempo, con la letra, los colores, el contorno y la sombra de cada estilo (los 9 estilos); los adornos van como imágenes en sus propias pistas.',
+        'Premiere Pro: con «Usar con Premiere Pro» CineCaptions ya no abre ni usa DaVinci Resolve, y si Premiere está cerrado, GO lo abre con un proyecto junto a tu video y lo coloca todo solo.',
+        'Soltar un video en el icono de CineCaptions con el programa ya abierto lo lleva a la ventana abierta (antes se perdía).',
+        'Mac: arreglado que CineCaptions no abriera después de instalarlo; y si un arranque se queda atascado, se cierra solo y lo anota en el Registro.',
+        'Más resistente: tus ajustes, la licencia y los sonidos ya no se pierden si el antivirus u otro programa tiene un archivo abierto un momento, y Cancelar durante la voz libera la tarjeta gráfica al instante.',
+    ]),
     ('5.84', [
         'Resolve reproduce antes los captions: el Estilo 5 llena su caché en menos de la mitad de tiempo y el Estilo 1 en un 22 % menos, con la misma imagen.',
         '«Video sin editores» graba hasta un 50 % más rápido: usa varios núcleos a la vez y el video sale idéntico.',

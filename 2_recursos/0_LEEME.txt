@@ -130,8 +130,9 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         requisitos_motor_qwen.txt
             versiones FIJAS del motor (Python 3.12 + torch + qwen-asr)
     plantillas_incluidas\   (75 archivos)  — los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)
-    premiere\   (5 archivos)
+    premiere\   (6 archivos)
         com.cinecaptions.premiere\   (5 archivos)
+        proyecto_vacio.xml
     resolve_scripts\   (25 archivos)  — los scripts que se instalan en DaVinci Resolve (Lua = Free, Python = Studio) y sfx_rules.json
         .cf\   (1 archivos)
         CineCaptions - Detectar Video.py

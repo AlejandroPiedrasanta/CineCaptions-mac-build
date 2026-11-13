@@ -56,12 +56,20 @@ def _es_termino(t):
     return len(t) >= 2 and (any(c.isupper() for c in t) or (any(c.isdigit() for c in t) and any(c.isalpha() for c in t)))
 
 
-def _leer():
+def _leer(para_escribir=False):
+    """v5.85 (auditoría): `para_escribir` = lo va a reescribir: si el archivo existe pero no se puede LEER (bloqueado por el antivirus o una
+    copia de seguridad) lanza OSError en vez de devolver uno vacío. Antes aprender_par escribía encima solo la palabra nueva y se perdía todo
+    el vocabulario aprendido (reproducido con un bloqueo de 0,3 s: de 5 términos quedaba 1)."""
     try:
-        import json
-        d = json.loads(RUTA.read_text(encoding='utf-8'))
+        import archivos_seguros
+        d = archivos_seguros._leer(RUTA)                  # (con reintentos mientras esté bloqueado)
         if isinstance(d, dict) and isinstance(d.get('terminos'), dict):
             return d
+    except FileNotFoundError:
+        pass
+    except OSError:
+        if para_escribir:
+            raise
     except Exception:
         pass
     return {'version': 1, 'terminos': {}}
@@ -83,7 +91,10 @@ def aprender_par(antes, despues):
     if not d or not _es_termino(d) or plano(a) == plano(d) or len(d) > 40:
         return False
     with _LOCK:
-        datos = _leer()
+        try:
+            datos = _leer(para_escribir=True)
+        except OSError:
+            return False                                       # (bloqueado: no se pisa el vocabulario con uno vacío)
         t = datos['terminos'].setdefault(d, {'veces': 0, 'de': [], 'ultimo': 0})
         t['veces'] = int(t.get('veces') or 0) + 1
         if a and plano(a) and plano(a) not in t['de']:

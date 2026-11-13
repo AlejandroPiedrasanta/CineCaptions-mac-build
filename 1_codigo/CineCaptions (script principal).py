@@ -46,6 +46,11 @@ if sys.platform.startswith('win'):
         ctypes.windll.kernel32.SetErrorMode(0x0001 | 0x8000)            # SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX
     except Exception:
         pass
+if __name__ == '__main__' and getattr(sys, 'frozen', False):
+    # v5.85 (Mac «no abre»): un hijo que una librería lanza con este ejecutable como si fuera Python («-B -S -I -c …», el resource_tracker
+    # de multiprocessing al bajar el modelo) abría CineCaptions entero, invisible y con el candado: corre su código y sale aquí mismo
+    import arranque_seguro
+    arranque_seguro.atender_hijo()
 os.environ['HF_HUB_DISABLE_SYMLINKS'] = '1'
 import datetime
 import math
@@ -2426,6 +2431,11 @@ class PlantillasWindow(QWidget):
             return app is not None and getattr(app, '_go_ocupa_resolve', None) is not None and app._go_ocupa_resolve(silencioso)
         if go_ocupa_resolve():
             return
+        try:                            # v5.85: con «Usar con Premiere Pro» las vistas automáticas no van a Resolve (creaban timelines temporales en su proyecto)
+            if silencioso and app is not None and app._con_premiere():
+                return
+        except Exception:
+            pass
         import vistas_slider
         packs = []
         if solo is not None:
@@ -6589,6 +6599,8 @@ class SubtitleApp(QWidget):
             except Exception:
                 pass
             def sondear():
+                if self._con_premiere():          # v5.85: con «Usar con Premiere Pro» no se conecta a Resolve (los scripts se siguen poniendo al día)
+                    return
                 import resolve_bridge
                 resolve_bridge.conectar()
             _correr_en_hilo(self, sondear, self._tras_sondear_resolve)
@@ -6602,6 +6614,11 @@ class SubtitleApp(QWidget):
         despues(9000, self._precargar_al_abrir, self)                  # v5.4.40: la voz y la IA de texto se cargan en segundo plano al abrir (el primer GO se ahorra ~14 s de carga)
         despues(5000, self._iniciar_vigilancia_conexion, self)         # v5.5.7: Resolve (Studio o Free, Windows o Mac) se conecta solo y el estado dice la verdad
         despues(45000, self._limpiar_caches, self)               # v5.4.8: tope de MB por caché (mantenimiento.py), 45 s después de abrir y en un hilo
+        self._reloj_relevo = ui.QTimer(self)                     # v5.85: el video que suelta otra copia (icono o «Abrir con» con esta ya abierta)
+        self._reloj_relevo.setInterval(700)
+        self._reloj_relevo.timeout.connect(self._mirar_relevo)
+        self._reloj_relevo.start()
+        despues(300, self._mirar_relevo, self)                   # (uno que llegó mientras esta copia arrancaba)
         try:                                                     # v5.4.8: lo de fondo (cola_trabajos) cede ante GO
             import cola_trabajos
             cola_trabajos.registrar_alta(lambda: bool(getattr(self, '_go_corriendo', False)))
@@ -6671,6 +6688,8 @@ class SubtitleApp(QWidget):
         vista real no pagan el arranque del puente."""
         def trabajo():
             import resolve_mcp
+            if self._con_premiere():              # v5.85: con «Usar con Premiere Pro» no se arranca ResolveMCP
+                return
             if resolve_mcp.ruta_exe() is not None:
                 resolve_mcp.cliente(arrancar=True)
         _correr_en_hilo(self, trabajo, lambda _r, _e: None)
@@ -7401,10 +7420,12 @@ class SubtitleApp(QWidget):
             if ruta:
                 self._soltar_archivo(ruta)
                 break
-    def _soltar_archivo(self, ruta):
-        """Un video o audio soltado en la ventana (o en la zona de Inicio)."""
+    def _soltar_archivo(self, ruta, cambiar_pagina=True):
+        """Un video o audio soltado en la ventana (o en la zona de Inicio). cambiar_pagina=False (v5.85, el que llega de otra copia: icono o
+        «Abrir con» con la ventana ya abierta): fuera de Inicio queda elegido sin llevarte a Estilos."""
         p = Path(ruta)
         if not self._entradas_activas:
+            registro.aviso(tr('CineCaptions está trabajando: espera a que termine antes de soltar otro video.'), 'GO · soltar archivo')
             try:
                 self.aviso_inicio.configure(text=tr('CineCaptions está trabajando: espera a que termine antes de soltar otro video.'))
             except Exception:
@@ -7435,8 +7456,46 @@ class SubtitleApp(QWidget):
             self._pintar_go_reposo()
             if not getattr(self, '_go_corriendo', False):
                 despues(120, self._go, self)
-        else:
+        elif cambiar_pagina:
             self.ir_a('estilos')
+
+    def _mirar_relevo(self):
+        """v5.85: ¿otra copia de CineCaptions dejó un video para esta ventana (_pasar_video_a_la_abierta)? Cada 0,7 s; lo normal es un
+        «no existe» (un stat, sin leer nada)."""
+        ruta_r = _ruta_relevo()
+        try:
+            if not ruta_r.exists():
+                return
+        except OSError:
+            return
+        import archivos_seguros
+        datos = archivos_seguros.leer_json(ruta_r, None)
+        try:
+            ruta_r.unlink()                               # recogido: la otra copia lo ve y se cierra tranquila
+        except OSError:
+            pass
+        if not isinstance(datos, dict):
+            return
+        ruta = str(datos.get('ruta') or '').strip().strip('"')
+        try:
+            reciente = abs(time.time() - float(datos.get('t') or 0)) <= RELEVO_VIGENCIA_S
+        except (TypeError, ValueError):
+            reciente = False
+        if ruta and reciente:                             # (uno viejo, de una copia que se cerraba, no arranca nada)
+            self._recibir_video_de_fuera(ruta)
+
+    def _recibir_video_de_fuera(self, ruta):
+        """v5.85 (un cliente con «Usar con Premiere Pro»: soltó el video en el icono con CineCaptions abierto y GO falló con «Suelta un video y
+        pulsa GO»): el video llega a esta ventana. En Inicio, como soltarlo aquí (GO arranca solo); en otra página queda elegido."""
+        try:
+            if self.isMinimized():
+                self.showNormal()
+            self.raise_()
+            self.activateWindow()
+        except Exception:
+            pass
+        registro.info(tr('Abriste «{n}» con CineCaptions ya abierto: lo recibe esta ventana.', n=Path(ruta).name), 'GO · soltar archivo')
+        self._soltar_archivo(ruta, cambiar_pagina=False)
     EXTENSIONES_MEDIO = {'.mp4', '.mov', '.mkv', '.avi', '.webm', '.m4v', '.mxf', '.mts', '.m2ts', '.wmv', '.flv', '.mpg', '.mpeg', '.3gp',
                          '.mp3', '.wav', '.m4a', '.aac', '.flac', '.ogg', '.opus', '.wma'}
     def closeEvent(self, e):
@@ -7623,6 +7682,9 @@ class SubtitleApp(QWidget):
         ruta_ok = bool(ruta) and Path(ruta).exists()
         motivo_mp4 = self._motivo_mp4()          # v5.4.48: GO entrega un MP4: Inicio lo dice (sin el rojo de «No encuentro DaVinci Resolve»)
         est_p = (getattr(self, '_estado_sistema', None) or {}).get('premiere')
+        if motivo_mp4 and not (archivo_ok or ruta_ok) and time.time() < getattr(self, '_go_pide_video_hasta', 0):
+            panel.reposo(self._texto_pide_video(motivo_mp4), listo=True, tono='aviso')    # v5.85: lo que pidió GO (_go_pide_video) no se borra al momento
+            return
         if motivo_mp4 == 'premiere' and est_p is not None:
             # v5.78 (el usuario: «que en Inicio diga conexión con Premiere Pro, que ya no diga DaVinci Resolve»): como la de Resolve, con su punto
             import premiere
@@ -8446,6 +8508,8 @@ class SubtitleApp(QWidget):
             return
         if not self._entradas_activas:
             return
+        if self._go_pide_video():                    # v5.85: Premiere / video sin editores y ningún video: dice qué hacer, sin «falló»
+            return
         self._go_corriendo = True
         self._un_clic = True
         self._pausa_go = False                # v5.4.8: «Pausar» / «Cancelar» (se miran en los puntos de control del trabajo)
@@ -8453,6 +8517,11 @@ class SubtitleApp(QWidget):
         try:
             import resolve_mcp
             resolve_mcp.permitir_esperas()    # v5.82: (por si un Cancelar de antes las dejó cortadas)
+        except Exception:
+            pass
+        try:
+            import motor_voz
+            motor_voz.permitir()              # v5.85: (y la voz)
         except Exception:
             pass
         self._go_termino = False
@@ -8516,9 +8585,13 @@ class SubtitleApp(QWidget):
             import efectos_visuales as _fxl
             import plantillas as _pl
             import edicion_pro as _epl                     # v5.55: los emojis los decide el juez único (la PRO + «Emojis animados»), no go_emojis
-            registro.info('GO empieza · %s · tema «%s» · Resolve %s · efectos %s · emojis %s' % (
+            # v5.85 (auditoría): «estilo», nunca «tema», en lo visible (esta línea sale en Inicio y en el Registro); y el destino de verdad: con el
+            # video sin editores (o sin Resolve en el equipo) decía «Resolve Free (Puente)»
+            _destino = {'premiere': 'no (Premiere Pro)', 'ajuste': 'no (video sin editores)', 'sin_resolve': 'no (no está instalado: video MP4)',
+                        'prueba': 'no (video MP4)'}.get(getattr(self, '_go_motivo', None) or ('ajuste' if self._go_sin_resolve else ''))
+            registro.info('GO empieza · %s · estilo «%s» · Resolve %s · efectos %s · emojis %s' % (
                 ('video «%s»' % Path(str(archivo)).name) if archivo else 'audio del timeline de Resolve', _pl.nombre_visible(self._plantilla_un_clic()),
-                'no (Premiere Pro)' if getattr(self, '_go_motivo', None) == 'premiere' else ('Studio (MCP)' if hay_mcp else 'Free (Puente)'),
+                _destino or ('Studio (MCP)' if hay_mcp else 'Free (Puente)'),
                 'sí' if _fxl.activado() else 'no',
                 'sí' if _epl.emojis_permitidos(self._plantilla_un_clic()) else 'no'), 'GO')
         except Exception:
@@ -8533,14 +8606,18 @@ class SubtitleApp(QWidget):
                 import resolve_bridge as _rb
                 modo_sis = _rb.modo_actual(pasivo=True)
             libre_puente = (not hay_mcp) and modo_sis in ('puente', 'manual') and not self._go_sin_resolve       # DaVinci Resolve Free: se habla por el Puente
-            if (hay_mcp or libre_puente) and not self._go_sin_resolve:
+            # v5.85 (el usuario: «cuando activo para Premiere Pro y arrastro un video me abre DaVinci Resolve»): con Studio (MCP) el hilo que abre
+            # Resolve y le arma el proyecto y el timeline salía aunque GO fuera a Premiere o al video sin editores (solo miraba hay_mcp)
+            studio_mcp = hay_mcp and not self._go_sin_resolve
+            if studio_mcp or libre_puente:
                 # v5.82 (el usuario: «que los estilos en 4K no pierdan calidad»): el timeline nuevo, a la resolución del video (un 4K: 2160×3840; Free hasta UHD)
                 medio['tl_ancho'], medio['tl_alto'] = resolve_mcp.tamano_timeline(
                     medio.get('ancho'), medio.get('alto'), resolve_mcp.TOPE_TIMELINE_STUDIO if hay_mcp else resolve_mcp.TOPE_TIMELINE_FREE)
             self._ancho_timeline, self._alto_timeline, self._fps_timeline = medio['tl_ancho'], medio['tl_alto'], medio['tl_fps']
-            self.go_panel.paso('timeline', 'saltado', tr('tu video, en un timeline nuevo') if (hay_mcp or libre_puente) else
-                               (tr('sin Resolve: te devuelvo el video') if self._go_sin_resolve else tr('uso tu archivo')))
-            if hay_mcp:
+            self.go_panel.paso('timeline', 'saltado', tr('tu video, en un timeline nuevo') if (studio_mcp or libre_puente) else
+                               (tr('uso tu archivo') if getattr(self, '_go_motivo', None) == 'premiere' else
+                                tr('sin Resolve: te devuelvo el video') if self._go_sin_resolve else tr('uso tu archivo')))
+            if studio_mcp:
                 # v5.2: Resolve se va abriendo mientras se transcribe (para colocar al final); v5.10: y se le arma el timeline con el video
                 self._go_tl_listo = threading.Event()
                 threading.Thread(target=self._go_timeline_del_video, args=(archivo, medio), daemon=True, name='abrir-resolve').start()
@@ -8602,15 +8679,7 @@ class SubtitleApp(QWidget):
                     (Path.home() / 'Library' / 'Application Support' / 'CineCaptions' / 'audio').mkdir(parents=True, exist_ok=True)
                 except OSError:
                     pass
-            inicio = time.time()
-            ok, err = resolve_bridge.ejecutar('detectar', timeout=600)
-            if ok:
-                # v5.72: el resultado de Free llega por el registro de Resolve, que se escribe en diferido: se espera a que aparezca (y si no, el porqué)
-                _datos, motivo = resolve_bridge.esperar_video_detectado(inicio)
-                if motivo:
-                    registro.aviso('GO · timeline: ' + motivo, 'GO · timeline')
-                    return ('ok', motivo)
-            return ('ok' if ok else 'error', err)
+            return self._go_detectar_en_resolve()
         _trabajo_timeline = trabajo
 
         def trabajo():
@@ -8634,10 +8703,11 @@ class SubtitleApp(QWidget):
                 except Exception:
                     pass
             ruta = self.video_var.get().strip().strip('"')
-            if estado == 'ok' and ruta and Path(ruta).exists():
+            audio = self._go_audio_que_usar(estado, ruta)
+            if audio == 'timeline':
                 self.go_panel.paso('timeline', 'hecho', Path(ruta).stem[:26])
                 self._go_generar()
-            elif ruta and Path(ruta).exists():
+            elif audio == 'archivo':
                 self.go_panel.paso('timeline', 'saltado', tr('uso tu archivo'))
                 self._go_generar()
             else:
@@ -8649,6 +8719,52 @@ class SubtitleApp(QWidget):
                 self._go_fallo('timeline', (tr('Resolve no entregó el audio del timeline (código {c}).', c=str(err).strip()) if str(err or '').strip().isdigit() else err) or tr('Abre DaVinci Resolve con tu timeline, o suelta un vídeo en la ventana, y pulsa GO otra vez.'),
                                diagnostico=diag)
         _correr_en_hilo(self, trabajo, fin)
+    def _go_detectar_en_resolve(self):
+        """Pide a Resolve el audio del timeline (script DetectarVideo, por el Puente o el MCP) y espera su resultado; fuera de la interfaz.
+        ('ok', '') si llegó uno de ESTA vez · ('sin_resultado', motivo) si Resolve terminó pero su resultado no llegó a tiempo · ('error', err).
+        v5.72: el resultado de Free llega por el registro de Resolve, que se escribe en diferido: se espera a que aparezca (y si no, el porqué).
+        v5.85 (auditoría): sin resultado nuevo devolvía ('ok', motivo) y GO seguía con lo que quedara en video_var: el render del GO ANTERIOR
+        (otro timeline; en Free 21.1 lleva la hora en el nombre y no se borra) o una detección de hasta 10 min: colocaba en ESTE timeline los
+        captions del otro. Ahora GO se detiene con el motivo (_go_audio_que_usar)."""
+        import resolve_bridge
+        inicio = time.time()
+        ok, err = resolve_bridge.ejecutar('detectar', timeout=600)
+        if ok:
+            _datos, motivo = resolve_bridge.esperar_video_detectado(inicio)
+            if motivo:
+                registro.aviso('GO · timeline: ' + motivo, 'GO · timeline')
+                return ('sin_resultado', motivo)
+        return ('ok' if ok else 'error', err)
+    def _go_audio_que_usar(self, estado, ruta):
+        """v5.85 (auditoría): qué audio usa GO tras pedirle el del timeline a Resolve: 'timeline' (lo entregó ahora), 'archivo' (no lo entregó:
+        vale el archivo que el usuario eligió él mismo, «uso tu archivo») o 'fallo'. Un resultado que no llegó a tiempo ('sin_resultado') o el
+        audio que dejó una detección ANTERIOR de Resolve (`_video_de_resolve`, de otro timeline) nunca sirven: GO se detiene con el motivo."""
+        if not ruta or not Path(ruta).exists():
+            return 'fallo'
+        if estado == 'ok':
+            return 'timeline'
+        if estado == 'sin_resultado' or ruta == getattr(self, '_video_de_resolve', None):
+            return 'fallo'
+        return 'archivo'
+    def _go_coloca_en_free(self):
+        """v5.85: ¿este trabajo coloca en DaVinci Resolve Free (por el Puente, que lee los sidecars .lua)? No con Studio (MCP), ni sin editores,
+        ni en Premiere. Barato; nunca lanza."""
+        try:
+            import resolve_mcp
+            if getattr(self, '_go_sin_resolve', False) or self._motivo_mp4():
+                return False
+            return resolve_mcp.ruta_exe() is None
+        except Exception:
+            return False
+    def _con_premiere(self):
+        """v5.85 (el usuario: «si activo usar para Premiere Pro ya no tiene que usar DaVinci Resolve»): ¿está elegido «Usar con Premiere Pro»
+        (Ajustes > General, go_premiere)? Con él nada de lo automático habla con Resolve: ni la vigilancia de la conexión (lanzaba el Puente en
+        Free), ni el estado de Inicio (arrancaba ResolveMCP), ni el sondeo al abrir, ni las vistas reales de Estilos. Barato: prefs con caché."""
+        try:
+            import ajustes_ui
+            return bool(ajustes_ui.leer_prefs().get('go_premiere'))
+        except Exception:
+            return False
     def _motivo_mp4(self):
         """Por qué GO NO coloca AHORA en Resolve: 'prueba' (CINECAPTIONS_SIN_RESOLVE=1: MP4), 'premiere' (Ajustes > General «Usar con Premiere
         Pro», go_premiere: premiere.py), 'ajuste' (Ajustes > General «Video sin editores (DaVinci y Premiere)», go_salida_mp4: MP4; hasta la 5.77
@@ -8674,6 +8790,40 @@ class SubtitleApp(QWidget):
         except Exception:
             pass                               # ante la duda, como siempre: con Resolve
         return None
+    def _texto_pide_video(self, motivo):
+        return (tr('Primero arrastra tu video aquí: GO lo subtitula y lo coloca en Premiere Pro') if motivo == 'premiere' else
+                tr('Primero arrastra tu video aquí: GO te lo devuelve con los subtítulos puestos'))
+
+    def _go_pide_video(self):
+        """v5.85 (informe de un cliente con «Usar con Premiere Pro»: «GO falla en el paso timeline»): con Premiere, el video sin editores o sin
+        Resolve, GO trabaja con un video tuyo. Sin ninguno, antes arrancaba y caía en rojo («No se pudo terminar», un error del Registro que
+        hasta salía como fallo del programa); ahora no arranca: la línea de Inicio dice en ámbar qué hacer (~20 s) y queda un aviso en el
+        Registro con la explicación de siempre. True si pidió el video (y GO no arranca)."""
+        archivo = getattr(self, '_go_archivo', None)
+        elegido = self.video_var.get().strip().strip('"') if hasattr(self, 'video_var') else ''
+        if (archivo and Path(archivo).is_file()) or (elegido and Path(elegido).is_file()):
+            return False
+        motivo = self._motivo_mp4()
+        if motivo is None:
+            return False                                   # con Resolve: GO saca el audio del timeline
+        texto = self._texto_pide_video(motivo)
+        if motivo == 'premiere':
+            detalle = tr('Tienes elegido «Usar con Premiere Pro» (Ajustes > General). Suelta un video en CineCaptions y pulsa GO: lo coloco en Premiere Pro.')
+        elif motivo == 'ajuste':
+            detalle = tr('Tienes elegido «Video sin editores (DaVinci y Premiere)» (Ajustes > General). Suelta un video en CineCaptions y pulsa GO, o elige «Usar con DaVinci Resolve» para trabajar con el timeline de Resolve.')
+        else:
+            detalle = tr('No hay DaVinci Resolve en este equipo. Suelta un video en CineCaptions y pulsa GO: te lo devuelvo con los subtítulos puestos.')
+        perdido = elegido or archivo
+        if perdido:                                        # había uno elegido, pero ya no está donde estaba
+            detalle = tr('No encuentro «{n}»: ¿lo moviste o le cambiaste el nombre?', n=Path(perdido).name) + '\n' + detalle
+        registro.aviso(texto, 'GO', detalle=detalle)
+        self._go_pide_video_hasta = time.time() + 20
+        try:
+            self.go_panel.reposo(texto, listo=True, forzar=True, tono='aviso')
+        except Exception:
+            pass
+        return True
+
     def _resolve_no_instalado(self):
         """v5.4.47: True si este GO entrega el MP4 (render_sin_resolve.py); deja en el Registro por qué."""
         motivo = self._motivo_mp4()
@@ -8817,6 +8967,9 @@ class SubtitleApp(QWidget):
                                                              fps=medio['tl_fps'], pista_broll=con_broll)
                     if not r.get('error'):
                         break
+                if getattr(self, '_cancelar_go', False) or resolve_mcp.cancelado():
+                    self._go_tl_error = tr('GO cancelado')          # v5.85: Cancelar no es un fallo de Resolve (sin «No pude preparar Resolve…» en errores.log)
+                    return
                 # v5.4.52: Resolve 21.1 a veces se cuelga al crear el proyecto (sobre todo tras un render): «ResolveMCP no contestó a tools/call en 75 s».
                 # v5.5.1: CUALQUIER fallo aquí se repara solo y se repite (hasta 3 intentos): colgado → se cierra a la fuerza; cerrado o caído → se reabre;
                 # el MCP se reinicia. Solo si los tres fallan se avisa (el proyecto de GO se vuelve a armar entero cada vez)
@@ -8904,11 +9057,15 @@ class SubtitleApp(QWidget):
           cierra nada, el diagnóstico queda en el Registro y en self._go_resolve_trabado, y GO se detiene (False).
         · inmediato=True (antes de cada paso): sano → False al momento (nada que repetir).
         · después de un fallo con Resolve sano: se reinicia la conexión MCP y se repite; cerrado → lo reabre el paso siguiente.
-        Lo que Resolve tuviera sin guardar del proyecto de GO se pierde, pero GO lo vuelve a armar entero (el proyecto anterior ya quedó guardado)."""
+        Lo que Resolve tuviera sin guardar del proyecto de GO se pierde, pero GO lo vuelve a armar entero (el proyecto anterior ya quedó guardado).
+        v5.85 (auditoría; errores.log real del 2026-11-10): con GO cancelado no se repara ni se repite nada. Cancelar cierra Resolve a propósito y corta
+        sus esperas («…(cancelado)»): esto lo tomaba por un fallo y anotaba dos veces «Resolve se cerró solo (…): lo vuelvo a abrir y repito»."""
         try:
             import colocacion
             import resolve_mcp
             import salud_resolve
+            if getattr(self, '_cancelar_go', False) or resolve_mcp.cancelado():
+                return False
             if not colocacion.pids_resolve():
                 if inmediato:
                     return False
@@ -9121,6 +9278,8 @@ class SubtitleApp(QWidget):
     def _vigilar_conexion(self):
         if getattr(self, '_vigilando_conexion', False) or getattr(self, '_go_corriendo', False):
             return
+        if self._con_premiere():                    # v5.85: con «Usar con Premiere Pro» no se toca Resolve (al volver a Resolve, el reloj sigue)
+            return
         self._vigilando_conexion = True
         def trabajo():
             import resolve_bridge
@@ -9248,7 +9407,7 @@ class SubtitleApp(QWidget):
             pass
         try:
             import motor_voz
-            motor_voz.abortar()                       # la voz de Qwen (otro proceso) se corta ya; Whisper para al siguiente avance
+            motor_voz.cancelar()                      # la voz de Qwen (otro proceso) se corta ya, sin otra pasada; Whisper para al siguiente avance (v5.85)
         except Exception:
             pass
         # v5.82 (el usuario: «cuando cancelo no cancela rápido, tarda demasiado, debe ser inmediato»): la pantalla pasa YA a «GO cancelado» (antes
@@ -9274,6 +9433,11 @@ class SubtitleApp(QWidget):
             try:
                 import resolve_mcp
                 resolve_mcp.permitir_esperas()        # (ya está todo cerrado: Corrector, la conexión o un GO nuevo pueden volver a abrir Resolve)
+            except Exception:
+                pass
+            try:
+                import motor_voz
+                motor_voz.permitir()                  # v5.85: (y la voz vuelve a funcionar)
             except Exception:
                 pass
             if getattr(self, '_cancelar_go', False) or getattr(self, '_go_corriendo', False):
@@ -9606,16 +9770,47 @@ class SubtitleApp(QWidget):
                 time.sleep(0.2)
             return bool(getattr(self, '_cancelar_go', False))
 
+        def dibujar_capa():
+            import render_sin_resolve
+            est.update(fase='capa', f=0.0)
+            capa = render_sin_resolve.renderizar_capa(video, cues, progreso=lambda f, t: est.update(f=f), cancelado=parar,
+                                                      emoji_arriba=emoji_arriba, estilo=estilo)
+            if capa.get('ok'):
+                est['capa'] = capa
+            return capa
+
         def trabajo():
             import premiere
-            import render_sin_resolve
             try:
-                capa = render_sin_resolve.renderizar_capa(video, cues, progreso=lambda f, t: est.update(f=f), cancelado=parar,
-                                                          emoji_arriba=emoji_arriba, estilo=estilo)
-                if not capa.get('ok'):
-                    est['r'] = capa
-                    return
-                est['capa'] = capa
+                # v5.85 (el usuario: «me pones el video de los captions y no quiero; quiero los textos que se vayan armando en la línea de
+                # tiempo»): cada texto del estilo, un clip de texto editable de Premiere (premiere_textos + colocar.jsx); la capa de video
+                # solo si el panel que corre no los entiende (Premiere abierto con el panel anterior) o si Premiere no deja ponerlos
+                piezas = None
+                try:
+                    if premiere.admite_textos():
+                        import premiere_textos
+                        est['fase'] = 'textos'
+                        piezas = premiere_textos.preparar(video, cues, emoji_arriba=emoji_arriba, estilo=estilo, cancelado=parar)
+                        if piezas.get('cancelado'):
+                            est['r'] = piezas
+                            return
+                        if not piezas.get('ok') or not piezas.get('textos'):
+                            piezas = None
+                        elif piezas.get('faltan_fuentes'):     # (sin ellas Premiere para con «Resolver fuentes»: van con Arial)
+                            registro.aviso(tr('En Premiere Pro estas letras van con Arial porque no están bien instaladas en este equipo: {f}. Instálalas y reinicia Premiere.',
+                                              f=', '.join(piezas['faltan_fuentes'])), 'GO · Premiere Pro')
+                    else:
+                        registro.info(tr('Premiere Pro tiene abierto el panel anterior de CineCaptions: reinícialo una vez para que los textos lleguen editables. Esta vez van como una capa de video.'),
+                                      'GO · Premiere Pro')
+                except Exception:
+                    registro.excepcion(origen='GO en Premiere Pro · textos')
+                    piezas = None
+                capa = None
+                if piezas is None:
+                    capa = dibujar_capa()
+                    if not capa.get('ok'):
+                        est['r'] = capa
+                        return
                 est['fase'] = 'premiere'
                 res_sonido = None                          # el Sonido de GO (biblioteca / AI Sound Director): lo mismo que recibiría Resolve
                 hilo_sonido = getattr(self, '_director_hilo', None)
@@ -9628,8 +9823,19 @@ class SubtitleApp(QWidget):
                     except Exception:
                         registro.excepcion(origen='GO en Premiere Pro · sonido')
                 sfx, musica = premiere.sonido_de_go(cues, res_sonido)
-                pedido = premiere.armar_pedido(video, capa, sfx, nombre_estilo, musica=musica)
-                est['r'] = premiere.colocar(pedido, cancelado=parar, aviso=lambda t: est.update(texto=t))
+                pedido = premiere.armar_pedido(video, capa, sfx, nombre_estilo, musica=musica, piezas=piezas)
+                r = premiere.colocar(pedido, cancelado=parar, aviso=lambda t: est.update(texto=t))
+                if piezas is not None and not r.get('ok') and r.get('causa') == 'textos':
+                    registro.aviso(tr('Premiere Pro no dejó poner los textos ({e}): esta vez van como una capa de video.', e=tr(str(r.get('error') or ''))),
+                                   'GO · Premiere Pro', detalle=json.dumps(r.get('diag') or {}, ensure_ascii=False)[:4000])
+                    capa = dibujar_capa()
+                    if not capa.get('ok'):
+                        est['r'] = capa
+                        return
+                    est['fase'] = 'premiere'
+                    r = premiere.colocar(premiere.armar_pedido(video, capa, sfx, nombre_estilo, musica=musica), cancelado=parar,
+                                         aviso=lambda t: est.update(texto=t))
+                est['r'] = r
             except BaseException as e:
                 est['error'] = f'{type(e).__name__}: {e}'
                 registro.excepcion(origen='GO en Premiere Pro')
@@ -9660,9 +9866,18 @@ class SubtitleApp(QWidget):
                 return
             sec = str(r.get('secuencia') or '')
             n_sfx, total_sfx = int(r.get('sfx') or 0), int(r.get('sfx_total') or 0)
-            registro.ok(tr('En Premiere Pro {v}: secuencia «{s}» en el proyecto «{p}» (captions en V2, {n} de {t} sonidos).',
-                           v=r.get('version') or '', s=sec, p=r.get('proyecto') or '', n=n_sfx, t=total_sfx)
-                        + (tr(' Con música.') if r.get('musica') else ''), 'GO · Premiere Pro')
+            if r.get('con_textos'):                                # v5.85: los textos en la línea de tiempo
+                registro.ok(tr('En Premiere Pro {v}: secuencia «{s}» en el proyecto «{p}» ({x} textos editables, {n} de {t} sonidos).',
+                               v=r.get('version') or '', s=sec, p=r.get('proyecto') or '', x=int(r.get('textos') or 0), n=n_sfx, t=total_sfx)
+                            + (tr(' Con música.') if r.get('musica') else ''), 'GO · Premiere Pro')
+                if int(r.get('textos_estilo') or 0) < int(r.get('textos') or 0):
+                    registro.aviso(tr('Premiere Pro puso {n} de {t} textos sin la letra ni los colores del estilo.',
+                                      n=int(r.get('textos') or 0) - int(r.get('textos_estilo') or 0), t=int(r.get('textos') or 0)), 'GO · Premiere Pro',
+                                   detalle=json.dumps(r.get('diag') or {}, ensure_ascii=False)[:4000])
+            else:
+                registro.ok(tr('En Premiere Pro {v}: secuencia «{s}» en el proyecto «{p}» (captions en V2, {n} de {t} sonidos).',
+                               v=r.get('version') or '', s=sec, p=r.get('proyecto') or '', n=n_sfx, t=total_sfx)
+                            + (tr(' Con música.') if r.get('musica') else ''), 'GO · Premiere Pro')
             if total_sfx and n_sfx < total_sfx:
                 registro.aviso(tr('Premiere Pro no aceptó {f} de los {t} sonidos.', f=total_sfx - n_sfx, t=total_sfx), 'GO · Premiere Pro')
             self._fin_tarea(True, '')
@@ -10125,18 +10340,21 @@ class SubtitleApp(QWidget):
     def _recoger_estado():
         """Corre en un hilo: NO toca widgets."""
         d = {}
+        con_premiere = False
         try:                                              # v5.78: con «Usar con Premiere Pro», Inicio y la barra hablan de Premiere (premiere.estado)
             import ajustes_ui
             if ajustes_ui.leer_prefs().get('go_premiere'):
+                con_premiere = True
                 import premiere
                 d['premiere'] = premiere.estado()
         except Exception:
             d['premiere'] = {}
         try:
             # v5.1: la conexion MCP oficial (Resolve 21.1+) se pregunta de
-            # verdad aqui, en el hilo; arrancar ResolveMCP cuesta 0,2-4 s
+            # verdad aqui, en el hilo; arrancar ResolveMCP cuesta 0,2-4 s.
+            # v5.85: con Premiere elegido, ni se arranca ResolveMCP ni se le pregunta a Resolve
             import resolve_mcp
-            d['mcp'] = resolve_mcp.estado(refrescar=True)
+            d['mcp'] = {} if con_premiere else resolve_mcp.estado(refrescar=True)
         except Exception:
             d['mcp'] = {}
         try:
@@ -11682,6 +11900,7 @@ class SubtitleApp(QWidget):
                 pass
             return emojis.para_manifiesto(bloques, eleccion if eleccion in ('abajo', 'arriba') else donde, forzar=forzar, fps=getattr(self, '_fps_timeline', None))
         except Exception:
+            registro.excepcion(origen='GO · emojis')              # v5.85 (auditoría): antes GO salía sin emojis y el Registro no decía nada
             return {}
     def _sfx_de_emojis(self, bloques, pista_sfx):
         """v5.7: cada emoji suena (fuego → fuego, beso → beso…). Suma un evento de sonido por bloque con emoji y devuelve la pista de efectos
@@ -13680,6 +13899,7 @@ class SubtitleApp(QWidget):
                 self._forzar_deteccion_nueva()
                 return
         self.video_var.set(video_path)
+        self._video_de_resolve = video_path              # v5.85: un GO posterior sin resultado nuevo no lo toma por «tu archivo» (_go_audio_que_usar)
         nombre_tl = datos.get('timeline_name', '')
         self._marca_entrada = datos.get('mark_in')
         self._marca_salida = datos.get('mark_out')
@@ -14420,6 +14640,7 @@ class SubtitleApp(QWidget):
             archivos = {cat: sfx_rules.archivos_de(cat) for cat in cuenta}
             return {'sfx_library': str(sfx_rules.carpeta_libreria()), 'sfx_archivos': {c: a for c, a in archivos.items() if a}, 'sfx_config': {'nombre_pista_audio': config.get('nombre_pista_audio'), 'volumen_db': config.get('volumen_db'), 'al_inicio': bool(config.get('al_inicio'))}, 'sfx_resumen': cuenta}
         except Exception:
+            registro.excepcion(origen='GO · sonidos')            # v5.85 (auditoría): antes GO salía sin ningún sonido y el Registro no decía nada
             return {}
     def _pack_guion(self):
         """El pack elegido si es de estilo «guion» (Referencia…: la frase se arma palabra a palabra), o None."""
@@ -15000,6 +15221,12 @@ class SubtitleApp(QWidget):
         try:
             if not licencia.vigente():
                 raise SystemExit(licencia.mensaje_sin_licencia())
+            if not getattr(self, '_cancelar_go', False):
+                try:
+                    import motor_voz
+                    motor_voz.permitir()          # v5.85: un trabajo nuevo (también «Generar»): la voz no sigue cortada por un Cancelar de antes
+                except Exception:
+                    pass
             st.SHARED_FOLDER.mkdir(parents=True, exist_ok=True)
             try:                          # v5.5: mientras se transcribe, las secuencias de los emojis populares se van dejando listas
                 import emojis as _emo
@@ -15280,7 +15507,10 @@ class SubtitleApp(QWidget):
                 manifest['tracks'].append({'language': destino, 'srt_path': str(srt_destino), 'traducida': True, 'offset_frames': self._offset_frames(), **self._pista_basicos()})
             manifest_path = st.SHARED_FOLDER / 'subtitles_manifest.json'
             archivos_seguros.escribir_json(manifest_path, manifest, indent=2)
-            sidecar_lua.escribir_sidecar(manifest_path, manifest)
+            if not sidecar_lua.escribir_sidecar(manifest_path, manifest) and self._go_coloca_en_free():
+                # v5.85 (auditoría): Resolve Free 21.1 lee SOLO el sidecar; si no se pudo escribir, colocaría los captions del GO anterior
+                raise SystemExit(tr('No pude preparar «{f}» para DaVinci Resolve Free (otro programa, como el antivirus, lo tenía abierto). Vuelve a pulsar GO.',
+                                    f=manifest_path.name))
             langs = ', '.join((t['language'].upper() for t in manifest['tracks']))
             self._punto_control_go()
             hilo_fx = getattr(self, '_efectos_hilo', None)
@@ -15697,7 +15927,42 @@ def escribir_diagnostico():
     return (destino, lineas)
 _SINGLE_INSTANCE_SOCKET = None
 _SINGLE_INSTANCE_LOCK = None
-def _asegurar_instancia_unica():
+_NOTAS_ARRANQUE = []          # v5.85: lo que pasó antes de que exista el Registro (se anota en cuanto se puede)
+RELEVO_VIGENCIA_S = 90      # un video dejado hace más (por una copia que se cerraba, o para una ventana que no llegó a abrir) ya no arranca nada
+
+
+def _ruta_relevo():
+    """v5.85: ~/.cinecaptions.abrir, junto al candado: el video que otra copia le pasa a la ventana ya abierta (SubtitleApp._mirar_relevo)."""
+    return Path.home() / '.cinecaptions.abrir'
+
+
+def _pasar_video_a_la_abierta(ruta, esperar_s=4.0):
+    """v5.85 (un cliente con «Usar con Premiere Pro»: soltó el video en el icono con CineCaptions abierto y GO le dijo «Suelta un video y pulsa
+    GO»): con la ventana ya abierta, Windows abre OTRA copia con el video como argumento; esa copia veía el candado y se cerraba, y el video se
+    perdía sin aviso. Ahora lo deja en _ruta_relevo() para la ventana abierta (que lo recoge en < 1 s) y la deja ponerse al frente.
+    True si la ventana lo recogió dentro de esperar_s (si no, el archivo queda RELEVO_VIGENCIA_S para cuando la ventana pueda)."""
+    import archivos_seguros
+    try:
+        archivos_seguros.escribir_json(_ruta_relevo(), {'ruta': str(ruta), 't': time.time(), 'pid': os.getpid()})
+    except Exception:
+        return False
+    if sys.platform.startswith('win'):
+        try:                                          # Windows solo deja ponerse al frente a quien abrió el usuario (esta copia): se le cede
+            import ctypes
+            pid = int((Path.home() / '.cinecaptions.pid').read_text(encoding='utf-8').strip() or 0)
+            if pid:
+                ctypes.windll.user32.AllowSetForegroundWindow(pid)
+        except Exception:
+            pass
+    limite = time.time() + esperar_s
+    while time.time() < limite:
+        if not _ruta_relevo().exists():
+            return True
+        time.sleep(0.1)
+    return False
+
+
+def _asegurar_instancia_unica(curar=True):
     """Garantiza que solo exista una ventana abierta a la vez.
 
     Se usa UN archivo lock, tomado con un candado del sistema operativo:
@@ -15746,10 +16011,30 @@ def _asegurar_instancia_unica():
             pid_previo = int((f.read() or '').strip() or 0)
         except Exception:
             pid_previo = None
+        if not pid_previo:                            # v5.85: en Windows el byte con candado no se deja leer: el PID va también aparte
+            try:
+                pid_previo = int(lock_path.with_suffix('.pid').read_text(encoding='utf-8').strip() or 0) or None
+            except Exception:
+                pid_previo = None
         try:
             f.close()
         except Exception:
             pass
+        # v5.85: si la copia que tiene el candado está atascada (un hijo de una librería que abrió el programa sin ventana, o una que lleva
+        # minutos sin terminar de abrir), se cierra y abre esta; antes «ya se encuentra en ejecución» y nada hasta reiniciar el equipo
+        if curar:
+            try:
+                import arranque_seguro
+                motivo = arranque_seguro.copia_atascada(pid_previo)
+                if motivo and arranque_seguro.terminar(pid_previo):
+                    _NOTAS_ARRANQUE.append(f'Había otra copia de CineCaptions atascada ({motivo}): se cerró para abrir esta.')
+                    limite = time.time() + 5
+                    while time.time() < limite:
+                        if _asegurar_instancia_unica(curar=False):
+                            return True
+                        time.sleep(0.25)
+            except Exception:
+                pass
         _traer_instancia_existente_al_frente(pid_previo)
         return False
     try:
@@ -15757,6 +16042,10 @@ def _asegurar_instancia_unica():
         f.truncate()
         f.write(str(os.getpid()))
         f.flush()
+    except Exception:
+        pass
+    try:                                              # v5.85: ~/.cinecaptions.pid, legible aunque el candado esté tomado (Windows)
+        lock_path.with_suffix('.pid').write_text(str(os.getpid()), encoding='utf-8')
     except Exception:
         pass
     _SINGLE_INSTANCE_LOCK = f
@@ -15831,6 +16120,8 @@ def _licencia_al_abrir():
         if licencia.vigente():
             return True
         import ventana_licencia
+        import vigilancia
+        vigilancia._marcar_sesion('abriendo · ventana de licencia')   # v5.85: esperar a que escriba la clave no es estar atascado (arranque_seguro)
         return bool(ventana_licencia.DialogoLicencia(None, verificar=bool(licencia.local())).ejecutar())
     except Exception:
         guardar_log_de_error(traceback.format_exc())
@@ -15864,16 +16155,20 @@ def main():
     # v5.1: --reinicio lo pone Ajustes al reiniciar: la instancia anterior
     # todavia esta cerrando, asi que se espera a que suelte el candado
     reinicio = '--reinicio' in sys.argv
-    limite = time.time() + (15 if reinicio else 0)
-    while not _asegurar_instancia_unica():
-        if time.time() >= limite:
-            print(tr('CineCaptions ya se encuentra en ejecución.'))
-            return
-        time.sleep(0.3)
     argumentos = [a for a in sys.argv[1:] if not a.startswith('--')]
     initial = argumentos[0] if argumentos else None
     if initial:
         initial = initial.strip().strip('\"')
+    limite = time.time() + (15 if reinicio else 0)
+    while not _asegurar_instancia_unica():
+        if time.time() >= limite:
+            # v5.85: el video que traía esta copia (soltado en el icono, «Abrir con») va a la ventana ya abierta; antes se perdía
+            if initial and _pasar_video_a_la_abierta(os.path.abspath(initial)):
+                print('CineCaptions ya estaba abierto: le pasé el video.')
+                return
+            print(tr('CineCaptions ya se encuentra en ejecución.'))
+            return
+        time.sleep(0.3)
     if sys.platform.startswith('win'):
         try:
             import ctypes
@@ -15888,19 +16183,24 @@ def main():
         telemetria_errores.iniciar()
     except Exception:
         pass
+    for nota in _NOTAS_ARRANQUE:                      # v5.85: p. ej. «había otra copia atascada: se cerró para abrir esta»
+        registro.aviso(nota, 'arranque')
     _vigia_ui = registro.vigilar_congelaciones()      # v5.4: anota cuando la interfaz se queda sin responder y donde
     import vigilancia
     vigilancia.iniciar_monitor()                      # v5.11: disco, memoria y escritura cada 60 s (solo anota lo que cambia)
     ui.poner_icono_app(LOGO_PATH)
     if not prueba_caducada() and not _licencia_al_abrir():
         return
-    vigilancia.vigilar_arranque(45)                   # v5.11: si la ventana no termina de abrir en 45 s queda el error con la pila de todos los hilos
+    vigilancia.vigilar_arranque(45, tope_s=vigilancia.ARRANQUE_TOPE_S)   # v5.11: a los 45 s, el error con la pila de todos los hilos;
+                                                      # v5.85: atascado de verdad (4 min, interfaz sin responder) → se cierra solo y la próxima vez abre
     ventana = SubtitleApp(initial_video=initial)
     ventana.show()
     vigilancia.arranque_listo()
     ui.despues(3000, ventana._chequeo_de_arranque, ventana)      # v5.11: librerías / motores / MCP: lo que falle queda en el Registro y se avisa
     ui.despues(4000, ui.congelar_gc, ventana)          # con todo ya cargado: el recolector de basura deja de recorrerlo (menos microcortes)
     app.exec()
+    registro.tope_de_salida(12)                   # v5.85: cerrar nunca se queda colgado (un cierre de ≥ 153 s dejaba sin abrir la siguiente vez;
+                                                  # 12 s: dentro de los 15 s que espera el --reinicio de Ajustes)
     try:
         import resolve_mcp
         resolve_mcp.cerrar(esperar_s=2.0)          # v5.53: el cierre es en un hilo; al salir se espera (si ResolveMCP está atascado, kill a los 2 s)

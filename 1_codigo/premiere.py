@@ -23,6 +23,16 @@ panel CEP. Así que:
      la pista siguiente (`sonido_de_go`: lo mismo que recibiría Resolve), abre la secuencia con el cabezal al inicio y
      deja `resultado.json`. Sin proyecto abierto crea uno junto al video («<video> (CineCaptions).prproj»).
 
+v5.85 (GO con Premiere cerrado esperaba 240 s y fallaba: Premiere 26 arranca en su pantalla de inicio y el panel solo carga con un proyecto
+abierto): `colocar()` escribe ese proyecto ANTES de abrir Premiere (`crear_proyecto`: `2_recursos/premiere/proyecto_vacio.xml`, solo
+ajustes, con su GUID nuevo, en gzip como cualquier .prproj) y lo abre con él (`abrir(exe, proyecto)`: «Adobe Premiere Pro.exe <proyecto>»,
+lo mismo que un doble clic; Mac `open -a`). El panel lo reconoce (`proyectos_cc`) y lo guarda al terminar.
+
+v5.85 (el usuario: «me pones el video de los captions y no quiero; quiero los textos que se vayan armando en la línea de tiempo»): si el
+panel en marcha lo admite (`admite_textos`: latido «panel» ≥ 2) y está la plantilla «Basic Title» de Premiere (`plantilla_texto`), GO no
+dibuja la capa: manda TEXTOS (premiere_textos: un .mogrt por texto con su letra, tamaño y colores) e imágenes (cajas, aros, emojis) y el
+panel los pone en V2… como clips editables. Si Premiere no los acepta (causa 'textos'), la capa de siempre.
+
 Lo que NO viaja (son de Fusion, solo existen en Resolve): las animaciones propias de los macros (rebotes, barridos, cristal), la Edición
 PRO, las transiciones y efectos visuales. Los captions se ven con el dibujo de «GO sin Resolve» (render_temas), los mismos sitios y tiempos.
 Todo lo que lanza procesos o espera va en un hilo (nunca en el de la interfaz).
@@ -42,7 +52,9 @@ CSXS = range(9, 14)                       # CEP 9 (Premiere 2019) … CEP 12/13 
 LATIDO_S = 10.0                           # el panel escribe cada ~3 s; más viejo que esto = Premiere cerrado o sin el panel
 ESPERA_ABRIR_S = 240.0                    # Premiere tarda en arrancar (y el usuario puede tener que elegir un proyecto)
 ESPERA_COLOCAR_S = 300.0                  # importar y colocar (muchos sonidos en un proyecto grande)
+ESPERA_SIN_AVANCE_S = 150.0               # v5.85: con textos, mientras el panel avance se sigue esperando (VIRAL: > 5 min); parado tanto, se corta
 PISTAS_SFX = 6
+PROYECTO_VACIO = 'proyecto_vacio.xml'     # v5.85: el proyecto sin nada con el que GO abre Premiere (2_recursos/premiere; crear_proyecto)
 
 
 def _datos_usuario():
@@ -106,6 +118,59 @@ def ejecutable():
     return sorted(candidatos, key=_orden_version, reverse=True)[0]
 
 
+def plantilla_texto(exe=None):
+    """v5.85: la plantilla de texto que trae el propio Premiere («Basic Title.mogrt», Gráficos esenciales; hecha en Premiere: su texto se
+    puede cambiar entero —letra, tamaño, color, contorno, sombra— desde el panel) o None. No se reparte con CineCaptions: es la del usuario."""
+    if os.environ.get('CINECAPTIONS_PREMIERE_MOGRT'):             # (pruebas)
+        p = Path(os.environ['CINECAPTIONS_PREMIERE_MOGRT'])
+        return p if p.is_file() else None
+    exe = Path(exe) if exe else ejecutable()
+    if exe is None:
+        return None
+    bases = [exe / 'Contents', exe.parent] if exe.suffix == '.app' else [exe.parent]
+    for b in bases:
+        for cand in (b / 'Essential Graphics' / 'Basic Title.mogrt', b / 'Resources' / 'Essential Graphics' / 'Basic Title.mogrt'):
+            if cand.is_file():
+                return cand
+    for b in bases:                                                # (otra versión con otra carpeta: hasta 3 niveles, sin recorrer todo)
+        for patron in ('*/Basic Title.mogrt', '*/*/Basic Title.mogrt', '*/*/*/Basic Title.mogrt'):
+            for cand in b.glob(patron):
+                return cand
+    return None
+
+
+_TEXTO_BASE = {}
+
+
+def texto_base(plantilla):
+    """v5.85: el JSON del «Texto de origen» guardado en la plantilla (.mogrt → project.prgraphic → proyecto gzip → valor en base64: 8 bytes de
+    largo + JSON en UTF-16): premiere_textos.mogrt_de_texto escribe ahí el texto y el estilo de cada clip. None si no se puede leer."""
+    if not plantilla:
+        return None
+    clave = str(plantilla)
+    if clave not in _TEXTO_BASE:
+        valor = None
+        try:
+            import base64
+            import gzip
+            import io
+            import re
+            import zipfile
+            with zipfile.ZipFile(plantilla) as z:
+                interior = zipfile.ZipFile(io.BytesIO(z.read('project.prgraphic')))
+                xml = gzip.decompress(interior.read(interior.namelist()[0])).decode('utf-8', 'replace')
+            m = re.search(r'<Name>Source Text</Name>.*?<StartKeyframeValue[^>]*>([^<]+)<', xml, re.S)
+            if m:
+                crudo = base64.b64decode(m.group(1).strip())
+                texto = crudo[8:].decode('utf-16-le')
+                json.loads(texto)
+                valor = texto
+        except Exception:
+            valor = None
+        _TEXTO_BASE[clave] = valor
+    return _TEXTO_BASE[clave]
+
+
 def abierto():
     """True si Premiere Pro está corriendo. Lanza un proceso en Mac: solo desde un hilo."""
     try:
@@ -118,20 +183,60 @@ def abierto():
         return False
 
 
-def abrir(exe=None):
-    """Abre Premiere Pro (sin esperar). False si no está instalado."""
+def abrir(exe=None, proyecto=None):
+    """Abre Premiere Pro (sin esperar); con `proyecto` (.prproj) lo abre directamente con él, como un doble clic, sin pasar por su pantalla de
+    inicio (v5.85). False si no está instalado."""
     exe = exe or ejecutable()
     if exe is None:
         return False
+    extra = [str(proyecto)] if proyecto else []
     try:
         if sys.platform == 'darwin':
-            subprocess.Popen(['open', '-a', str(exe)])
+            subprocess.Popen(['open', '-a', str(exe)] + extra)
         else:
-            subprocess.Popen([str(exe)], cwd=str(Path(exe).parent),
+            subprocess.Popen([str(exe)] + extra, cwd=str(Path(exe).parent),
                              creationflags=getattr(subprocess, 'DETACHED_PROCESS', 0) | getattr(subprocess, 'CREATE_NEW_PROCESS_GROUP', 0))
         return True
     except OSError:
         return False
+
+
+def plantilla_proyecto():
+    from sfx_rules import base_recursos
+    return base_recursos() / 'premiere' / PROYECTO_VACIO
+
+
+_CREADOS = []                             # los proyectos que este GO (u otro anterior de esta sesión) escribió y abrió: el panel los guarda
+
+
+def crear_proyecto(ruta):
+    """v5.85: escribe en `ruta` un proyecto de Premiere vacío (no pisa nada: si ya existe, «… 2.prproj»). Es XML en gzip, igual en Windows
+    y Mac; sale de `proyecto_vacio.xml`, que solo lleva ajustes (los de fábrica de un proyecto nuevo de Premiere 26.5: nada de medios, rutas
+    ni plantillas de Adobe), con su GUID y el de su carpeta raíz nuevos (dos proyectos nunca comparten identidad).
+    → la ruta escrita (Path) o None si no se pudo (sin plantilla o carpeta sin permiso)."""
+    import gzip
+    import re
+    tmp = None
+    try:
+        xml = plantilla_proyecto().read_text(encoding='utf-8')
+        m = re.search(r'<RootProjectItem ObjectURef="([0-9a-fA-F-]{36})"', xml)
+        if not m or '<MZ.Project.GUID>' not in xml:
+            return None
+        xml = xml.replace(m.group(1), str(uuid.uuid4()))
+        xml = re.sub(r'<MZ\.Project\.GUID>[^<]*</MZ\.Project\.GUID>', lambda _m: f'<MZ.Project.GUID>{uuid.uuid4()}</MZ.Project.GUID>', xml, count=1)
+        ruta = _ruta_libre(ruta)
+        ruta.parent.mkdir(parents=True, exist_ok=True)
+        tmp = ruta.with_name(f'{ruta.name}.{uuid.uuid4().hex[:8]}.tmp')
+        tmp.write_bytes(gzip.compress(xml.encode('utf-8'), mtime=0))
+        os.replace(tmp, ruta)
+        return ruta
+    except OSError:
+        if tmp is not None:
+            try:
+                tmp.unlink()
+            except OSError:
+                pass
+        return None
 
 
 # ------------------------------------------------------------------------------------------------------------------ el panel
@@ -232,6 +337,23 @@ def panel_vivo(max_s=LATIDO_S):
         return False
 
 
+PANEL_TEXTOS = 2                          # v5.85: desde esta versión del panel (latido «panel»), los textos editables
+
+
+def admite_textos():
+    """v5.85: ¿este GO puede mandar TEXTOS (premiere_textos) en vez de la capa de video? Hace falta la plantilla de texto de Premiere y que
+    el panel que corre los entienda: con Premiere cerrado, al abrirse carga el panel nuevo (colocar() lo instala antes); abierto con el panel
+    viejo (sin «panel» en el latido) no se recarga solo hasta reiniciarlo una vez. Desde un hilo (en Mac `abierto` lanza pgrep)."""
+    if plantilla_texto() is None:
+        return False
+    if panel_vivo():
+        try:
+            return int((latido() or {}).get('panel') or 0) >= PANEL_TEXTOS
+        except (TypeError, ValueError):
+            return False
+    return not abierto()
+
+
 def nombre_de(exe):
     """«Adobe Premiere Pro 2026» (la carpeta del .exe en Windows, la .app en Mac); «Adobe Premiere Pro» si no se sabe."""
     if not exe:
@@ -330,10 +452,23 @@ def _sonidos(lista):
     return salida
 
 
-def armar_pedido(video, capa, sfx, nombre_estilo='', musica=None):
-    """El pedido para el panel. capa: lo que devuelve render_sin_resolve.renderizar_capa; sfx / musica: [(t, ruta[, dur])] (sonido_de_go)."""
+def armar_pedido(video, capa, sfx, nombre_estilo='', musica=None, piezas=None):
+    """El pedido para el panel. capa: lo que devuelve render_sin_resolve.renderizar_capa; sfx / musica: [(t, ruta[, dur])] (sonido_de_go).
+    v5.85: piezas = premiere_textos.preparar (textos editables + imágenes) en vez de la capa (capa = None)."""
     video = Path(video)
     sonidos = _sonidos(sfx)
+    if piezas:
+        plantilla = plantilla_texto()
+        return {
+            'id': uuid.uuid4().hex, 'version': 2, 'creado': time.time(), 'video': str(video.resolve()), 'capa': None, 'solo_audio': False,
+            'duracion': piezas.get('duracion'), 'fps': piezas.get('fps'), 'secuencia': f'{video.stem} (CineCaptions)', 'bin': 'CineCaptions',
+            'sfx': sonidos, 'musica': _sonidos(musica), 'pistas_sfx': PISTAS_SFX,
+            'proyecto_nuevo': str(_ruta_libre(video.with_name(f'{video.stem} (CineCaptions).prproj')).resolve()), 'estilo': nombre_estilo or '',
+            'plantilla': str(plantilla) if plantilla else None,
+            'textos': piezas.get('textos') or [], 'imagenes': piezas.get('imagenes') or [],
+            'carriles_texto': piezas.get('carriles_texto') or 0, 'carriles_imagen': piezas.get('carriles_imagen') or 0,
+            'ancho': piezas.get('ancho'), 'alto': piezas.get('alto'),
+        }
     return {
         'id': uuid.uuid4().hex,
         'version': 1,
@@ -358,7 +493,7 @@ def enviar(pedido):
     import archivos_seguros
     cola = carpeta_cola()
     cola.mkdir(parents=True, exist_ok=True)
-    for viejo in ('resultado.json', 'resultado.tmp'):
+    for viejo in ('resultado.json', 'resultado.tmp', 'progreso.json'):
         try:
             (cola / viejo).unlink()
         except OSError:
@@ -373,6 +508,17 @@ def retirar():
         (carpeta_cola() / 'pedido.json').unlink()
     except OSError:
         pass
+
+
+def progreso(id_pedido):
+    """v5.85: (hechos, total) de las piezas que el panel lleva colocadas en ESE pedido (lo escribe cada 10), o None."""
+    try:
+        d = json.loads((carpeta_cola() / 'progreso.json').read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(d, dict) or d.get('id') != id_pedido:
+        return None
+    return int(d.get('hechos') or 0), int(d.get('total') or 0)
 
 
 def resultado(id_pedido):
@@ -402,16 +548,34 @@ def colocar(pedido, cancelado=None, aviso=None, espera_abrir_s=ESPERA_ABRIR_S, e
         return {'ok': False, 'causa': 'sin_premiere',
                 'error': 'No encuentro Adobe Premiere Pro en este equipo. Instálalo (o elige «Usar con DaVinci Resolve» en Ajustes > General).'}
     estaba_abierto = abierto()
+    proyecto = None
+    if not estaba_abierto and not panel_vivo() and pedido.get('proyecto_nuevo'):
+        # v5.85: Premiere cerrado → se abre YA con el proyecto nuevo (sin proyecto se queda en su pantalla de inicio y el panel no carga)
+        proyecto = crear_proyecto(pedido['proyecto_nuevo'])
+        if proyecto is not None:
+            pedido['proyecto_nuevo'] = str(proyecto)
+            _CREADOS.append(str(proyecto))
+            del _CREADOS[:-10]
+        else:
+            try:
+                import registro
+                from i18n import tr
+                registro.aviso(tr('No pude crear el proyecto de Premiere Pro junto al video ({r}): lo abro sin proyecto.', r=pedido['proyecto_nuevo']),
+                               'GO · Premiere Pro')
+            except Exception:
+                pass
+    pedido['proyectos_cc'] = list(_CREADOS)          # (el panel guarda al terminar los proyectos que escribió CineCaptions, no los del usuario)
     id_pedido = enviar(pedido)
     if not panel_vivo():
         if estaba_abierto:
             decir('Esperando a Premiere Pro…')
         else:
             decir('Abriendo Adobe Premiere Pro…')
-            abrir(exe)
+            abrir(exe, proyecto)
     limite = time.time() + espera_abrir_s
     tomado = False
     visto_vivo = False
+    ultimo_avance = None
     while True:
         if cancelado and cancelado():
             retirar()
@@ -425,6 +589,16 @@ def colocar(pedido, cancelado=None, aviso=None, espera_abrir_s=ESPERA_ABRIR_S, e
             tomado = True                            # el panel lo tomó: colocando (mientras coloca no late: ExtendScript es de un hilo)
             limite = time.time() + espera_colocar_s
             decir('Colocando en Premiere Pro…')
+        if tomado:                                   # v5.85: el avance de los textos e imágenes: mientras siga, se sigue esperando
+            pr = progreso(id_pedido)
+            if pr and pr != ultimo_avance:
+                ultimo_avance = pr
+                limite = max(limite, time.time() + ESPERA_SIN_AVANCE_S)
+                try:
+                    from i18n import tr
+                    decir(tr('Colocando en Premiere Pro… {h} de {t}', h=pr[0], t=pr[1]))
+                except Exception:
+                    pass
         if not tomado and not visto_vivo and panel_vivo():
             visto_vivo = True
             decir('Premiere Pro conectado…')

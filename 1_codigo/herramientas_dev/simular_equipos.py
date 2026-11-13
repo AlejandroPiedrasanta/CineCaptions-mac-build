@@ -1773,6 +1773,680 @@ def arranque_lento_y_escritura_bien_explicados():
     esperar(not malas, '\n      '.join(malas))
 
 
+# ---------------------------------------------------------------------------------------------------------------------------------------
+# Cancelar GO y cerrar (auditoría 5.85; errores.log real del 2026-11-10): cancelar no es un fallo, no deja nada en marcha y cerrar no se cuelga
+# ---------------------------------------------------------------------------------------------------------------------------------------
+_BARRA_CARGA = ('Loading weights:   0%|          | 0/707 [00:00<?, ?it/s]\rLoading weights:  10%|#         | 73/707 '
+                '[00:00<00:00, 727.31it/s]\rLoading')
+
+
+class _RegistroEspia:
+    def __init__(self):
+        self.lineas = []
+
+    def __getattr__(self, nivel):
+        return lambda msg, *a, **k: self.lineas.append((nivel, str(msg)))
+
+
+def _proceso_vivo(pid, espera_s=2.0):
+    """¿Sigue vivo el proceso `pid` pasados `espera_s` segundos?"""
+    if sys.platform.startswith('win'):
+        import ctypes
+        k = ctypes.windll.kernel32
+        h = k.OpenProcess(0x00100000, False, int(pid))            # SYNCHRONIZE
+        if not h:
+            return False
+        try:
+            return k.WaitForSingleObject(h, int(espera_s * 1000)) == 0x102      # WAIT_TIMEOUT: sigue vivo
+        finally:
+            k.CloseHandle(h)
+    fin = time.time() + espera_s
+    while time.time() < fin:
+        try:
+            os.kill(pid, 0)
+        except OSError:
+            return False
+        time.sleep(0.1)
+    return True
+
+
+@caso('Cancelar GO')
+def cancelar_durante_la_voz_no_lanza_otra_pasada():
+    """Cancelar con Qwen3-ASR transcribiendo: el motor residente muerto contaba como fallo («El motor de voz residente no pudo (Loading
+    weights…): pruebo con una pasada suelta») y se lanzaba OTRA pasada del modelo DESPUÉS de cancelar."""
+    espia, lanzados = _RegistroEspia(), []
+
+    class ServidorCancelado:
+        def vivo(self):
+            return True
+
+        def pedir(self, *a, **k):
+            motor_voz.cancelar()                               # (el usuario pulsa Cancelar a mitad)
+            return False, _BARRA_CARGA
+
+    wav = os.path.join(tempfile.mkdtemp(prefix='cc_cancelar_'), 'audio.wav')
+    open(wav, 'wb').close()
+    viejo, salida = motor_voz._SRV_VOZ['s'], None
+    try:
+        with parches((motor_voz, '_audio_16k', lambda m: wav), (motor_voz, 'modo_gpu', lambda: 'residente'), (motor_voz, '_reg', lambda: espia),
+                     (motor_voz, '_lanzar', lambda *a, **k: lanzados.append(a) or (1, [])), (motor_voz, 'abortar', lambda: False)):
+            motor_voz._SRV_VOZ['s'] = ServidorCancelado()
+            try:
+                motor_voz.transcribir(wav, 'es')
+                salida = 'terminó sin cancelar'
+            except SystemExit as e:
+                salida = f'SystemExit: {e}'
+            except Exception as e:
+                salida = f'{type(e).__name__}: {e}'
+    finally:
+        motor_voz._SRV_VOZ['s'] = viejo
+        if hasattr(motor_voz, 'permitir'):
+            motor_voz.permitir()
+    esperar(not lanzados, f'tras Cancelar se lanzaron {len(lanzados)} pasadas sueltas más ({salida})')
+    esperar(not [x for x in espia.lineas if x[0] in ('aviso', 'error')], f'avisos de fallo tras Cancelar: {espia.lineas}')
+    esperar(salida and salida.startswith('SystemExit'), f'debía salir como cancelación: {salida}')
+
+
+@caso('Cancelar GO')
+def motor_cortado_a_mitad_no_queda_vivo():
+    """Cancelar llega a mitad de una pasada suelta (SystemExit desde su avance): el proceso del motor seguía vivo con el modelo en la GPU."""
+    carpeta = tempfile.mkdtemp(prefix='cc_motor_')
+    script, marca = os.path.join(carpeta, 'motor_falso.py'), os.path.join(carpeta, 'pid.txt')
+    with open(script, 'w', encoding='utf-8') as f:
+        f.write('import os, sys, time\nopen(sys.argv[1], "w").write(str(os.getpid()))\nprint("PROGRESO|0.1", flush=True)\n'
+                'for _ in range(300):\n    time.sleep(0.1)\nprint("LISTO|x", flush=True)\n')
+
+    def avance(tipo, texto):
+        if tipo == 'PROGRESO':
+            raise SystemExit('GO cancelado.')
+
+    salida = None
+    with parches((motor_voz, 'python_motor', lambda: pathlib.Path(sys.executable)), (motor_voz, 'esperar_puesta_al_dia', lambda: None),
+                 (motor_voz, 'carpeta', lambda: pathlib.Path(carpeta))):
+        try:
+            motor_voz._lanzar_script(pathlib.Path(script), [marca], avance, sin_senal=60)
+            salida = 'terminó'
+        except SystemExit:
+            salida = 'cancelado'
+    pid = int(open(marca, encoding='utf-8').read())
+    vivo = _proceso_vivo(pid, espera_s=3.0)
+    if vivo:
+        subprocess.run(['taskkill', '/F', '/PID', str(pid)], capture_output=True) if sys.platform.startswith('win') else os.kill(pid, 9)
+    esperar(salida == 'cancelado' and not vivo, f'{salida} · el proceso del motor seguía vivo tras cortarlo: {vivo}')
+
+
+@caso('Cancelar GO')
+def motivo_del_motor_sin_barras_de_carga():
+    """El motor de voz se cierra mientras carga el modelo: el motivo del Registro era la barra «Loading weights: 10%|# …» (redibujada con \\r)."""
+    codigo = ('import sys, time\nsys.stdin.readline()\nsys.stderr.write(' + repr(_BARRA_CARGA + '\n') + ')\nsys.stderr.flush()\n'
+              'time.sleep(0.5)\nsys.exit(1)\n')
+
+    class VozFalsa(motor_voz._ServidorVoz):
+        def __init__(self):
+            self.modelo = 'falso'
+            self.p = subprocess.Popen([sys.executable, '-c', codigo], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.lineas = __import__('queue').Queue()
+            self.errores = []
+            self.pedido = threading.Lock()
+            threading.Thread(target=self._leer, daemon=True).start()
+            threading.Thread(target=self._leer_err, daemon=True).start()
+
+    ok, motivo = VozFalsa().pedir('a.wav', 'Spanish', 'a.json', lambda *a: None, timeout=30, sin_senal=10)
+    esperar(not ok and '%|' not in motivo and 'Loading' not in motivo, f'motivo: {motivo!r}')
+    m = motor_voz.motivo_de_errores(['Traceback (most recent call last):', '  File "motor_qwen.py", line 3, in <module>',
+                                     'torch.OutOfMemoryError: CUDA out of memory', 'Loading weights: 100%|#| 707/707 [00:01<00:00]'], '—')
+    esperar(m == 'torch.OutOfMemoryError: CUDA out of memory', f'motivo de la excepción: {m!r}')
+
+
+@caso('Cancelar GO')
+def cancelar_mientras_abre_resolve_no_dice_que_se_cerro_solo():
+    """Soltar un video y pulsar Cancelar mientras Resolve abre: Cancelar lo cierra a propósito y corta sus esperas («…(cancelado)»); GO lo tomaba
+    por un fallo: «Resolve se cerró solo (…): lo vuelvo a abrir y repito» dos veces y «No pude preparar Resolve para tu video» (explicado como
+    «No pude traer el audio del timeline»)."""
+    M = principal()
+    import colocacion
+    import registro
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_cancelar_resolve_'))
+    falso = types.SimpleNamespace(msg_queue=__import__('queue').Queue(), _cancelar_go=True, _go_tl_listo=threading.Event())
+    for nombre in ('_go_reparar_resolve', '_go_proyecto_usuario'):
+        setattr(falso, nombre, types.MethodType(getattr(M.SubtitleApp, nombre), falso))
+    falso._esperar_vistas_reales = lambda *a, **k: None
+    falso._go_proyecto = lambda: 'CineCaptions'
+    llamadas, anotado = [], []
+    r = registro.registro()
+    antes = list(r._lista)
+    r._lista.clear()
+    resolve_mcp.cancelar_esperas()
+    try:
+        with parches((registro, 'CARPETA', carpeta), (registro, 'ARCHIVO', carpeta / 'c.log'), (registro, 'ARCHIVO_ERRORES', carpeta / 'e.log'),
+                     (resolve_mcp, 'preparar_proyecto', lambda *a, **k: llamadas.append(1) or {'ok': False, 'motivo': 'Resolve no terminó de abrirse (cancelado)'}),
+                     (resolve_mcp, 'cerrar', lambda *a, **k: None), (colocacion, 'pids_resolve', lambda: []),
+                     (colocacion, 'detener_reproduccion', lambda: None)):
+            M.SubtitleApp._go_timeline_del_video(falso, 'video.mp4', {'tl_ancho': 1080, 'tl_alto': 1920, 'tl_fps': 30})
+        anotado = [f'{e.nivel}: {e.mensaje}' for e in r._lista if e.nivel in ('aviso', 'error')]
+    finally:
+        resolve_mcp.permitir_esperas()
+        r._lista.clear()
+        r._lista.extend(antes)
+    esperar(not anotado, ' | '.join(anotado))
+    esperar(len(llamadas) == 1, f'tras Cancelar se volvió a preparar Resolve ({len(llamadas)} veces en total)')
+    esperar(falso._go_tl_listo.is_set(), 'el paso debía avisar de que terminó (si no, GO espera hasta 900 s)')
+
+
+@caso('Cancelar GO')
+def cerrar_colgado_sale_igual():
+    """Al cerrar, un atexit que no vuelve (el 2026-11-10 el programa se quedó ≥ 153 s cerrándose y, mientras, abrirlo otra vez no hacía nada):
+    con el tope sale a los pocos segundos y deja las pilas de los hilos en fallo_nativo.log."""
+    carpeta = tempfile.mkdtemp(prefix='cc_salida_')
+    codigo = (f'import atexit, os, sys, time\nsys.path.insert(0, {CODIGO!r})\nimport registro\nfrom pathlib import Path\nc = Path({carpeta!r})\n'
+              'registro.CARPETA, registro.ARCHIVO, registro.ARCHIVO_ERRORES = c, c / "c.log", c / "e.log"\n'
+              'registro.FALLOS_NATIVOS = c / "fallo_nativo.log"\nregistro._fallos_nativos()\natexit.register(time.sleep, 60)\n'
+              'registro.tope_de_salida(1.5)\nprint("cerrando", flush=True)\natexit._run_exitfuncs()\nos._exit(0)\n')
+    t0 = time.time()
+    try:
+        p = subprocess.run([sys.executable, '-c', codigo], capture_output=True, text=True, timeout=40)
+        salida = p.stdout + p.stderr
+    except subprocess.TimeoutExpired:
+        salida = 'no salió en 40 s'
+    tarda = time.time() - t0
+    try:
+        volcado = open(os.path.join(carpeta, 'fallo_nativo.log'), encoding='utf-8', errors='replace').read()
+    except OSError:
+        volcado = ''
+    esperar('cerrando' in salida and tarda < 20 and 'Timeout (' in volcado, f'{tarda:.0f} s · {salida.strip()[-300:]} · volcado: {volcado[-200:]!r}')
+    import inspect
+    fuente = inspect.getsource(principal().main)
+    esperar('tope_de_salida(' in fuente and fuente.index('tope_de_salida(') < fuente.index('_run_exitfuncs'), 'main() no pone el tope antes de los atexit')
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------
+# Datos del usuario y GO (auditoría 5.85): un archivo bloqueado un momento no borra nada; GO no reutiliza el audio de otro timeline
+# ---------------------------------------------------------------------------------------------------------------------------------------
+@contextlib.contextmanager
+def _abierto_en_exclusiva(ruta, segundos):
+    """Abre `ruta` en exclusiva (nadie más puede ni leerla) durante `segundos`, como un antivirus o una copia de seguridad (solo Windows)."""
+    import ctypes
+    from ctypes import wintypes
+    k = ctypes.WinDLL('kernel32', use_last_error=True)
+    k.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, ctypes.c_void_p, wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]
+    k.CreateFileW.restype = wintypes.HANDLE
+    listo = threading.Event()
+
+    def bloquear():
+        h = k.CreateFileW(str(ruta), 0x80000000, 0, None, 3, 0, None)            # GENERIC_READ, sin compartir, OPEN_EXISTING
+        listo.set()
+        time.sleep(segundos)
+        k.CloseHandle(h)
+    hilo = threading.Thread(target=bloquear, daemon=True)
+    hilo.start()
+    listo.wait(5)
+    try:
+        yield
+    finally:
+        hilo.join(segundos + 5)
+
+
+@caso('Datos del usuario')
+def preferencias_bloqueadas_un_momento_no_se_borran():
+    """El antivirus abre preferencias.json en exclusiva mientras se guarda un cambio: mezclar_json lo daba por «roto» y guardaba SOLO el cambio
+    (se perdían todas las demás preferencias; reproducido con 0,45 s)."""
+    if not sys.platform.startswith('win'):
+        return
+    import archivos_seguros
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_prefs_'))
+    ruta = carpeta / 'preferencias.json'
+    original = {'tema': 'azul', 'acento': 'verde', 'motor_voz': 'qwen3', 'go_pack': 'Kinetic', 'idioma_ui': 'es', 'recetas': [1, 2, 3]}
+    malas = []
+    for segundos, debe_guardar in ((0.45, True), (1.8, False)):
+        ruta.write_text(json.dumps(original), encoding='utf-8')
+        with _abierto_en_exclusiva(ruta, segundos):
+            ok = archivos_seguros.mezclar_json(ruta, {'pagina': 'inicio'})
+        final = json.loads(ruta.read_text(encoding='utf-8'))
+        if any(final.get(k) != v for k, v in original.items()):
+            malas.append(f'bloqueo {segundos} s: quedaron {sorted(final)}')
+        if bool(ok) != debe_guardar or (debe_guardar and final.get('pagina') != 'inicio'):
+            malas.append(f'bloqueo {segundos} s: devolvió {ok} (se esperaba {debe_guardar})')
+    esperar(not malas, ' | '.join(malas))
+
+
+@caso('Datos del usuario')
+def vocabulario_bloqueado_no_se_borra():
+    """Corregir una palabra con vocabulario.json bloqueado un momento: se reescribía con SOLO la palabra nueva (de 5 términos quedaba 1)."""
+    if not sys.platform.startswith('win'):
+        return
+    import vocabulario
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_vocab_'))
+    ruta = carpeta / 'vocabulario.json'
+    terminos = {t: {'veces': 2, 'de': [t.lower()], 'ultimo': 1.0} for t in ('Xela', 'FIFA', 'iPhone', 'DJ', 'U2')}
+    ruta.write_text(json.dumps({'version': 1, 'terminos': terminos}), encoding='utf-8')
+    with parches((vocabulario, 'RUTA', ruta)):
+        with _abierto_en_exclusiva(ruta, 0.4):              # (un momento: la lectura fallaba al instante y la escritura, con reintentos, pasaba)
+            ok = vocabulario.aprender_par('chakira', 'Shakira')
+        quedan = sorted(json.loads(ruta.read_text(encoding='utf-8'))['terminos'])
+        esperar(ok and 'Shakira' in quedan and set(terminos) <= set(quedan), f'quedaron {quedan} (devolvió {ok})')
+
+
+@caso('Datos del usuario')
+def go_sin_resultado_nuevo_no_usa_el_audio_de_otro_timeline():
+    """Resolve Free: GO en el timeline A y luego en el B; el resultado de B tarda más de 6 s en llegar. Antes contaba como bueno y GO seguía
+    con el render de A (seguía en video_var): colocaba en B los captions de A."""
+    M = principal()
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_detectar_'))
+    render_a = carpeta / 'Timeline A 2026-11-11 10-00-00.wav'
+    render_a.write_bytes(b'RIFF')
+    mio = carpeta / 'mi_video.mp4'
+    mio.write_bytes(b'x')
+    falso = types.SimpleNamespace(_video_de_resolve=str(render_a))
+    motivo = 'Resolve terminó, pero no entregó un resultado nuevo (el último es de hace 3 min). Haz clic en tu timeline en Resolve y repite GO.'
+    import registro
+    with parches((resolve_bridge, 'ejecutar', lambda *a, **k: (True, '')), (resolve_bridge, 'esperar_video_detectado', lambda *a, **k: (None, motivo)),
+                 (registro, 'CARPETA', carpeta), (registro, 'ARCHIVO', carpeta / 'c.log'), (registro, 'ARCHIVO_ERRORES', carpeta / 'e.log')):
+        estado, err = M.SubtitleApp._go_detectar_en_resolve(falso)
+    usar = lambda e, r: M.SubtitleApp._go_audio_que_usar(falso, e, str(r))      # noqa: E731
+    casos = {('sin resultado nuevo + render de A', estado, render_a): 'fallo', ('error del Puente + render de A', 'error', render_a): 'fallo',
+             ('resultado de ahora', 'ok', render_a): 'timeline', ('error + un archivo elegido por el usuario', 'error', mio): 'archivo'}
+    malas = [f'{n}: {usar(e, r)} (se esperaba {d})' for (n, e, r), d in casos.items() if usar(e, r) != d]
+    esperar(estado != 'ok' and err == motivo and not malas, f'detectar devolvió ({estado}, {err[:40]}…) · ' + ' | '.join(malas))
+
+
+@caso('Datos del usuario')
+def sonido_del_usuario_se_guarda_sin_write_text():
+    """sfx_modo.json, favoritos, carpetas propias, volúmenes y recortes se escribían con write_text: un corte a mitad los dejaba a medias, se
+    leían «de fábrica» y el guardado siguiente pisaba lo elegido sin dejar copia. Ahora van por archivos_seguros y uno roto se aparta como .roto."""
+    import ast
+    import sfx_rules
+    arbol = ast.parse(pathlib.Path(CODIGO, 'sfx_rules.py').read_text(encoding='utf-8'))
+    con_write = sorted(f.name for f in ast.walk(arbol) if isinstance(f, ast.FunctionDef) and f.name in ('_escribir_lista', '_escribir_dic', 'guardar_modo')
+                       and any(isinstance(n, ast.Attribute) and n.attr in ('write_text', 'write_bytes') for n in ast.walk(f)))
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_sfx_'))
+    modo = carpeta / 'sfx_modo.json'
+    modo.write_text('{"modo": "simple", "donde": "principal", "sonidos": ["TAP_POP.mp3", "Bass', encoding='utf-8')      # (cortado a mitad)
+    with parches((sfx_rules, 'ARCHIVO_MODO', modo), (sfx_rules, 'CARPETA_USUARIO', carpeta)):
+        sfx_rules.guardar_modo(donde='todas')
+        quedo = json.loads(modo.read_text(encoding='utf-8'))
+    roto = modo.with_name(modo.name + '.roto')
+    esperar(not con_write and roto.is_file() and quedo.get('donde') == 'todas',
+            f'con write_text: {con_write} · copia .roto: {roto.is_file()} · guardado: {quedo.get("donde")}')
+
+
+@caso('Datos del usuario')
+def licencia_con_el_archivo_abierto_un_momento_sigue_activa():
+    """licencia.dat leído sin reintentos: si el antivirus lo abría en exclusiva justo al comprobarla, la licencia salía como «no hay» (y se
+    escribía a mano, sin fsync: tras un corte de luz podía quedar vacío)."""
+    if not sys.platform.startswith('win'):
+        return
+    import licencia
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_licencia_'))
+    ruta = carpeta / 'licencia.dat'
+    with parches((licencia, '_archivo', lambda: ruta)):
+        licencia._guardar({'equipo': licencia.id_equipo(), 'clave': 'CC-PRUEBA-0000', 'plataforma': 'cinecaptions', 'cliente': 'Prueba'})
+        esperar(licencia.local() is not None, 'la licencia recién guardada no se lee')
+        with _abierto_en_exclusiva(ruta, 0.4):
+            datos = licencia.local()
+    esperar(datos is not None and datos.get('clave') == 'CC-PRUEBA-0000', f'con el archivo abierto 0,4 s por otro programa: {datos}')
+
+
+def _errores_del_registro(funcion):
+    """Corre `funcion` con el Registro en una carpeta temporal y devuelve los (origen, mensaje) de los errores que anotó."""
+    import registro
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_reg_'))
+    r = registro.registro()
+    antes = list(r._lista)
+    r._lista.clear()
+    try:
+        with parches((registro, 'CARPETA', carpeta), (registro, 'ARCHIVO', carpeta / 'c.log'), (registro, 'ARCHIVO_ERRORES', carpeta / 'e.log')):
+            funcion()
+        return [(e.origen, e.mensaje) for e in r._lista if e.nivel == 'error']
+    finally:
+        r._lista.clear()
+        r._lista.extend(antes)
+
+
+@caso('Datos del usuario')
+def preferencias_que_no_se_guardan_lo_dice_el_registro():
+    """guardar_prefs devolvía False (archivo bloqueado, disco lleno) y nadie lo miraba: los ajustes volvían atrás al reiniciar sin explicación."""
+    import archivos_seguros
+    with parches((archivos_seguros, 'mezclar_json', lambda *a, **k: False)):
+        if hasattr(ajustes_ui, '_PREFS_FALLO_DICHO'):
+            ajustes_ui._PREFS_FALLO_DICHO[0] = False
+        errores = _errores_del_registro(lambda: (ajustes_ui.guardar_prefs({'pagina': 'inicio'}), ajustes_ui.guardar_prefs({'pagina': 'sfx'})))
+    esperar(len(errores) == 1, f'errores en el Registro: {errores} (uno solo, aunque falle dos veces)')
+
+
+@caso('Datos del usuario')
+def go_sin_emojis_ni_sonidos_lo_dice_el_registro():
+    """Un fallo al preparar los emojis o los sonidos de GO devolvía {} en silencio: GO salía sin ellos y el Registro no decía nada."""
+    M = principal()
+    import emojis
+    import sfx_rules
+    falso = types.SimpleNamespace(msg_queue=__import__('queue').Queue(), _un_clic=False, plantilla_sel='', video_var=types.SimpleNamespace(get=lambda: ''))
+
+    def roto(*a, **k):
+        raise KeyError('fallo de prueba de los emojis')
+
+    def roto_sfx(*a, **k):                          # (otro texto: el Registro junta en una línea el MISMO mensaje repetido en < 4 s)
+        raise KeyError('fallo de prueba de los sonidos')
+    with parches((emojis, 'asignar', roto), (sfx_rules, 'cargar_reglas', roto_sfx)):
+        errores = _errores_del_registro(lambda: (M.SubtitleApp._preparar_emojis(falso, [{'texto': 'hola'}], []),
+                                                 M.SubtitleApp._preparar_sfx(falso, [{'texto': 'hola'}])))
+    origenes = sorted(o for o, _m in errores)
+    esperar(origenes == ['GO · emojis', 'GO · sonidos'], f'errores en el Registro: {errores}')
+
+
+@caso('Datos del usuario')
+def free_sin_sidecar_nuevo_no_usa_el_viejo():
+    """Resolve Free 21.1 (sin `io`) solo lee el sidecar «.json.lua»: si no se podía escribir (el antivirus lo tenía abierto), el fallo se tragaba
+    y quedaba el del GO ANTERIOR, que Resolve colocaba sin que nadie se enterara."""
+    import archivos_seguros
+    import registro
+    import sidecar_lua
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_sidecar_'))
+    manifiesto = carpeta / 'subtitles_manifest.json'
+    for s in sidecar_lua.rutas_sidecar(manifiesto):
+        s.write_text('return {video = "VIDEO_ANTERIOR"}\n', encoding='utf-8')
+    real = archivos_seguros.escribir_texto
+
+    def bloqueado(ruta, *a, **k):
+        if str(ruta).endswith('.lua'):
+            raise PermissionError(13, 'El proceso no tiene acceso al archivo porque está siendo utilizado por otro proceso', str(ruta))
+        return real(ruta, *a, **k)
+    r = registro.registro()
+    antes = list(r._lista)
+    r._lista.clear()
+    try:
+        with parches((archivos_seguros, 'escribir_texto', bloqueado), (resolve_mcp, 'ruta_exe', lambda: None), (registro, 'CARPETA', carpeta),
+                     (registro, 'ARCHIVO', carpeta / 'c.log'), (registro, 'ARCHIVO_ERRORES', carpeta / 'e.log')):
+            ok = sidecar_lua.escribir_sidecar(manifiesto, {'video': 'VIDEO_NUEVO'})
+        errores = [e.mensaje for e in r._lista if e.nivel == 'error']
+    finally:
+        r._lista.clear()
+        r._lista.extend(antes)
+    viejos = [s.name for s in sidecar_lua.rutas_sidecar(manifiesto) if s.exists() and 'VIDEO_ANTERIOR' in s.read_text(encoding='utf-8')]
+    esperar(ok is False and not viejos and errores, f'devolvió {ok!r} · siguen los del GO anterior: {viejos} · errores en el Registro: {errores}')
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------
+# Scripts de Resolve y packs (auditoría 5.85)
+# ---------------------------------------------------------------------------------------------------------------------------------------
+def _codigo_de(ruta, nombres):
+    """Las funciones y asignaciones `nombres` de un archivo (también funciones anidadas), ejecutadas aparte: para probar los scripts de
+    Resolve sin Resolve."""
+    import ast
+    arbol = ast.parse(pathlib.Path(ruta).read_text(encoding='utf-8'))
+    trozos = [n for n in ast.walk(arbol) if (isinstance(n, ast.FunctionDef) and n.name in nombres)
+              or (isinstance(n, ast.Assign) and n in arbol.body and any(getattr(t, 'id', '') in nombres for t in n.targets))]
+    ns = {'Path': pathlib.Path}
+    exec(compile(ast.Module(body=trozos, type_ignores=[]), str(ruta), 'exec'), ns)
+    return ns
+
+
+@caso('Scripts de Resolve y packs')
+def agrandar_con_un_fallo_no_deja_la_palabra_al_cuadrado():
+    """Studio, palabra grande del estilo «guion» con zoom 2: si una herramienta del macro fallaba DESPUÉS de agrandar RestingSize, la función
+    devolvía False y quien llama ponía además ZoomX = 2 (la palabra a ×4). El .lua (su gemelo) da por hecho el tamaño y sigue."""
+    ns = _codigo_de(os.path.join(RAIZ, '2_recursos', 'resolve_scripts', 'CineCaptions.py'), ('AGRANDAR_LUXE', 'agrandar_sin_zoom'))
+
+    class Herramienta:
+        def __init__(self, **v):
+            self.v = v
+
+        def GetInput(self, e):
+            return self.v.get(e)
+
+        def SetInput(self, e, x):
+            self.v[e] = x
+    tam = Herramienta(RestingSize=0.1, StartSize=0.1, EndSize=0.1)
+
+    class Comp:
+        def FindTool(self, nombre):
+            if nombre == 'glow1':
+                raise RuntimeError('FindTool falló')
+            return tam if nombre == 'sizeCtrl' else None
+    item = types.SimpleNamespace(GetFusionCompByIndex=lambda i: Comp())
+    hecho = ns['agrandar_sin_zoom'](item, 2.0)
+    esperar(hecho is True and abs(tam.v['RestingSize'] - 0.2) < 1e-9, f'devolvió {hecho} con RestingSize {tam.v["RestingSize"]} (×2 ya hecho)')
+
+
+@caso('Scripts de Resolve y packs')
+def informe_lee_bien_la_version_del_puente():
+    """instalacion_scripts.txt y el diagnóstico del Puente decían «sin_lectura (del programa v5.84)»: tomaban la primera línea con VERSION y
+    comillas, que es un comentario del Puente."""
+    ns = _codigo_de(os.path.join(CODIGO, 'instalador_scripts.py'), ('_version_del_puente_en',))
+    texto = pathlib.Path(RAIZ, '2_recursos', 'resolve_scripts', 'CineCaptions_Puente.lua').read_text(encoding='utf-8')
+    version = re.search(r'^local VERSION = "([^"]+)"', texto, re.M).group(1)
+    leida = ns['_version_del_puente_en'](pathlib.Path(RAIZ, '2_recursos', 'resolve_scripts'))
+    esperar(leida.startswith(version + ' '), f'leyó «{leida}» (el Puente es la {version})')
+
+
+@caso('Scripts de Resolve y packs')
+def gemelos_emoji_solo_con_la_caja_de_dos_valores():
+    """El emoji de un bloque se pone encima o debajo de su caja (arriba, abajo). El .py (Studio) solo usa la caja si tiene 2 valores; el .lua
+    (Free) también con la de 4 de la línea de los Estilos 3 y 7: tomaba x0 por «arriba» y el emoji salía lejos de su línea."""
+    carpeta = pathlib.Path(RAIZ, '2_recursos', 'resolve_scripts')
+    py = len(re.findall(r'isinstance\(caja, \(list, tuple\)\) and len\(caja\) == 2', (carpeta / 'CineCaptions.py').read_text(encoding='utf-8')))
+    lua_texto = (carpeta / 'CineCaptions_Subtitulos.lua').read_text(encoding='utf-8')
+    lua_bien = len(re.findall(r'type\(caja\) == "table" and #caja == 2 and tonumber\(caja\[1\]\)', lua_texto))
+    lua_todos = len(re.findall(r'type\(caja\) == "table" and .*tonumber\(caja\[1\]\) and tonumber\(caja\[2\]\)', lua_texto))
+    esperar(py >= 2 and lua_bien == lua_todos == py, f'.py comprueba 2 valores en {py} sitios; .lua en {lua_bien} de {lua_todos}')
+
+
+@caso('Scripts de Resolve y packs')
+def todo_pack_de_fabrica_tiene_revision_del_bin():
+    """Sin revisión, un pack cambiado no se vuelve a importar en los proyectos que ya tienen su bin («Base títulos dinámicos» no la tenía)."""
+    import plantillas
+    faltan = sorted({p.nombre for p in plantillas.packs_incorporados() if p.incorporado} - set(plantillas.REVISION_BIN))
+    esperar(not faltan, f'packs de fábrica sin REVISION_BIN: {faltan}')
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------
+# Arranque seguro (v5.85, Mac «no abre»): hijos de librerías que no reabren el programa, copias atascadas que se quitan, arranque con tope
+# ---------------------------------------------------------------------------------------------------------------------------------------
+_HIJO_CONGELADO = r'''
+import sys, runpy
+sys.frozen = True
+sys.argv = ARGV
+sys.path.insert(0, CODIGO)
+import multiprocessing.resource_tracker as rt
+rt.main = lambda fd: print('TRACKER', fd, flush=True)       # el resource_tracker de verdad: aquí solo dice que lo llamaron
+try:
+    runpy.run_path(SCRIPT, run_name='__main__')
+    print('SIGUIO', flush=True)
+except SystemExit as e:
+    print('SALIDA', e.code, 'Qt' if 'PySide6.QtWidgets' in sys.modules else 'sin Qt', flush=True)
+'''
+
+
+def _como_hijo_congelado(argv, casa):
+    """Corre el script principal como el .exe/.app congelado (sys.frozen) con `argv`, con HOME en `casa`. → (segundos, salida)."""
+    codigo = (_HIJO_CONGELADO.replace('ARGV', repr(argv)).replace('CODIGO', repr(CODIGO))
+              .replace('SCRIPT', repr(os.path.join(CODIGO, 'CineCaptions (script principal).py'))))
+    entorno = dict(os.environ, HOME=casa, USERPROFILE=casa, QT_QPA_PLATFORM='offscreen')
+    t0 = time.time()
+    p = subprocess.run([sys.executable, '-c', codigo], capture_output=True, text=True, timeout=120, env=entorno, cwd=casa,
+                       encoding='utf-8', errors='replace')
+    return time.time() - t0, (p.stdout + p.stderr).strip()
+
+
+@caso('Arranque seguro')
+def hijo_de_libreria_no_reabre_el_programa():
+    """El .exe/.app lanzado como Python por una librería («-B -S -I -c …»: el resource_tracker de multiprocessing, que en la 5.84 abría
+    CineCaptions invisible y con el candado) corre SOLO su código y sale, sin Qt, sin candado y sin marca de sesión. Un arranque normal sigue."""
+    casa = tempfile.mkdtemp(prefix='cc_hijo_')
+    marca = os.path.join(casa, 'hijo.txt')
+    pruebas = [
+        (['CineCaptions', '-B', '-S', '-I', '-c', 'from multiprocessing.resource_tracker import main;main(9)'], 'TRACKER 9'),
+        (['CineCaptions', '-B', '-S', '-I', '-c', "import sys; open(sys.argv[1], 'w').write('ok')", marca], 'SALIDA 0 sin Qt'),
+        (['CineCaptions', '-I', '-m', 'platform'], 'SALIDA 0 sin Qt'),
+    ]
+    for argv, espera in pruebas:
+        tarda, salida = _como_hijo_congelado(argv, casa)
+        esperar(espera in salida and 'SALIDA 0 sin Qt' in salida and tarda < 30, f'{argv[1:]}: {tarda:.1f} s · {salida[-300:]}')
+    esperar(open(marca).read() == 'ok', 'el hijo «-c» no corrió su código con sus argumentos')
+    for resto in ('.cinecaptions.lock', 'DaVinciSubtitles'):
+        esperar(not os.path.exists(os.path.join(casa, resto)), f'un hijo dejó {resto}: arrancó parte del programa')
+    # un arranque normal (una --tarea desconocida) no lo corta la guardia: llega a tareas_instalador
+    estado = os.path.join(casa, 'estado.txt')
+    _, salida = _como_hijo_congelado(['CineCaptions', '--tarea', 'no_existe', estado], casa)
+    esperar('Tarea desconocida' in (open(estado, encoding='utf-8').read() if os.path.exists(estado) else ''), f'--tarea: {salida[-300:]}')
+    fuente = open(os.path.join(CODIGO, 'CineCaptions (script principal).py'), encoding='utf-8').read()
+    esperar(fuente.index('arranque_seguro.atender_hijo()') < fuente.index('import datetime'), 'la guardia debe ir antes de cargar el programa')
+
+
+@caso('Arranque seguro')
+def como_interprete_solo_reconoce_hijos():
+    import arranque_seguro as A
+    si = [['x', '-c', 'print(1)'], ['x', '-B', '-S', '-I', '-c', 'c', 'a'], ['x', '-X', 'utf8', '-m', 'mod'], ['x', '-OO', '-m', 'm']]
+    no = [['x'], ['x', 'C:/videos/a.mp4'], ['x', '--tarea', 'verificar', 'e.txt'], ['x', '--reinicio'], ['x', '-psn_0_123'],
+          ['x', '-c'], ['x', 'video -c.mp4'], ['x', '--multiprocessing-fork', 'pipe_handle=5']]
+    malos = [a for a in si if A.como_interprete(a) is None] + [a for a in no if A.como_interprete(a) is not None]
+    esperar(not malos, f'mal reconocidos: {malos}')
+    esperar(A.como_interprete(['x', '-B', '-c', 'c', 'a', 'b']) == ('-c', 'c', ['a', 'b']), 'el resto de argumentos se pierde')
+
+
+@caso('Arranque seguro')
+def copia_atascada_solo_si_lo_esta():
+    """Se cierra la copia del candado SOLO si es un hijo de librería o lleva minutos «abriendo» fuera de la licencia; ante la duda, nunca."""
+    import arranque_seguro as A
+    exe = '/Applications/CineCaptions.app/Contents/MacOS/CineCaptions'
+    ahora = 10_000.0
+    tracker = {'exe': exe, 'cmd': exe + ' -B -S -I -c from multiprocessing.resource_tracker import main;main(9)', 'edad': 30}
+    normal = {'exe': exe, 'cmd': exe, 'edad': 600}
+    con_video = {'exe': exe, 'cmd': exe + ' /Users/x/mi -c video.mp4', 'edad': 600}
+    ajeno = {'exe': '/usr/bin/python3', 'cmd': '/usr/bin/python3 -c pass', 'edad': 600}
+    casos = [
+        ('hijo de librería', tracker, None, True),
+        ('abriendo 6 min', normal, (ahora - 360, 'abriendo · creando la ventana'), True),
+        ('abriendo 1 min', normal, (ahora - 60, 'abriendo · creando la ventana'), False),
+        ('en la licencia 20 min', normal, (ahora - 1200, 'abriendo · ventana de licencia'), False),
+        ('abierta y lista', normal, (ahora - 3600, 'listo'), False),
+        ('marca de una sesión vieja', dict(normal, edad=30), (ahora - 3600, 'abriendo · antes de la ventana'), False),
+        ('video con « -c » en el nombre', con_video, (ahora - 3600, 'listo'), False),
+        ('otro programa', ajeno, (ahora - 3600, 'abriendo'), False),
+        ('sin datos del proceso', None, (ahora - 3600, 'abriendo'), False),
+    ]
+    malos = []
+    for nombre, info, marca, debe in casos:
+        r = A.copia_atascada(999_999, info=info or {}, marca=marca or (ahora, 'listo'), ahora=ahora, ejecutable=exe)
+        if bool(r) != debe:
+            malos.append(f'{nombre}: {r!r}')
+    esperar(not malos, '; '.join(malos))
+    esperar(A._edad_ps('1-02:03:04') == 93784 and A._edad_ps(' 05:06') == 306, 'etime de ps mal leído')
+    yo = A.info_proceso(os.getpid())
+    esperar(yo is not None and yo.get('edad') is not None and yo['edad'] >= 0, f'info del propio proceso: {yo}')
+
+
+@caso('Arranque seguro')
+def candado_ocupado_por_copia_atascada_se_libera():
+    """Otra copia con el candado de una sola ventana y atascada: se cierra y esta abre (antes: «ya se encuentra en ejecución» hasta reiniciar).
+    Si la copia está bien, sigue viva y esta solo la trae al frente."""
+    import arranque_seguro as A
+    M = principal()
+    casa = tempfile.mkdtemp(prefix='cc_candado_')
+    candado = os.path.join(casa, '.cinecaptions.lock')
+    tomar = ('import msvcrt, os, time\nf = open(r"%s", "w+")\nmsvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)\n' if sys.platform.startswith('win')
+             else 'import fcntl, os, time\nf = open(r"%s", "w+")\nfcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)\n') % candado
+    tomar += ('f.write(str(os.getpid())); f.flush()\nopen(r"%s", "w").write(str(os.getpid()))\nprint("tengo", flush=True)\ntime.sleep(120)\n'
+              % os.path.join(casa, '.cinecaptions.pid'))
+    vieja_home = pathlib.Path.__dict__.get('home')
+    viejos = (A.es_cinecaptions, A.leer_marca, A.TOPE_ABRIENDO_S, M._traer_instancia_existente_al_frente)
+    resultado = {}
+    try:
+        pathlib.Path.home = classmethod(lambda cls: pathlib.Path(casa))
+        A.es_cinecaptions = lambda info, ejecutable=None: bool(info)
+        A.TOPE_ABRIENDO_S = 1
+        M._traer_instancia_existente_al_frente = lambda pid=None: None
+        for estado, debe_abrir in (('listo', False), ('abriendo · creando la ventana', True)):
+            dueno = subprocess.Popen([sys.executable, '-c', tomar], stdout=subprocess.PIPE, text=True)
+            try:
+                esperar(dueno.stdout.readline().strip() == 'tengo', 'el proceso de prueba no tomó el candado')
+                time.sleep(3)
+                A.leer_marca = lambda ruta=None, e=estado: (time.time() - 2, e)
+                M._NOTAS_ARRANQUE.clear()
+                abrio = M._asegurar_instancia_unica()
+                try:                                      # (el python.exe de un venv es un lanzador: termina un instante después del de verdad)
+                    dueno.wait(3)
+                except subprocess.TimeoutExpired:
+                    pass
+                vivo = dueno.poll() is None
+                resultado[estado] = (abrio, vivo, list(M._NOTAS_ARRANQUE))
+            finally:
+                if M._SINGLE_INSTANCE_LOCK is not None:
+                    M._SINGLE_INSTANCE_LOCK.close()
+                    M._SINGLE_INSTANCE_LOCK = None
+                if dueno.poll() is None:
+                    dueno.kill()
+                dueno.wait(10)
+    finally:
+        if vieja_home is not None:
+            pathlib.Path.home = vieja_home
+        else:
+            del pathlib.Path.home
+        A.es_cinecaptions, A.leer_marca, A.TOPE_ABRIENDO_S, M._traer_instancia_existente_al_frente = viejos
+        M._NOTAS_ARRANQUE.clear()
+    abrio, vivo, notas = resultado.get('listo', (None, None, None))
+    esperar(abrio is False and vivo is True and not notas, f'con una copia que funciona: {resultado.get("listo")}')
+    abrio, vivo, notas = resultado.get('abriendo · creando la ventana', (None, None, None))
+    esperar(abrio is True and vivo is False and notas and 'atascada' in notas[0], f'con una copia atascada: {resultado.get("abriendo · creando la ventana")}')
+
+
+_ARRANQUE_COLGADO = r'''
+import os, sys, threading, time
+sys.path.insert(0, __CODIGO__)
+from pathlib import Path
+import registro, vigilancia
+c = Path(__CARPETA__)
+registro.CARPETA, registro.ARCHIVO, registro.ARCHIVO_ERRORES = c, c / "c.log", c / "e.log"
+vigilancia.CARPETA = c
+vigilancia.ARRANQUE_SIN_PULSO_S = 1.5
+registro._PULSO_UI['t'] = time.time()
+if __LATE__:                                 # una interfaz viva (p. ej. un diálogo esperando al usuario) sigue latiendo
+    def latir():
+        while True:
+            registro._PULSO_UI['t'] = time.time(); time.sleep(0.2)
+    threading.Thread(target=latir, daemon=True).start()
+vigilancia.vigilar_arranque(45, tope_s=1.0)
+time.sleep(9)
+print("sigue vivo", flush=True)
+os._exit(0)
+'''
+
+
+@caso('Arranque seguro')
+def arranque_atascado_se_cierra_solo():
+    """Sin ventana pasado el tope y con la interfaz sin latir: se anota, la marca lo dice y el proceso sale (suelta el candado). Con la
+    interfaz latiendo (un diálogo esperando al usuario) no se toca."""
+    resultados = {}
+    for late in (False, True):
+        carpeta = tempfile.mkdtemp(prefix='cc_arranque_')
+        codigo = _ARRANQUE_COLGADO.replace('__CODIGO__', repr(CODIGO)).replace('__CARPETA__', repr(carpeta)).replace('__LATE__', repr(late))
+        p = subprocess.run([sys.executable, '-c', codigo], capture_output=True, text=True, timeout=60, encoding='utf-8', errors='replace')
+        try:
+            marca = open(os.path.join(carpeta, 'sesion_abierta.flag'), encoding='utf-8').read()
+        except OSError:
+            marca = ''
+        try:
+            errores = open(os.path.join(carpeta, 'e.log'), encoding='utf-8', errors='replace').read()
+        except OSError:
+            errores = ''
+        resultados[late] = (p.returncode, (p.stdout + p.stderr).strip()[-200:], marca, 'no terminó de abrir' in errores)
+    codigo, salida, marca, anotado = resultados[False]
+    esperar(codigo == 3 and 'sigue vivo' not in salida and 'cortado' in marca and anotado, f'atascado: {resultados[False]}')
+    codigo, salida, marca, anotado = resultados[True]
+    esperar(codigo == 0 and 'sigue vivo' in salida and 'cortado' not in marca, f'interfaz latiendo: {resultados[True]}')
+    fuente = open(os.path.join(CODIGO, 'CineCaptions (script principal).py'), encoding='utf-8').read()
+    esperar('vigilar_arranque(45, tope_s=' in fuente, 'main() no pone el tope del arranque')
+    esperar("_marcar_sesion('abriendo · ventana de licencia')" in fuente, 'la ventana de licencia no se marca (contaría como atascada)')
+
+
+@caso('Arranque seguro')
+def postinstall_mac_limpia_y_pone_topes():
+    """El postinstall quita los hijos huérfanos de la 5.84 (antes y después de las tareas) y ninguna tarea puede colgar el instalador."""
+    texto = open(os.path.join(RAIZ, '7_mac', 'pkg', 'scripts', 'postinstall'), encoding='utf-8').read()
+    esperar('\r' not in texto, 'postinstall con CRLF: bash no lo corre en la Mac')
+    esperar(texto.count('limpiar_huerfanos') >= 3, 'falta limpiar_huerfanos antes o después de las tareas')
+    esperar('pgrep -P 1 -f' in texto and 'con_tope "$TOPE"' in texto, 'faltan la limpieza de huérfanos o el tope por tarea')
+
+
 def main():
     t0 = time.time()
     for grupo, f, lento in CASOS:

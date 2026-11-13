@@ -11,6 +11,16 @@ BIN="$APP/Contents/MacOS/CineCaptions"
 
 xattr -dr com.apple.quarantine "$APP" 2>/dev/null
 
+# v5.85: hasta la 5.84 el «resource_tracker» de multiprocessing que lanza la tarea «modelo» volvía a abrir CineCaptions entero,
+# invisible y con el candado de una sola ventana: el programa «no abría» hasta reiniciar la Mac. Al instalar se quitan esos hijos
+# huérfanos (padre 1) que haya dejado una instalación anterior; nunca toca una ventana abierta del programa.
+limpiar_huerfanos() {
+    for P in $(pgrep -P 1 -f "CineCaptions.app/Contents/MacOS/CineCaptions .*-c from multiprocessing" 2>/dev/null); do
+        kill -9 "$P" 2>/dev/null
+    done
+}
+limpiar_huerfanos
+
 USUARIO=$(stat -f%Su /dev/console 2>/dev/null)
 [ -z "$USUARIO" ] || [ "$USUARIO" = "root" ] && exit 0
 UID_U=$(id -u "$USUARIO")
@@ -22,10 +32,29 @@ mkdir -p "$CARPETA" && chown "$USUARIO" "$CARPETA"
 LOG="$CARPETA/instalacion_mac.log"
 echo "== $(date '+%Y-%m-%d %H:%M:%S')  CineCaptions: tareas de instalacion" >> "$LOG"
 
+# v5.85: cada tarea con tope de tiempo: una descarga colgada (o cualquier atasco) nunca deja el instalador esperando para siempre;
+# lo que no se terminó lo reintenta el programa al abrirse
+con_tope() {        # con_tope SEGUNDOS TAREA orden…
+    local TOPE="$1" NOMBRE="$2"; shift 2
+    "$@" & local P=$!
+    local T=0
+    while kill -0 "$P" 2>/dev/null; do
+        if [ "$T" -ge "$TOPE" ]; then
+            pkill -9 -f "$BIN --tarea $NOMBRE" 2>/dev/null
+            kill -9 "$P" 2>/dev/null
+            echo "-- $NOMBRE: cortada tras $TOPE s (el programa la reintenta al abrirse)" >> "$LOG"
+            break
+        fi
+        sleep 2; T=$((T + 2))
+    done
+    wait "$P" 2>/dev/null
+}
+
 for TAREA in scripts fuentes modelo; do
+    case "$TAREA" in modelo) TOPE=1800 ;; fuentes) TOPE=300 ;; *) TOPE=180 ;; esac
     ESTADO="/tmp/cinecaptions_$TAREA.$$.txt"
     : > "$ESTADO"; chmod 666 "$ESTADO"
-    launchctl asuser "$UID_U" sudo -u "$USUARIO" -H env -i \
+    con_tope "$TOPE" "$TAREA" launchctl asuser "$UID_U" sudo -u "$USUARIO" -H env -i \
         HOME="$CASA" USER="$USUARIO" PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
         QT_QPA_PLATFORM=offscreen \
         "$BIN" --tarea "$TAREA" "$ESTADO" >> "$LOG" 2>&1
@@ -33,5 +62,6 @@ for TAREA in scripts fuentes modelo; do
     grep -v '^PROGRESO' "$ESTADO" >> "$LOG" 2>/dev/null
     rm -f "$ESTADO"
 done
+limpiar_huerfanos
 chown "$USUARIO" "$LOG" 2>/dev/null
 exit 0

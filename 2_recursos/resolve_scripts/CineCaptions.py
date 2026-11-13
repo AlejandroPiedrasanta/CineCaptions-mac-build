@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.84 (subtitulos)"
+VERSION = "5.85 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -972,7 +972,10 @@ def agrandar_sin_zoom(item, z):
         if not isinstance(ahora, (int, float)) or abs(float(ahora) - float(antes) * z) > 1e-4:
             return False
         for nombre, entradas in AGRANDAR_LUXE:
-            t = comp.FindTool(nombre)
+            try:                               # v5.85 (auditoría): como el .lua (hecho = true antes del bucle): con RestingSize ya × z, un fallo
+                t = comp.FindTool(nombre)      # aquí devolvía False y quien llama ponía además ZoomX = z (la palabra a z²)
+            except Exception:
+                continue
             if t is None:
                 continue
             for e in entradas:
@@ -7440,15 +7443,20 @@ def main():
     if _MEZCLA_ACUM.get("activo"):
         # v5.4.30: los emojis y los sonidos de TODA la mezcla, de una sola vez (cada estilo los dejó apartados)
         _MEZCLA_ACUM["volcando"] = True
+        # v5.85 (auditoría): emojis y sonidos por separado, como el .lua (dos pcall): antes un fallo de los emojis dejaba la mezcla sin sonidos.
+        # El orden no cambia: emojis ANTES que sonidos (al revés Resolve Free se cae)
         try:
             planes_m = sorted(_MEZCLA_ACUM.get("planes") or [], key=lambda p: p.get("ini", 0))
             if planes_m and _MEZCLA_ACUM.get("track_emojis"):
                 colocar_emojis(timeline, media_pool, _MEZCLA_ACUM["track_emojis"], planes_m, _MEZCLA_ACUM.get("fps_emojis"))
+        except Exception as exc_m:
+            print(f"  Aviso: los emojis de la mezcla ({type(exc_m).__name__}: {exc_m}).")
+        try:
             cues_m = sorted(_MEZCLA_ACUM.get("cues") or [], key=lambda c: float(c.get("start") or 0))
             if cues_m and _MEZCLA_ACUM.get("sfx_track"):
                 place_sfx_track(timeline, media_pool, cues_m, _MEZCLA_ACUM["sfx_track"], _MEZCLA_ACUM.get("sfx_fps"), _MEZCLA_ACUM.get("sfx_start"))
         except Exception as exc_m:
-            print(f"  Aviso: los emojis o sonidos de la mezcla ({type(exc_m).__name__}: {exc_m}).")
+            print(f"  Aviso: los sonidos de la mezcla ({type(exc_m).__name__}: {exc_m}).")
         _MEZCLA_ACUM.clear()
 
     if _ALGO_COLOCADO[0]:

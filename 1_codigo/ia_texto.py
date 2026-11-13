@@ -170,7 +170,7 @@ class _Servidor:
             # «Loading checkpoint shards: 100%») como si fuera el motivo
             self.cerrar()
             return False, f'la IA de texto no terminó en {int(timeout)} s'
-        return False, (self.errores[-1] if self.errores else 'la IA de texto se cerró')
+        return False, motor_voz.motivo_de_errores(self.errores, 'la IA de texto se cerró')     # v5.85: sin las barras de carga como motivo
 
     def cerrar(self):
         try:

@@ -846,6 +846,20 @@ def fin_arranque_nativo():
         pass
 
 
+def tope_de_salida(segundos=15):
+    """v5.85 (auditoría; errores.log real del 2026-11-10 21:37, la 5.82): al cerrar, el programa se quedó ≥ 153 s dentro de los atexit (la pila de
+    Python solo decía main → atexit._run_exitfuncs: el cierre en C++ de Qt, PySide6 __moduleShutdown, sin saber qué esperaba). Mientras, el candado de
+    una sola ventana seguía tomado y volver a abrir CineCaptions no hacía NADA («ya se encuentra en ejecución»). Si cerrar pasa de `segundos`,
+    faulthandler (un hilo de C: no necesita el GIL) deja las pilas de todos los hilos en fallo_nativo.log («Timeout (…)») y termina el proceso."""
+    try:
+        import faulthandler
+        destino = _ARCHIVO_FALLOS if _ARCHIVO_FALLOS is not None else open(FALLOS_NATIVOS, 'a', encoding='utf-8')
+        faulthandler.dump_traceback_later(segundos, repeat=False, file=destino, exit=True)
+        return True
+    except Exception:
+        return False
+
+
 def _gancho_unraisable():
     """Excepciones que Python no puede lanzar (destructores, callbacks): antes se perdian en silencio."""
     def gancho(args):
@@ -857,11 +871,22 @@ def _gancho_unraisable():
     sys.unraisablehook = gancho
 
 
+_PULSO_UI = {'t': None, 'aviso': 0.0}        # el último latido del bucle de eventos (lo pone vigilar_congelaciones)
+
+
+def segundos_sin_pulso_ui():
+    """v5.85: segundos desde el último latido del bucle de eventos de la interfaz; None si nadie lo vigila (pruebas, tareas). Lo usa el
+    tope del arranque (vigilancia): un diálogo que espera al usuario late, un arranque atascado no."""
+    t = _PULSO_UI.get('t')
+    return None if t is None else max(0.0, time.time() - t)
+
+
 def vigilar_congelaciones(umbral_s=2.5):
     """Detector de interfaz congelada: un hilo comprueba que el bucle de eventos siga latiendo; si pasa de 'umbral_s' sin
     responder anota CUANTO duro y la linea de codigo donde estaba atascado (lo que antes costaba horas de adivinar)."""
     from PySide6.QtCore import QTimer
-    pulso = {'t': time.time(), 'aviso': 0.0}
+    pulso = _PULSO_UI
+    pulso.update(t=time.time(), aviso=0.0)
     hilo_ui = threading.get_ident()
     reloj = QTimer()
     reloj.setInterval(250)

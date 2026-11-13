@@ -440,6 +440,65 @@ def _exito_de_qwen():
     _FALLOS['avisado'] = False
 
 
+# v5.85 (auditoría; errores.log real del 2026-11-10 17:31): Cancelar de GO a mitad de la voz llamaba a abortar() y transcribir() lo tomaba por un
+# fallo: anotaba «El motor de voz residente no pudo (…): pruebo con una pasada suelta», lanzaba OTRA pasada (el modelo entero a la GPU) DESPUÉS de
+# cancelar y, si esa pasada se cortaba a mitad, su proceso se quedaba vivo. Ahora Cancelar llama a cancelar(): la voz para ya, sin reintentos, sin
+# Whisper de respaldo y sin avisos de fallo, hasta permitir() (al empezar otro GO o trabajo).
+_CANCELADO = threading.Event()
+_CORTABLES = set()                    # las pasadas sueltas de voz en marcha (cancelar() las corta)
+_LOCK_CORTABLES = threading.Lock()
+
+
+def cancelar():
+    """Cancelar de GO: corta la voz YA (el motor residente y la pasada suelta en marcha). Hasta permitir(), transcribir() sale como cancelación
+    (SystemExit «GO cancelado.», la de los puntos de control de GO) en vez de reintentar."""
+    _CANCELADO.set()
+    abortar()
+    with _LOCK_CORTABLES:
+        procesos = list(_CORTABLES)
+    for p in procesos:
+        try:
+            p.kill()
+        except Exception:
+            pass
+
+
+def permitir():
+    """Un GO o un trabajo nuevo: la voz vuelve a funcionar (por si un Cancelar de antes la dejó cortada)."""
+    _CANCELADO.clear()
+
+
+def cancelado() -> bool:
+    return _CANCELADO.is_set()
+
+
+def _si_cancelado():
+    if _CANCELADO.is_set():
+        raise SystemExit(tr('GO cancelado.'))
+
+
+_BARRA = re.compile(r'\d+%\||\bit/s\]|\bs/it\]|\d[kMG]?B/s\]')
+
+
+def motivo_de_errores(errores, defecto):
+    """v5.85 (auditoría): la causa de un motor que se cerró = su última línea de error que DIGA algo. stderr también trae las barras de carga de
+    transformers/tqdm, redibujadas con «\\r» en la MISMA línea («Loading weights:  10%|█  | 73/707 [00:00<00:00, 727.31it/s]»): salían en el Registro
+    como si fueran el motivo («El motor de voz residente no pudo (Loading weights: 0%|…)»). Se prefiere la línea de la excepción
+    («RuntimeError: …»); sin nada útil, `defecto`."""
+    utiles = []
+    for linea in errores or []:
+        t = str(linea or '')
+        if '\r' in t or _BARRA.search(t):
+            continue
+        t = t.strip()
+        if t:
+            utiles.append(t)
+    for t in reversed(utiles):
+        if re.match(r'^[\w.]*(Error|Exception|Interrupt)\b', t):
+            return t
+    return utiles[-1] if utiles else defecto
+
+
 def abortar():
     """Mata el motor de voz SIN pedir el candado (el que lo tiene puede ser quien está colgado). Lo llama el vigía: el pedido en curso termina con error y
     transcribir() pasa solo al modelo de respaldo."""
@@ -612,7 +671,7 @@ class _ServidorVoz:
                 if tipo == 'FIN':
                     break
                 on_linea(tipo, resto)
-        return False, (self.errores[-1] if self.errores else 'el motor de voz se cerró')
+        return False, motivo_de_errores(self.errores, 'el motor de voz se cerró')
 
     def cerrar(self):
         try:
@@ -679,16 +738,17 @@ def _audio_16k(media_path):
     return motor_compat.audio_16k(media_path)
 
 
-def _lanzar(argumentos, on_linea, timeout=None, sin_senal=None):
-    """Corre el motor de voz (motor_qwen.py); ver _lanzar_script."""
-    return _lanzar_script(script_motor(), argumentos, on_linea, timeout, sin_senal)
+def _lanzar(argumentos, on_linea, timeout=None, sin_senal=None, cortable=False):
+    """Corre el motor de voz (motor_qwen.py); ver _lanzar_script. `cortable`: una transcripción que Cancelar de GO corta (cancelar())."""
+    return _lanzar_script(script_motor(), argumentos, on_linea, timeout, sin_senal, cortable=cortable)
 
 
-def _lanzar_script(script, argumentos, on_linea, timeout=None, sin_senal=None):
+def _lanzar_script(script, argumentos, on_linea, timeout=None, sin_senal=None, cortable=False):
     """Corre un script del motor (voz o texto) en su Python 3.12 y entrega
     cada linea 'TIPO|texto' a on_linea. Devuelve (codigo, ultimas_lineas_de_error).
     v5.11: `sin_senal` = segundos sin ninguna linea tras los que se mata el proceso (antes el timeout solo se miraba al llegar una linea: un motor
-    colgado sin imprimir nada dejaba a GO esperando para siempre)."""
+    colgado sin imprimir nada dejaba a GO esperando para siempre).
+    v5.85: si quien lee se va a mitad (Cancelar de GO lanza SystemExit desde on_linea) el proceso se mata: antes seguía vivo con el modelo en la GPU."""
     entorno = dict(os.environ)
     entorno['PYTHONIOENCODING'] = 'utf-8'
     entorno['PYTHONUNBUFFERED'] = '1'
@@ -701,6 +761,11 @@ def _lanzar_script(script, argumentos, on_linea, timeout=None, sin_senal=None):
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=entorno,
                          creationflags=SIN_VENTANA, cwd=str(carpeta()))
     errores = []
+    if cortable:
+        with _LOCK_CORTABLES:
+            _CORTABLES.add(p)
+        if _CANCELADO.is_set():                   # (Cancelar justo entre lanzarlo y apuntarlo)
+            p.kill()
 
     def leer_err():
         for linea in iter(p.stderr.readline, b''):
@@ -732,8 +797,17 @@ def _lanzar_script(script, argumentos, on_linea, timeout=None, sin_senal=None):
                 p.kill()
                 break
         p.wait()
+    except BaseException:
+        try:
+            if p.poll() is None:
+                p.kill()
+        except Exception:
+            pass
+        raise
     finally:
         terminado.set()
+        with _LOCK_CORTABLES:
+            _CORTABLES.discard(p)
     if pulso['colgado']:
         errores.append(f'el motor se quedó sin responder {int(sin_senal)} s y se cerró')
         return (p.returncode if p.returncode not in (0, None) else -9), errores
@@ -789,6 +863,7 @@ def transcribir(media_path, codigo_idioma, progress_callback=None, model_loaded_
         except Exception as e:
             motivo_servidor = f'{type(e).__name__}: {e}'
         if not ok_servidor:
+            _si_cancelado()                       # v5.85: lo cortó Cancelar de GO: ni aviso ni otra pasada
             r = _reg()
             if r:
                 r.aviso(f'El motor de voz residente no pudo ({str(motivo_servidor)[:200]}): pruebo con una pasada suelta.', 'motor de voz')
@@ -801,14 +876,16 @@ def transcribir(media_path, codigo_idioma, progress_callback=None, model_loaded_
             intentos = [([], 'el modelo habitual'), (['--modelo', '0.6B'], 'el modelo ligero 0.6B'), (['--modelo', '0.6B', '--dispositivo', 'cpu'], 'el modelo ligero en CPU')]
             motivo = motivo_servidor
             for extra, nombre in intentos:
+                _si_cancelado()
                 estado.update(listo=None, error=None)
                 codigo, errores = _lanzar(['--audio', wav, '--idioma', idioma, '--salida', salida] + extra + (['--contexto', contexto] if contexto else []),
-                                          linea, sin_senal=SIN_SENAL_VOZ_S)
+                                          linea, sin_senal=SIN_SENAL_VOZ_S, cortable=True)
                 if codigo == 0 and estado['listo']:
                     if extra and r:
                         r.ok(f'Qwen3-ASR funcionó con {nombre}.', 'motor de voz')
                     break
-                motivo = estado['error'] or (errores[-1] if errores else f'salió con código {codigo}') or motivo
+                _si_cancelado()
+                motivo = estado['error'] or motivo_de_errores(errores, f'salió con código {codigo}') or motivo
                 if r:
                     r.aviso(f'Qwen3-ASR con {nombre} falló: {str(motivo)[:200]}', 'motor de voz', detalle='\n'.join(errores[-12:]))
                 if status_callback and extra != intentos[-1][0]:
@@ -980,7 +1057,7 @@ def instalar(progreso=None, aviso=None, modelo='auto'):
 
     codigo, errores = _lanzar(['--comprobar'], linea_comprobar, timeout=300)
     if codigo != 0 or 'error' in info:
-        raise RuntimeError(info.get('error') or (errores[-1] if errores else 'el motor no arrancó'))
+        raise RuntimeError(info.get('error') or motivo_de_errores(errores, 'el motor no arrancó'))
     if aviso:
         aviso(f"torch {info.get('torch')} · CUDA {'sí' if info.get('cuda') else 'no'}"
               + (f" · {info.get('gpu')} {info.get('vram_gb')} GB" if info.get('gpu') else ''))
@@ -1001,7 +1078,7 @@ def instalar(progreso=None, aviso=None, modelo='auto'):
 
     codigo, errores = _lanzar(['--descargar', '--modelo', eleccion], linea_descarga)
     if codigo != 0:
-        raise RuntimeError(estado.get('error') or (errores[-1] if errores else 'no se descargaron los modelos'))
+        raise RuntimeError(estado.get('error') or motivo_de_errores(errores, 'no se descargaron los modelos'))
     # la IA de texto (corregir y elegir palabras): Qwen3-4B con 10 GB de VRAM o
     # mas, Qwen3-1.7B si no. Si falla, el motor de voz queda igual de listo.
     pr(0.8, tr('Descargando la IA de texto (Qwen3)'))

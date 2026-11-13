@@ -84,19 +84,46 @@ def rutas_sidecar(ruta_json):
     ruta = Path(ruta_json)
     return [ruta.with_name(ruta.name + '.lua'), ruta.with_name(ruta.name + '.free.lua')]
 def _escribir_sidecars(ruta, obj):
+    """v5.85 (auditoría): True si quedaron los dos. Antes un fallo (el antivirus con el archivo abierto más de ~1 s) se tragaba y quedaba el
+    sidecar del GO ANTERIOR: en Free 21.1 (sin `io`) es lo único que lee Resolve y colocaba lo de antes sin que nadie se enterara. Ahora el que
+    no se pudo escribir se intenta BORRAR (mejor sin datos que con los viejos) y el fallo va al Registro (error en Free)."""
     import archivos_seguros
-    archivos_seguros.escribir_texto(ruta.with_name(ruta.name + '.lua'), a_lua(obj))
+    fallos = []
+    for destino, texto in ((ruta.with_name(ruta.name + '.lua'), lambda: a_lua(obj)),
+                           (ruta.with_name(ruta.name + '.free.lua'), lambda: a_lua_free(obj, ruta))):
+        try:
+            archivos_seguros.escribir_texto(destino, texto())
+        except Exception as e:
+            fallos.append(f'{destino.name}: {type(e).__name__}: {e}')
+            try:
+                destino.unlink(missing_ok=True)
+            except OSError:
+                pass
+    if fallos:
+        _anotar_fallo(ruta, fallos)
+    return not fallos
+def _anotar_fallo(ruta, fallos):
     try:
-        archivos_seguros.escribir_texto(ruta.with_name(ruta.name + '.free.lua'), a_lua_free(obj, ruta))
+        import registro
+        from i18n import tr
+        try:
+            import resolve_mcp
+            libre = resolve_mcp.ruta_exe() is None              # (Studio lee el .json: ahí el sidecar no hace falta)
+        except Exception:
+            libre = True
+        texto = tr('No pude preparar «{f}» para DaVinci Resolve Free (otro programa, como el antivirus, lo tenía abierto). Vuelve a pulsar GO.',
+                   f=getattr(ruta, 'name', str(ruta)))
+        (registro.error if libre else registro.aviso)(texto, 'Resolve Free', detalle='\n'.join(fallos))
     except Exception:
-        return None
+        pass
 def escribir_sidecar(ruta_json, obj):
-    """Escribe SOLO los sidecars `<ruta_json>.lua` y `<ruta_json>.free.lua` (el .json ya lo escribio quien\n    llama). Nunca lanza: si falla, el .json sigue sirviendo a 21.0.x/Studio."""
+    """Escribe SOLO los sidecars `<ruta_json>.lua` y `<ruta_json>.free.lua` (el .json ya lo escribio quien\n    llama). Nunca lanza: si falla, el .json sigue sirviendo a 21.0.x/Studio.
+    v5.85: devuelve True si quedaron los dos (False: ver _escribir_sidecars)."""
     from pathlib import Path
     try:
-        _escribir_sidecars(Path(ruta_json), obj)
+        return _escribir_sidecars(Path(ruta_json), obj)
     except Exception:
-        return None
+        return False
 def escribir_par(ruta_json, obj):
     """Escribe el `.json` (como siempre) Y el sidecar `<ruta>.lua`.\n\n    `ruta_json` es un Path o str al `.json`. El sidecar es `<ruta_json>.lua`,\n    colocado al lado para que el script lo encuentre por el mismo nombre + \'.lua\'.\n    NUNCA lanza por el sidecar: si falla, el `.json` ya quedo (21.0.x sigue).\n    """
     import json
@@ -105,9 +132,9 @@ def escribir_par(ruta_json, obj):
     ruta = Path(ruta_json)
     archivos_seguros.escribir_json(ruta, obj, indent=2)
     try:
-        _escribir_sidecars(ruta, obj)
+        return _escribir_sidecars(ruta, obj)
     except Exception:
-        return None
+        return False
 if __name__ == '__main__':
     import lupa
     casos = [{'a': 1, 'b': 'hola', 'c': True, 'd': None, 'e': [1, 2, 'x']}, {'tracks': [{'style': 'din', 'data_path': 'C:\\x\\y.json', 'n': 3}], 'pack': None, 'texto': 'con \"comillas\" y\nsalto\ttab'}, {'1raro': 'clave que empieza por numero', 'con espacio': 9}, [], {'vacio': {}}]

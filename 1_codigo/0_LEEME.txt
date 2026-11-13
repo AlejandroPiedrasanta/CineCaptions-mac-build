@@ -24,6 +24,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         el Estilo 8 (v5.80): una línea pequeña y elegante en Montserrat ámbar, la clave en ExtraBold, palabra a palabra.
     archivos_seguros.py
         escritura atómica de JSON/texto (preferencias, marcas, proyectos): un corte o dos hilos ya no dejan archivos a medias.
+    arranque_seguro.py
+        que nada deje el programa sin abrir: hijos de librerías que no reabren la app y copias atascadas que se quitan.
     audio_compatible.py
         v5.4.52 (auditoría de los renders: el video quedaba MUDO): los videos bajados de Pinterest / Instagram / TikTok
     avisos_sistema.py
@@ -316,6 +318,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         «Posición» de cada efecto de la Edición PRO: el usuario marca en la línea de tiempo de SU video (con sus
     premiere.py
         GO en Adobe Premiere Pro (v5.78): el panel CineCaptions de Premiere coloca el video, los captions y los sonidos.
+    premiere_textos.py
+        v5.85: GO en Premiere Pro con los TEXTOS en la línea de tiempo (no un video de captions): cada palabra o línea del estilo, un clip de texto editable; lo demás (cajas, aros, rayas, emojis), PNG.
     preparar_efectos.py
         herramienta de desarrollo: convierte las imágenes de iconos sobre fondo blanco en SPRITES con transparencia (uno por icono).
     pro_lateral_ui.py

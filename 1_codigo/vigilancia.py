@@ -44,6 +44,10 @@ _TAREAS = {}
 _HILO = {'v': None}
 _MONITOR = {'v': None, 'estado': {}}
 _ARRANQUE = {'listo': True, 'inicio': time.time(), 'avisado': False}          # (solo se vigila si main() llama a vigilar_arranque; pruebas y MCP no)
+# v5.85: un arranque atascado de verdad (sin ventana tras ARRANQUE_TOPE_S y la interfaz sin latir ARRANQUE_SIN_PULSO_S) se cierra solo: si no,
+# seguía vivo con el candado de una sola ventana y abrir el programa no hacía nada hasta reiniciar. Un diálogo esperando al usuario late: no cuenta.
+ARRANQUE_TOPE_S = 240
+ARRANQUE_SIN_PULSO_S = 60
 
 
 def _registro():
@@ -269,9 +273,10 @@ def _llamar(fn, *args):
 # ---------------------------------------------------------------------------
 # arranque
 # ---------------------------------------------------------------------------
-def vigilar_arranque(limite_s=45):
-    """Llamar lo primero en main(): si `arranque_listo()` no llega en `limite_s`, se anota con la pila de todos los hilos."""
-    _ARRANQUE.update(listo=False, inicio=time.time(), limite=limite_s, avisado=False)
+def vigilar_arranque(limite_s=45, tope_s=None):
+    """Llamar lo primero en main(): si `arranque_listo()` no llega en `limite_s`, se anota con la pila de todos los hilos; con `tope_s`
+    (v5.85), si tampoco llega en `tope_s` y la interfaz no late, el programa se cierra solo (ver ARRANQUE_TOPE_S)."""
+    _ARRANQUE.update(listo=False, inicio=time.time(), limite=limite_s, avisado=False, tope=tope_s, cortado=False)
     _marcar_sesion('abriendo · creando la ventana')     # v5.82: la fase va en la marca: el siguiente arranque dice dónde se quedó
     try:
         _registro().vigilar_arranque_nativo(20)      # v5.82: a los 20 s, la pila de todos los hilos en fallo_nativo.log (aunque se cierre a la fuerza)
@@ -299,16 +304,45 @@ def arranque_listo():
 
 
 def _revisar_arranque():
-    if _ARRANQUE['listo'] or _ARRANQUE['avisado']:
+    if _ARRANQUE['listo']:
         return
     limite = _ARRANQUE.get('limite') or 45
     espera = time.time() - _ARRANQUE['inicio']
-    if espera >= limite:
+    if espera >= limite and not _ARRANQUE['avisado']:
         _ARRANQUE['avisado'] = True
         try:
             _registro().error(f'El programa lleva {_fmt_s(espera)} abriendo y no termina: algo se quedó esperando.', 'arranque', detalle=pilas_de_todos())
         except Exception:
             pass
+    tope = _ARRANQUE.get('tope')
+    if tope and espera >= tope and not _ARRANQUE.get('cortado'):
+        try:
+            parado = _registro().segundos_sin_pulso_ui()
+        except Exception:
+            parado = None
+        if parado is not None and parado >= ARRANQUE_SIN_PULSO_S:
+            _ARRANQUE['cortado'] = True
+            _cortar_arranque(espera, parado)
+
+
+def _cortar_arranque(espera, parado, salir=None):
+    """v5.85: el arranque está atascado de verdad: se anota (con la pila de todos los hilos), la marca de sesión lo dice para el siguiente
+    arranque y el proceso termina, lo que suelta el candado de una sola ventana. `salir` es para las pruebas (por defecto os._exit)."""
+    try:
+        _registro().error(f'El programa no terminó de abrir en {_fmt_s(espera)} (la interfaz llevaba {_fmt_s(parado)} sin responder): '
+                          'se cerró solo para que la próxima vez abra.', 'arranque', detalle=pilas_de_todos())
+    except Exception:
+        pass
+    _marcar_sesion(f'abriendo · cortado tras {int(espera)} s sin responder')
+    try:
+        import logging
+        logging.shutdown()
+        for flujo in (sys.stdout, sys.stderr):
+            if flujo is not None:
+                flujo.flush()
+    except Exception:
+        pass
+    (salir or os._exit)(3)
 
 
 def _marcar_sesion(estado):

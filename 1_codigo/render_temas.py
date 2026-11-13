@@ -123,10 +123,12 @@ class Sprite:
 
     def __init__(self, img):
         self.img = img
+        self.rot = 0.0
 
     def girar(self, grados):
         if abs(grados) > 0.01:
             self.img = self.img.rotate(grados, resample=Image.BICUBIC, expand=True)
+            self.rot = float(grados)                 # v5.85 (Premiere con textos): el giro, para girar igual el clip de texto
         return self
 
 
@@ -260,6 +262,10 @@ def texto(txt, par, em, color=(1, 1, 1), degradado=None, esp=1.0, contorno=0.0, 
         img = img.transform((ancho, H), Image.AFFINE, (1, k, -k * base, 0, 1, 0), resample=Image.BICUBIC)
     sp = Sprite(_lienzo_centrado(img, ax, base))
     sp.total = total
+    # v5.85 (el usuario: «quiero los textos que se vayan armando en la línea de tiempo» de Premiere): la ficha de la palabra, para que
+    # premiere_textos la ponga como un texto editable de Premiere en vez del dibujo (no cambia nada de lo que se dibuja)
+    sp.espec = dict(txt=txt, par=tuple(par), em=em, color=color, degradado=degradado, esp=esp, contorno=contorno, color_contorno=color_contorno,
+                    sombra=sombra, halo=halo, inclinacion=inclinacion, caja=caja, apretar=apretar, brillo=brillo, sombra2=sombra2, dura=dura)
     return sp
 
 
@@ -774,6 +780,34 @@ def _capas_tipo(r, s, dx, dy, ini, fin, aj, pack):
     if not caja:
         return []
     estados = [e for e in TV.estados(texto) if t_clip + e < t_fin - 0.02]
+    # v5.85 (Premiere con textos editables): las líneas del bloque (texto, letra, tamaño, centro y línea de base RELATIVOS a la esquina de la
+    # capa, y cuándo aparece su primera palabra), para que premiere_textos ponga un texto por línea en vez de las imágenes de cada estado
+    x0, y0 = dx + caja[0], dy + caja[1]
+    lineas_tipo = []
+    try:
+        import tipo_planificador as TP
+        import viral_captions as VC
+        for linea in TP.decodificar(texto):
+            if not linea:
+                continue
+            par = linea['par']
+            em = linea['size'] * TP.K_PX[par] * W / 1080.0
+            base = (1.0 - linea['cy']) * H + TP.CAP[par] * em / 2.0 - TP.DY_EM[par] * em
+            aparece = min((float(tt) for tt, ff in linea['tabla'] if ff > 0), default=0.0)
+            # la escritura (como tipo_vista._visibles): en cada paso, cuánto mide lo que ya se ve de la línea (px desde su borde izquierdo)
+            f_l = VC._fuente(par, em)
+            txt_l = linea['texto']
+            pasos = []
+            for tt, ff in sorted(linea['tabla']):
+                if ff <= 0:
+                    continue
+                vis = txt_l if ff >= 1.0 else txt_l[:int(ff * len(txt_l) + 1e-6)].rstrip()
+                pasos.append((t_clip + float(tt), f_l.getlength(vis) if f_l is not None else 0.0))
+            lineas_tipo.append({'txt': txt_l, 'par': tuple(par), 'em': em, 'rx': linea['cx'] * W + dx - x0, 'ry': base + dy - y0,
+                                't': t_clip + aparece, 'grande': par == TP.GRANDE,
+                                'ancho': f_l.getlength(txt_l) if f_l is not None else 0.0, 'pasos': pasos})
+    except Exception:
+        lineas_tipo = []
     capas = []
     for n, e in enumerate(estados):
         img = TV.dibujar(texto, W, H, e, color).crop(caja)
@@ -783,7 +817,8 @@ def _capas_tipo(r, s, dx, dy, ini, fin, aj, pack):
         t1 = t_clip + estados[n + 1] if n + 1 < len(estados) else t_fin
         capas.append({'rgb': rgb, 'a': a, 'x': int(round(dx + caja[0])), 'y': int(round(dy + caja[1])), 't0': t_clip + e, 't1': max(t_clip + e + 0.02, t1),
                       'entrada': 0.08 if not capas else 0.0, 'sube': 0.0, 'seco': n + 1 < len(estados),
-                      'tipo': 'viral', 'k': 'v tipo', 'rol': 'main', 'pack': pack, 'em': 60.0 * s, 'cue_t0': ini})
+                      'tipo': 'viral', 'k': 'v tipo', 'rol': 'main', 'pack': pack, 'em': 60.0 * s, 'cue_t0': ini,
+                      'tipo_lineas': lineas_tipo, 'tipo_fin': t_fin, 'tipo_color': color, 'tipo_alto': H, 'tipo_ancho': W})
     return capas
 
 
@@ -835,7 +870,9 @@ def capas_de_cue(estilo, cue, s, dx, dy):
                 'entrada': ENTRADA_S, 'sube': SUBE_EM * em * s,
                 # v5.5.10: qué es cada capa, para que la vista de Creativo (vista_tema.py) la anime como su macro (el MP4 no lo usa)
                 'tipo': tipo, 'k': str(r.get('k') or ''), 'rol': r.get('rol'), 'pack': (estilo or {}).get('pack'), 'em': em * s,
-                'cue_t0': ini}
+                'cue_t0': ini,
+                # v5.85: la ficha del texto (None en aros, rayas y trazos) y su giro: premiere_textos lo pone como texto de Premiere
+                'espec': getattr(sp, 'espec', None), 'rot': getattr(sp, 'rot', 0.0)}
         if capa['k'].startswith(('v linea activa', 'v rojo')):     # v5.75: la caja del Tema 3 salta de palabra en palabra (corte seco, como el clip); v5.78: el Estilo 7, corte seco
             capa.update(entrada=0.0, sube=0.0)
             if capa['k'].startswith('v rojo'):
@@ -849,7 +886,7 @@ def capas_de_cue(estilo, cue, s, dx, dy):
                 sc = _caja_select(r, s, aj)
                 rgb_c, a_c = _a_rgba(sc.img, sc.img.getchannel('A'))
                 Wc, Hc = sc.img.size
-                capas.append(dict(capa, rgb=rgb_c, a=a_c, x=int(round(cx - Wc / 2.0)), y=int(round(cy - Hc / 2.0)), parte='caja'))
+                capas.append(dict(capa, rgb=rgb_c, a=a_c, x=int(round(cx - Wc / 2.0)), y=int(round(cy - Hc / 2.0)), parte='caja', espec=None))
             except Exception:
                 pass
         an = getattr(sp, 'anchos', None) if con_letra else None

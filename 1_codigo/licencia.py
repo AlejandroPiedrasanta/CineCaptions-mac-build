@@ -271,7 +271,8 @@ def local():
     """Datos de la licencia activada en ESTA computadora (cliente, correo, plataforma, ultima_ok...)
     o None si no hay, si el archivo se editó o si viene de otra computadora."""
     try:
-        contenido = json.loads(_archivo().read_text(encoding='utf-8'))
+        import archivos_seguros
+        contenido = archivos_seguros._leer(_archivo())      # v5.85: con reintentos (el antivirus abriéndolo un momento ya no es «sin licencia»)
         datos, firma = contenido['datos'], str(contenido['firma'])
         if (isinstance(datos, dict) and hmac.compare_digest(firma, _firma(datos))
                 and datos.get('equipo') == id_equipo() and datos.get('clave')
@@ -285,11 +286,10 @@ def local():
 def _guardar(datos):
     datos = dict(datos)
     datos['visto'] = max(float(datos.get('visto') or 0.0), time.time())   # la hora más nueva vista
-    ruta = _archivo()
-    ruta.parent.mkdir(parents=True, exist_ok=True)
-    tmp = ruta.with_name('%s.%d.tmp' % (ruta.name, os.getpid()))
-    tmp.write_text(json.dumps({'datos': datos, 'firma': _firma(datos)}), encoding='utf-8')
-    os.replace(tmp, ruta)
+    # v5.85 (auditoría): con archivos_seguros (fsync, temporal propio de cada hilo y reintentos de os.replace). Antes, a mano y sin fsync: tras un
+    # corte de luz licencia.dat podía quedar vacío (había que reactivar con la clave e internet) y un antivirus con el archivo abierto daba error
+    import archivos_seguros
+    archivos_seguros.escribir_json(_archivo(), {'datos': datos, 'firma': _firma(datos)}, ensure_ascii=True)
     return datos
 
 

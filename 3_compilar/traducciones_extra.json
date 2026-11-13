@@ -13641,5 +13641,104 @@
   "ko": "수정: 스타일 1의 네온이 안전 영역 안에 들어오고, 긴 동영상에서 「편집기 없이 동영상」이 GO가 멈췄다고 잘못 경고하지 않습니다.",
   "ru": "Исправления: неон Стиля 1 остаётся в безопасной зоне, а на длинных видео «Видео без монтажных программ» больше не сообщает ложно, что GO завис.",
   "zh": "修复：样式 1 的霓虹效果保持在安全区内；长视频使用「无需剪辑软件的视频」时，不再误报 GO 卡住。"
+ },
+ "Primero arrastra tu video aquí: GO lo subtitula y lo coloca en Premiere Pro": {
+  "en": "First drag your video here: GO captions it and places it in Premiere Pro",
+  "pt": "Primeiro arraste seu vídeo para cá: o GO o legenda e o coloca no Premiere Pro",
+  "fr": "Glisse d'abord ta vidéo ici : GO la sous-titre et la place dans Premiere Pro",
+  "de": "Zieh zuerst dein Video hierher: GO untertitelt es und legt es in Premiere Pro an",
+  "it": "Prima trascina qui il tuo video: GO lo sottotitola e lo inserisce in Premiere Pro",
+  "ja": "まず動画をここにドラッグしてください：GOが字幕を付けてPremiere Proに配置します",
+  "ko": "먼저 동영상을 여기로 끌어 놓으세요: GO가 자막을 넣고 Premiere Pro에 배치합니다",
+  "ru": "Сначала перетащите видео сюда: GO добавит субтитры и поместит его в Premiere Pro",
+  "zh": "请先把视频拖到这里：GO 会添加字幕并放入 Premiere Pro"
+ },
+ "Primero arrastra tu video aquí: GO te lo devuelve con los subtítulos puestos": {
+  "en": "First drag your video here: GO gives it back to you with the captions on",
+  "pt": "Primeiro arraste seu vídeo para cá: o GO o devolve com as legendas aplicadas",
+  "fr": "Glisse d'abord ta vidéo ici : GO te la rend avec les sous-titres incrustés",
+  "de": "Zieh zuerst dein Video hierher: GO gibt es dir mit Untertiteln zurück",
+  "it": "Prima trascina qui il tuo video: GO te lo restituisce con i sottotitoli",
+  "ja": "まず動画をここにドラッグしてください：GOが字幕付きで返します",
+  "ko": "먼저 동영상을 여기로 끌어 놓으세요: GO가 자막을 넣어 돌려드립니다",
+  "ru": "Сначала перетащите видео сюда: GO вернёт его с субтитрами",
+  "zh": "请先把视频拖到这里：GO 会把加好字幕的视频交给你"
+ },
+ "Abriste «{n}» con CineCaptions ya abierto: lo recibe esta ventana.": {
+  "en": "You opened «{n}» with CineCaptions already open: this window takes it.",
+  "pt": "Você abriu «{n}» com o CineCaptions já aberto: esta janela o recebe.",
+  "fr": "Tu as ouvert «{n}» alors que CineCaptions était déjà ouvert : cette fenêtre le reçoit.",
+  "de": "Du hast «{n}» geöffnet, während CineCaptions schon offen war: Dieses Fenster übernimmt es.",
+  "it": "Hai aperto «{n}» con CineCaptions già aperto: lo riceve questa finestra.",
+  "ja": "CineCaptions が開いている状態で「{n}」を開きました：このウィンドウで受け取ります。",
+  "ko": "CineCaptions가 이미 열려 있는 상태에서 «{n}»을(를) 열었습니다: 이 창이 받습니다.",
+  "ru": "Вы открыли «{n}», когда CineCaptions уже был открыт: его получает это окно.",
+  "zh": "你在 CineCaptions 已打开时打开了「{n}」：由此窗口接收。"
+ },
+ "No pude crear el proyecto de Premiere Pro junto al video ({r}): lo abro sin proyecto.": {
+  "en": "I couldn't create the Premiere Pro project next to the video ({r}): opening it without a project.",
+  "pt": "Não consegui criar o projeto do Premiere Pro ao lado do vídeo ({r}): vou abri-lo sem projeto.",
+  "fr": "Impossible de créer le projet Premiere Pro à côté de la vidéo ({r}) : je l'ouvre sans projet.",
+  "de": "Das Premiere-Pro-Projekt neben dem Video konnte nicht erstellt werden ({r}): Premiere wird ohne Projekt geöffnet.",
+  "it": "Non sono riuscito a creare il progetto di Premiere Pro accanto al video ({r}): lo apro senza progetto.",
+  "ja": "動画の横に Premiere Pro のプロジェクトを作成できませんでした（{r}）：プロジェクトなしで開きます。",
+  "ko": "동영상 옆에 Premiere Pro 프로젝트를 만들 수 없습니다({r}): 프로젝트 없이 엽니다.",
+  "ru": "Не удалось создать проект Premiere Pro рядом с видео ({r}): открываю без проекта.",
+  "zh": "无法在视频旁创建 Premiere Pro 项目（{r}）：将不带项目打开。"
+ },
+ "Premiere Pro: los captions llegan como textos editables en la línea de tiempo, con la letra, los colores, el contorno y la sombra de cada estilo (los 9 estilos); los adornos van como imágenes en sus propias pistas.": {
+  "en": "Premiere Pro: captions arrive as editable text clips on the timeline, with each style's font, colors, outline and shadow (all 9 styles); the decorations go as images on their own tracks.",
+  "pt": "Premiere Pro: as legendas chegam como textos editáveis na linha do tempo, com a fonte, as cores, o contorno e a sombra de cada estilo (os 9 estilos); os enfeites vão como imagens em suas próprias faixas.",
+  "fr": "Premiere Pro : les sous-titres arrivent en textes modifiables sur la timeline, avec la police, les couleurs, le contour et l'ombre de chaque style (les 9 styles) ; les ornements vont en images sur leurs propres pistes.",
+  "de": "Premiere Pro: Die Untertitel kommen als bearbeitbare Texte in die Timeline, mit Schrift, Farben, Kontur und Schatten jedes Stils (alle 9 Stile); die Verzierungen kommen als Bilder auf eigene Spuren.",
+  "it": "Premiere Pro: i sottotitoli arrivano come testi modificabili nella timeline, con il carattere, i colori, il contorno e l'ombra di ogni stile (tutti i 9 stili); gli elementi decorativi vanno come immagini sulle loro tracce.",
+  "ja": "Premiere Pro：字幕がタイムライン上の編集可能なテキストとして届きます。各スタイルのフォント、色、輪郭、影付き（全9スタイル）。装飾は専用トラックの画像になります。",
+  "ko": "Premiere Pro: 자막이 타임라인에 편집 가능한 텍스트로 들어옵니다. 각 스타일의 글꼴, 색상, 윤곽선, 그림자 그대로(9개 스타일 모두). 장식은 별도 트랙의 이미지로 들어갑니다.",
+  "zh": "Premiere Pro：字幕以可编辑文字的形式进入时间线，保留每种样式的字体、颜色、描边和阴影（全部 9 种样式）；装饰以图片形式放在各自的轨道上。",
+  "ru": "Premiere Pro: субтитры попадают на таймлайн как редактируемые тексты со шрифтом, цветами, обводкой и тенью каждого стиля (все 9 стилей); украшения идут картинками на своих дорожках."
+ },
+ "Premiere Pro: con «Usar con Premiere Pro» CineCaptions ya no abre ni usa DaVinci Resolve, y si Premiere está cerrado, GO lo abre con un proyecto junto a tu video y lo coloca todo solo.": {
+  "en": "Premiere Pro: with «Use with Premiere Pro», CineCaptions no longer opens or uses DaVinci Resolve, and if Premiere is closed, GO opens it with a project next to your video and places everything by itself.",
+  "pt": "Premiere Pro: com «Usar com o Premiere Pro», o CineCaptions não abre nem usa mais o DaVinci Resolve, e se o Premiere estiver fechado, o GO o abre com um projeto ao lado do seu vídeo e coloca tudo sozinho.",
+  "fr": "Premiere Pro : avec «Utiliser avec Premiere Pro», CineCaptions n'ouvre ni n'utilise plus DaVinci Resolve, et si Premiere est fermé, GO l'ouvre avec un projet à côté de votre vidéo et place tout seul.",
+  "de": "Premiere Pro: Mit «Mit Premiere Pro verwenden» öffnet und nutzt CineCaptions DaVinci Resolve nicht mehr, und ist Premiere geschlossen, öffnet GO es mit einem Projekt neben deinem Video und platziert alles von selbst.",
+  "it": "Premiere Pro: con «Usa con Premiere Pro» CineCaptions non apre né usa più DaVinci Resolve, e se Premiere è chiuso, GO lo apre con un progetto accanto al tuo video e posiziona tutto da solo.",
+  "ja": "Premiere Pro：「Premiere Pro で使う」を選ぶと、CineCaptions は DaVinci Resolve を開いたり使ったりしなくなりました。Premiere が閉じていれば、GO が動画の横にプロジェクトを作って開き、すべて自動で配置します。",
+  "ko": "Premiere Pro: «Premiere Pro와 함께 사용»을 선택하면 CineCaptions가 더 이상 DaVinci Resolve를 열거나 사용하지 않으며, Premiere가 닫혀 있으면 GO가 동영상 옆에 프로젝트를 만들어 열고 모두 자동으로 배치합니다.",
+  "zh": "Premiere Pro：选择「与 Premiere Pro 一起使用」后，CineCaptions 不再打开或使用 DaVinci Resolve；如果 Premiere 已关闭，GO 会在视频旁创建项目并打开它，自动放好一切。",
+  "ru": "Premiere Pro: с «Использовать с Premiere Pro» CineCaptions больше не открывает и не использует DaVinci Resolve, а если Premiere закрыт, GO откроет его с проектом рядом с вашим видео и всё разместит сам."
+ },
+ "Soltar un video en el icono de CineCaptions con el programa ya abierto lo lleva a la ventana abierta (antes se perdía).": {
+  "en": "Dropping a video on the CineCaptions icon while the app is already open now sends it to the open window (before, it was lost).",
+  "pt": "Soltar um vídeo no ícone do CineCaptions com o programa já aberto agora o leva à janela aberta (antes ele se perdia).",
+  "fr": "Déposer une vidéo sur l'icône de CineCaptions alors que le programme est déjà ouvert l'envoie désormais à la fenêtre ouverte (avant, elle se perdait).",
+  "de": "Ein Video auf das CineCaptions-Symbol zu ziehen, während das Programm schon offen ist, bringt es jetzt ins offene Fenster (vorher ging es verloren).",
+  "it": "Trascinare un video sull'icona di CineCaptions con il programma già aperto ora lo porta nella finestra aperta (prima si perdeva).",
+  "ja": "CineCaptions を開いたままアイコンに動画をドロップすると、開いているウィンドウに届くようになりました（以前は失われていました）。",
+  "ko": "CineCaptions가 이미 열려 있을 때 아이콘에 동영상을 놓으면 이제 열린 창으로 전달됩니다(전에는 사라졌습니다).",
+  "zh": "在 CineCaptions 已打开时把视频拖到它的图标上，现在会送到已打开的窗口（以前会丢失）。",
+  "ru": "Если перетащить видео на значок CineCaptions, когда программа уже открыта, оно теперь попадает в открытое окно (раньше терялось)."
+ },
+ "Mac: arreglado que CineCaptions no abriera después de instalarlo; y si un arranque se queda atascado, se cierra solo y lo anota en el Registro.": {
+  "en": "Mac: fixed CineCaptions not opening after installing it; and if a start gets stuck, it closes by itself and notes it in the Log.",
+  "pt": "Mac: corrigido o CineCaptions que não abria depois de instalado; e se uma inicialização travar, ele fecha sozinho e anota no Registro.",
+  "fr": "Mac : corrigé CineCaptions qui ne s'ouvrait pas après l'installation ; et si un démarrage reste bloqué, il se ferme tout seul et le note dans le Journal.",
+  "de": "Mac: behoben, dass CineCaptions nach der Installation nicht startete; bleibt ein Start hängen, schließt es sich selbst und vermerkt es im Protokoll.",
+  "it": "Mac: risolto il problema per cui CineCaptions non si apriva dopo l'installazione; e se un avvio si blocca, si chiude da solo e lo annota nel Registro.",
+  "ja": "Mac：インストール後に CineCaptions が開かない問題を修正。起動が止まったままになった場合は自動で終了し、ログに記録します。",
+  "ko": "Mac: 설치 후 CineCaptions가 열리지 않던 문제를 고쳤습니다. 시작이 멈추면 스스로 닫고 기록에 남깁니다.",
+  "zh": "Mac：修复了安装后 CineCaptions 无法打开的问题；如果启动卡住，会自动关闭并记录在日志中。",
+  "ru": "Mac: исправлено, что CineCaptions не открывался после установки; если запуск зависнет, программа закроется сама и запишет это в Журнал."
+ },
+ "Más resistente: tus ajustes, la licencia y los sonidos ya no se pierden si el antivirus u otro programa tiene un archivo abierto un momento, y Cancelar durante la voz libera la tarjeta gráfica al instante.": {
+  "en": "More robust: your settings, license and sounds are no longer lost if the antivirus or another program has a file open for a moment, and Cancel during the voice step frees the graphics card right away.",
+  "pt": "Mais resistente: suas configurações, a licença e os sons não se perdem mais se o antivírus ou outro programa estiver com um arquivo aberto por um momento, e Cancelar durante a voz libera a placa de vídeo na hora.",
+  "fr": "Plus robuste : vos réglages, la licence et les sons ne se perdent plus si l'antivirus ou un autre programme garde un fichier ouvert un instant, et Annuler pendant la voix libère la carte graphique tout de suite.",
+  "de": "Robuster: Deine Einstellungen, die Lizenz und die Sounds gehen nicht mehr verloren, wenn der Virenscanner oder ein anderes Programm kurz eine Datei geöffnet hat, und Abbrechen während der Spracherkennung gibt die Grafikkarte sofort frei.",
+  "it": "Più robusto: impostazioni, licenza e suoni non si perdono più se l'antivirus o un altro programma tiene un file aperto per un momento, e Annulla durante la voce libera subito la scheda grafica.",
+  "ja": "より堅牢に：ウイルス対策ソフトや他のプログラムがファイルを一瞬開いていても、設定・ライセンス・サウンドが失われなくなりました。音声処理中のキャンセルでグラフィックカードをすぐに解放します。",
+  "ko": "더 견고해졌습니다: 백신이나 다른 프로그램이 파일을 잠시 열고 있어도 설정, 라이선스, 사운드가 더 이상 사라지지 않으며, 음성 단계에서 취소하면 그래픽 카드가 즉시 해제됩니다.",
+  "zh": "更稳定：即使杀毒软件或其他程序短暂占用文件，你的设置、许可证和音效也不会再丢失；在语音阶段取消会立即释放显卡。",
+  "ru": "Надёжнее: настройки, лицензия и звуки больше не теряются, если антивирус или другая программа ненадолго открыли файл, а «Отмена» во время распознавания речи сразу освобождает видеокарту."
  }
 }

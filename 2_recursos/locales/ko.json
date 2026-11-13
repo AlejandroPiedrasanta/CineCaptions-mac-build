@@ -4630,6 +4630,23 @@
     "«Video sin editores» graba hasta un 50 % más rápido: usa varios núcleos a la vez y el video sale idéntico.": "「편집기 없이 동영상」이 최대 50 % 더 빨리 녹화됩니다. 여러 코어를 동시에 쓰고 동영상은 똑같이 나옵니다.",
     "Inicio va más fluido mientras se preparan las páginas: el fondo animado se compone en otro hilo.": "페이지를 준비하는 동안 홈이 더 부드럽게 움직입니다. 애니메이션 배경은 다른 스레드에서 합성됩니다.",
     "Volver a pulsar el botón que abrió un panel o una lista lo cierra (el chip Estilo, Edición PRO, la letra y los demás).": "패널이나 목록을 연 버튼을 다시 누르면 닫힙니다(스타일 칩, PRO 편집, 글꼴 등).",
-    "Arreglos: el neón del Estilo 1 queda dentro de la zona segura, y con videos largos «Video sin editores» ya no avisa en falso de que GO está atascado.": "수정: 스타일 1의 네온이 안전 영역 안에 들어오고, 긴 동영상에서 「편집기 없이 동영상」이 GO가 멈췄다고 잘못 경고하지 않습니다."
+    "Arreglos: el neón del Estilo 1 queda dentro de la zona segura, y con videos largos «Video sin editores» ya no avisa en falso de que GO está atascado.": "수정: 스타일 1의 네온이 안전 영역 안에 들어오고, 긴 동영상에서 「편집기 없이 동영상」이 GO가 멈췄다고 잘못 경고하지 않습니다.",
+    "Premiere Pro tiene abierto el panel anterior de CineCaptions: reinícialo una vez para que los textos lleguen editables. Esta vez van como una capa de video.": "Premiere Pro에 이전 CineCaptions 패널이 열려 있습니다. 텍스트를 편집 가능한 상태로 받으려면 한 번 다시 시작하세요. 이번에는 비디오 레이어로 배치합니다.",
+    "Premiere Pro no dejó poner los textos ({e}): esta vez van como una capa de video.": "Premiere Pro가 텍스트 배치를 허용하지 않았습니다({e}). 이번에는 비디오 레이어로 배치합니다.",
+    "En Premiere Pro {v}: secuencia «{s}» en el proyecto «{p}» ({x} textos editables, {n} de {t} sonidos).": "Premiere Pro {v}: 프로젝트 «{p}»의 시퀀스 «{s}» (편집 가능한 텍스트 {x}개, 사운드 {t}개 중 {n}개).",
+    "Premiere Pro puso {n} de {t} textos sin la letra ni los colores del estilo.": "Premiere Pro가 텍스트 {t}개 중 {n}개를 스타일의 글꼴과 색상 없이 배치했습니다.",
+    "Premiere no dejó cambiar el texto de la plantilla": "Premiere가 템플릿 텍스트 변경을 허용하지 않았습니다",
+    "Premiere no creó las pistas para los textos": "Premiere가 텍스트용 트랙을 만들지 않았습니다",
+    "Colocando en Premiere Pro… {h} de {t}": "Premiere Pro에 배치 중… {t}개 중 {h}개",
+    "En Premiere Pro estas letras van con Arial porque no están bien instaladas en este equipo: {f}. Instálalas y reinicia Premiere.": "이 글꼴들이 이 컴퓨터에 제대로 설치되어 있지 않아 Premiere Pro에서 Arial로 대체됩니다: {f}. 설치한 뒤 Premiere를 다시 시작하세요.",
+    "Primero arrastra tu video aquí: GO lo subtitula y lo coloca en Premiere Pro": "먼저 동영상을 여기로 끌어 놓으세요: GO가 자막을 넣고 Premiere Pro에 배치합니다",
+    "Primero arrastra tu video aquí: GO te lo devuelve con los subtítulos puestos": "먼저 동영상을 여기로 끌어 놓으세요: GO가 자막을 넣어 돌려드립니다",
+    "Abriste «{n}» con CineCaptions ya abierto: lo recibe esta ventana.": "CineCaptions가 이미 열려 있는 상태에서 «{n}»을(를) 열었습니다: 이 창이 받습니다.",
+    "No pude crear el proyecto de Premiere Pro junto al video ({r}): lo abro sin proyecto.": "동영상 옆에 Premiere Pro 프로젝트를 만들 수 없습니다({r}): 프로젝트 없이 엽니다.",
+    "Premiere Pro: los captions llegan como textos editables en la línea de tiempo, con la letra, los colores, el contorno y la sombra de cada estilo (los 9 estilos); los adornos van como imágenes en sus propias pistas.": "Premiere Pro: 자막이 타임라인에 편집 가능한 텍스트로 들어옵니다. 각 스타일의 글꼴, 색상, 윤곽선, 그림자 그대로(9개 스타일 모두). 장식은 별도 트랙의 이미지로 들어갑니다.",
+    "Premiere Pro: con «Usar con Premiere Pro» CineCaptions ya no abre ni usa DaVinci Resolve, y si Premiere está cerrado, GO lo abre con un proyecto junto a tu video y lo coloca todo solo.": "Premiere Pro: «Premiere Pro와 함께 사용»을 선택하면 CineCaptions가 더 이상 DaVinci Resolve를 열거나 사용하지 않으며, Premiere가 닫혀 있으면 GO가 동영상 옆에 프로젝트를 만들어 열고 모두 자동으로 배치합니다.",
+    "Soltar un video en el icono de CineCaptions con el programa ya abierto lo lleva a la ventana abierta (antes se perdía).": "CineCaptions가 이미 열려 있을 때 아이콘에 동영상을 놓으면 이제 열린 창으로 전달됩니다(전에는 사라졌습니다).",
+    "Mac: arreglado que CineCaptions no abriera después de instalarlo; y si un arranque se queda atascado, se cierra solo y lo anota en el Registro.": "Mac: 설치 후 CineCaptions가 열리지 않던 문제를 고쳤습니다. 시작이 멈추면 스스로 닫고 기록에 남깁니다.",
+    "Más resistente: tus ajustes, la licencia y los sonidos ya no se pierden si el antivirus u otro programa tiene un archivo abierto un momento, y Cancelar durante la voz libera la tarjeta gráfica al instante.": "더 견고해졌습니다: 백신이나 다른 프로그램이 파일을 잠시 열고 있어도 설정, 라이선스, 사운드가 더 이상 사라지지 않으며, 음성 단계에서 취소하면 그래픽 카드가 즉시 해제됩니다."
   }
 }
