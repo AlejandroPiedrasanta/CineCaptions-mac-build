@@ -519,7 +519,11 @@ def poner_motores_al_dia():
     """v5.72 (pedido: «que el .exe actualice las dependencias en segundo plano, sin ventanas ni interrumpir»): si una instalación anterior
     dejó un motor con librerías que no son las fijadas (la tarea del instalador se cortó o se omitió), se ponen al día AL ABRIR, en un
     hilo, con pip sin ventana y solo lo que falta (--no-deps). Mientras, los arranques del motor esperan (motor_voz.esperar_puesta_al_dia;
-    motor_compat.instalar va de uno en uno). Solo el programa instalado en Windows; desde Claude el AppData está virtualizado (no)."""
+    motor_compat.instalar va de uno en uno). Solo el programa instalado en Windows; desde Claude el AppData está virtualizado (no).
+    v5.86: en la Mac, _motor_ia_en_mac (el motor de voz e IA lo instala el programa, no el .pkg)."""
+    if sys.platform == 'darwin' and getattr(sys, 'frozen', False):
+        _motor_ia_en_mac()
+        return
     if not sys.platform.startswith('win') or not getattr(sys, 'frozen', False):
         return
     with _LOCK:
@@ -547,6 +551,60 @@ def poner_motores_al_dia():
             r.aviso(f'Motor de voz e IA: no pude poner al día sus librerías ({type(e).__name__}: {e}). Si la voz falla, «Reparar el motor» '
                     'en Ajustes.', 'arranque')
     _MOTORES_AL_DIA['v'] = threading.Thread(target=trabajo, daemon=True, name='motores-al-dia')
+    _MOTORES_AL_DIA['v'].start()
+
+
+MAC_IA_ESPERA_S = 90                     # tras abrir, antes de empezar la descarga (el arranque y un primer GO van primero)
+MAC_IA_REINTENTO_S = 24 * 3600           # tras un intento fallido, el siguiente automático (con «Instalar» en Ajustes, cuando quiera)
+
+
+def _motor_ia_en_mac():
+    """v5.86 (pedido: «en Mac aún no están todos los estilos y funciones»): en Windows el instalador pone el motor de voz e IA (Qwen3-ASR + la
+    IA de texto: de 4 a 15 GB); el .pkg de la Mac no puede esperar tanto. Así que en la Mac con Apple Silicon lo instala el programa solo, al
+    abrir y en segundo plano (mientras, Whisper y las reglas; Ajustes › General enseña el avance). Ya instalado, solo pone al día sus librerías.
+    Si falla (o queda sin la IA de texto), lo dice en el Registro y no lo reintenta solo hasta pasado un día (motor_qwen/instalacion_auto.json)."""
+    import motor_voz
+    if not motor_voz.SOPORTADO:
+        return
+    with _LOCK:
+        if _MOTORES_AL_DIA['v'] is not None:
+            return
+        _MOTORES_AL_DIA['v'] = True
+    r = _registro()
+
+    def trabajo():
+        import archivos_seguros
+        marca = motor_voz.carpeta() / 'instalacion_auto.json'
+        try:
+            info = motor_voz.asegurar_listo()
+            if info and info.get('modelo_texto'):
+                puestas = motor_voz.completar_requisitos()
+                if puestas:
+                    r.ok(f'Motor de voz e IA: {len(puestas)} librerías puestas al día en segundo plano.', 'arranque')
+                return
+            ultimo = archivos_seguros.leer_json(marca, {}) or {}
+            if time.time() - float(ultimo.get('fallo') or 0) < MAC_IA_REINTENTO_S:
+                return
+            time.sleep(MAC_IA_ESPERA_S)
+            if motor_voz.instalando() or motor_voz.instalado():       # (ya la pidió Ajustes en este rato)
+                return
+            r.info('Motor de voz e IA (Qwen3-ASR y la IA de texto): lo instalo en segundo plano, de 4 a 15 GB según la memoria de esta Mac; '
+                   'mientras, la voz va con Whisper. El avance se ve en Ajustes › General.', 'arranque')
+            modelo = motor_voz.instalar(aviso=None)
+            info = motor_voz.info_instalado() or {}
+            if info.get('modelo_texto'):
+                archivos_seguros.escribir_json(marca, {'listo': time.strftime('%Y-%m-%d %H:%M')})
+                r.ok(f'Motor de voz e IA listo: Qwen3-ASR {modelo} + IA de texto ({info.get("gpu") or "Apple Silicon"}).', 'arranque')
+            else:
+                archivos_seguros.escribir_json(marca, {'fallo': time.time(), 'motivo': 'sin la IA de texto'})
+        except Exception as e:
+            try:
+                archivos_seguros.escribir_json(marca, {'fallo': time.time(), 'motivo': f'{type(e).__name__}: {e}'[:300]})
+            except Exception:
+                pass
+            r.aviso(f'Motor de voz e IA: no se pudo instalar solo ({type(e).__name__}: {e}); lo reintento mañana, o ahora con «Instalar '
+                    'motor Qwen3-ASR» en Ajustes › General. Mientras, la voz va con Whisper.', 'arranque')
+    _MOTORES_AL_DIA['v'] = threading.Thread(target=trabajo, daemon=True, name='motor-ia-mac')
     _MOTORES_AL_DIA['v'].start()
 
 

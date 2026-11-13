@@ -55,13 +55,33 @@ def decir(tipo, texto=''):
     sys.stdout.flush()
 
 
+def mps_disponible(torch):
+    """v5.86: la tarjeta de una Mac con Apple Silicon (Metal), si este torch la ve."""
+    try:
+        return sys.platform == 'darwin' and torch.backends.mps.is_available()
+    except Exception:
+        return False
+
+
+def memoria_mps(torch):
+    """v5.86: GB que Metal deja usar a la tarjeta de la memoria unificada (~2/3 de la RAM; ~3/4 desde 36 GB)."""
+    try:
+        return torch.mps.recommended_max_memory() / 1024 ** 3
+    except Exception:
+        return os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / 1024 ** 3 * 2 / 3
+
+
 def elegir_dispositivo(pedido):
     import torch
-    if pedido == 'cpu' or not torch.cuda.is_available():
+    if pedido == 'cpu':
         return 'cpu', torch.float32, 0
-    vram = torch.cuda.get_device_properties(0).total_memory / 1024 ** 3
-    dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
-    return 'cuda:0', dtype, vram
+    if torch.cuda.is_available():
+        vram = torch.cuda.get_device_properties(0).total_memory / 1024 ** 3
+        dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+        return 'cuda:0', dtype, vram
+    if mps_disponible(torch):            # (v5.86: bf16 en la tarjeta de Apple, como en NVIDIA; macOS 14 o más, el mínimo del programa)
+        return 'mps', torch.bfloat16, memoria_mps(torch)
+    return 'cpu', torch.float32, 0
 
 
 def elegir_modelo(pedido, dispositivo, vram):
@@ -69,7 +89,7 @@ def elegir_modelo(pedido, dispositivo, vram):
         return pedido
     # 1.7B en bf16 ocupa ~4 GB + 1,2 GB el alineador: con menos de 8 GB de
     # VRAM, o en CPU, va el 0.6B (mas ligero y bastante mas rapido)
-    return '1.7B' if dispositivo.startswith('cuda') and vram >= 7.5 else '0.6B'
+    return '1.7B' if dispositivo.startswith(('cuda', 'mps')) and vram >= 7.5 else '0.6B'
 
 
 def descargar(modelo):
@@ -314,8 +334,16 @@ def comprobar():
     import transformers
     from transformers import AutoModelForMultimodalLM, AutoModelForTokenClassification  # noqa: F401
     disp, _, vram = elegir_dispositivo('auto')
+    gpu = torch.cuda.get_device_name(0) if torch.cuda.is_available() else ''
+    if disp == 'mps':                    # (v5.86: «Apple M2 Pro», lo que se ve en Ajustes)
+        import subprocess
+        try:
+            gpu = subprocess.run(['sysctl', '-n', 'machdep.cpu.brand_string'], capture_output=True, text=True, timeout=5).stdout.strip()
+        except Exception:
+            pass
+        gpu = gpu or 'Apple Silicon'
     info = {'torch': torch.__version__, 'transformers': transformers.__version__,
-            'cuda': torch.cuda.is_available(), 'gpu': torch.cuda.get_device_name(0) if torch.cuda.is_available() else '',
+            'cuda': torch.cuda.is_available(), 'mps': disp == 'mps', 'gpu': gpu,
             'vram_gb': round(vram, 1), 'modelo_auto': elegir_modelo('auto', disp, vram), 'version_motor': VERSION_MOTOR}
     decir('LISTO', json.dumps(info))
 

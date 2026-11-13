@@ -4647,6 +4647,10 @@
     "Premiere Pro: con «Usar con Premiere Pro» CineCaptions ya no abre ni usa DaVinci Resolve, y si Premiere está cerrado, GO lo abre con un proyecto junto a tu video y lo coloca todo solo.": "Premiere Pro: «Premiere Pro와 함께 사용»을 선택하면 CineCaptions가 더 이상 DaVinci Resolve를 열거나 사용하지 않으며, Premiere가 닫혀 있으면 GO가 동영상 옆에 프로젝트를 만들어 열고 모두 자동으로 배치합니다.",
     "Soltar un video en el icono de CineCaptions con el programa ya abierto lo lleva a la ventana abierta (antes se perdía).": "CineCaptions가 이미 열려 있을 때 아이콘에 동영상을 놓으면 이제 열린 창으로 전달됩니다(전에는 사라졌습니다).",
     "Mac: arreglado que CineCaptions no abriera después de instalarlo; y si un arranque se queda atascado, se cierra solo y lo anota en el Registro.": "Mac: 설치 후 CineCaptions가 열리지 않던 문제를 고쳤습니다. 시작이 멈추면 스스로 닫고 기록에 남깁니다.",
-    "Más resistente: tus ajustes, la licencia y los sonidos ya no se pierden si el antivirus u otro programa tiene un archivo abierto un momento, y Cancelar durante la voz libera la tarjeta gráfica al instante.": "더 견고해졌습니다: 백신이나 다른 프로그램이 파일을 잠시 열고 있어도 설정, 라이선스, 사운드가 더 이상 사라지지 않으며, 음성 단계에서 취소하면 그래픽 카드가 즉시 해제됩니다."
+    "Más resistente: tus ajustes, la licencia y los sonidos ya no se pierden si el antivirus u otro programa tiene un archivo abierto un momento, y Cancelar durante la voz libera la tarjeta gráfica al instante.": "더 견고해졌습니다: 백신이나 다른 프로그램이 파일을 잠시 열고 있어도 설정, 라이선스, 사운드가 더 이상 사라지지 않으며, 음성 단계에서 취소하면 그래픽 카드가 즉시 해제됩니다.",
+    "Qwen3-ASR necesita una Mac con Apple Silicon: se usa Whisper.": "Qwen3-ASR에는 Apple Silicon Mac이 필요합니다: Whisper를 사용합니다.",
+    "El motor ya se está instalando.": "엔진이 이미 설치 중입니다.",
+    "Mac: «Captions detrás de ti», la persona delante de los gráficos de la Edición PRO y las posiciones PRO ya funcionan también en Mac, como en Windows.": "Mac: «내 뒤의 자막», PRO 편집 그래픽 앞의 인물, PRO 위치가 이제 Windows처럼 Mac에서도 작동합니다.",
+    "Mac con Apple Silicon: el motor de voz Qwen3-ASR y la IA de texto (palabras grandes, ortografía y emojis) se instalan solos en segundo plano la primera vez que abres CineCaptions; el avance se ve en Ajustes › General.": "Apple Silicon Mac: 음성 엔진 Qwen3-ASR과 텍스트 AI(큰 단어, 맞춤법, 이모지)가 CineCaptions를 처음 열 때 백그라운드에서 자동으로 설치됩니다. 진행 상황은 설정 › 일반에서 볼 수 있습니다."
   }
 }

@@ -442,7 +442,6 @@ def _worker():
         return _WORKER['m']
 
 
-_SIN_MAC = ('mate', 'caras', 'cuerpos', 'descargar_modnet')   # «Captions detrás de ti»: no existe en el Mac (sin probar con su onnxruntime)
 _SIN_CANDADO = ('verificar', 'cuda', 'paquetes_instalados')    # no emiten ni tocan los modelos: no esperan a que acabe una transcripción
 
 
@@ -498,8 +497,7 @@ class _EnProceso:
         return json.loads(json.dumps(resultado, ensure_ascii=False))
 
     def pedir(self, operacion, datos=None, on_linea=None, timeout=3600, sin_senal=180):
-        if operacion in _SIN_MAC:
-            raise RuntimeError('«Captions detrás de ti» no está en el Mac.')
+        # (v5.86: el recorte de persona —mate, caras, cuerpos— también en el Mac: worker._sesion_mate usa CoreML solo si da el mismo alfa)
         if operacion in _SIN_CANDADO:
             return self._atender(operacion, datos)
         with self.pedido:

@@ -592,6 +592,10 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.86', [
+        'Mac: «Captions detrás de ti», la persona delante de los gráficos de la Edición PRO y las posiciones PRO ya funcionan también en Mac, como en Windows.',
+        'Mac con Apple Silicon: el motor de voz Qwen3-ASR y la IA de texto (palabras grandes, ortografía y emojis) se instalan solos en segundo plano la primera vez que abres CineCaptions; el avance se ve en Ajustes › General.',
+    ]),
     ('5.85', [
         'Premiere Pro: los captions llegan como textos editables en la línea de tiempo, con la letra, los colores, el contorno y la sombra de cada estilo (los 9 estilos); los adornos van como imágenes en sus propias pistas.',
         'Premiere Pro: con «Usar con Premiere Pro» CineCaptions ya no abre ni usa DaVinci Resolve, y si Premiere está cerrado, GO lo abre con un proyecto junto a tu video y lo coloca todo solo.',
@@ -2800,6 +2804,15 @@ class VentanaAjustes(_Panel):
         info = motor_voz.info_instalado()
         # v5.83: sin «NVIDIA GeForce» (con él no cabía y quedaba «Ti» solo en otra línea: «… RTX 5070 / Ti»)
         gpu = ((info or {}).get('gpu') or 'CPU').replace('NVIDIA GeForce ', '').replace('NVIDIA ', '')
+        en_marcha = motor_voz.instalando()
+        if en_marcha:
+            # v5.86: la instalación que la Mac hace sola al abrir (o una de este botón): su avance, al día cada 2 s mientras dura
+            f, texto = en_marcha
+            self.motor_estado.configure(text=f'{int(f * 100)} % · {texto}', text_color=ui.ACCENT_CLARO)
+            self.motor_btn.setEnabled(False)
+            QTimer.singleShot(2000, lambda: self._pintar_motor() if ui.vivo(self.motor_estado) else None)
+            return
+        self.motor_btn.setEnabled(True)
         if info and not (info.get('modelo_texto') or motor_voz.modelos_texto_descargados()):
             # v5.82: «Reparar» sin poder bajar la IA de texto ya no queda en verde como si todo estuviera (el porqué va al Registro)
             self.motor_estado.configure(text=tr('Instalado: Qwen3-ASR {m} · {gpu} · sin la IA de texto (mira el Registro)', m=info.get('modelo', ''),
@@ -2808,8 +2821,8 @@ class VentanaAjustes(_Panel):
         elif info:
             self.motor_estado.configure(text=tr('Instalado: Qwen3-ASR {m} · {gpu}', m=info.get('modelo', ''), gpu=gpu), text_color=ui.VERDE)
             self.motor_btn.configure(text=tr('Reparar el motor'))
-        elif sys.platform != 'win32':
-            self.motor_estado.configure(text=tr('Qwen3-ASR por ahora solo está para Windows: se usa Whisper.'))
+        elif not motor_voz.SOPORTADO:          # (v5.86: la Mac con Apple Silicon ya lo tiene; la Intel no tiene un PyTorch nuevo)
+            self.motor_estado.configure(text=tr('Qwen3-ASR necesita una Mac con Apple Silicon: se usa Whisper.'))
             self.motor_btn.hide()
         else:
             self.motor_estado.configure(text=tr('No instalado (descarga de 4 a 15 GB): mientras tanto se usa Whisper.'),

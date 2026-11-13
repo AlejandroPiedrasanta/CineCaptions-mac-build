@@ -17,6 +17,9 @@ el motor vive en su propia carpeta, con su propio Python embebido:
         python\\              Python 3.14.10 embebido + torch + transformers 5 (v5.5.8; antes 3.12 + qwen-asr; v5.36: 3.14.9)
         listo.json           se escribe al final: si no esta, no se usa
 
+    Mac con Apple Silicon (v5.86): ~/Library/Application Support/CineCaptions/motor_qwen/python/bin/python3.14 (el Python portátil de
+    python-build-standalone), torch de PyPI con la tarjeta de Apple («mps»); lo instala el programa al abrir (vigilancia._motor_ia_en_mac).
+
 Lo instala el paso "Motor de voz" del instalador (o Ajustes > General >
 Motor de voz). El programa lo lanza como proceso por cada transcripcion
 (2_recursos/motor_qwen/motor_qwen.py) y lee su avance por stdout.
@@ -66,6 +69,19 @@ MODELOS_TEXTO = (('gemma4', 'google/gemma-4-E4B-it', 15_000_000_000, 11.5, 9.0),
                  ('1.7B', 'Qwen/Qwen3-1.7B', 1_000_000_000, 0.0, 4.0))
 REPOS_VIEJOS = ('Qwen/Qwen3-ASR-1.7B', 'Qwen/Qwen3-ASR-0.6B', 'Qwen/Qwen3-ForcedAligner-0.6B')   # los del motor 1.x (~6 GB)
 SIN_VENTANA = 0x08000000 if sys.platform == 'win32' else 0
+# v5.86 (pedido: «en Mac aún no están todos los estilos y funciones»): el motor también en las Mac con Apple Silicon. Su Python es el
+# portátil de python-build-standalone (python.org no publica uno embebible para Mac), en ~/Library/Application Support/CineCaptions/motor_qwen;
+# torch de PyPI (con la tarjeta de Apple, «mps») y las mismas librerías fijadas. En las Mac Intel no hay torch nuevo: Whisper y reglas.
+import platform as _platform
+ES_MAC = sys.platform == 'darwin'
+SOPORTADO = sys.platform == 'win32' or (ES_MAC and _platform.machine() == 'arm64')
+PYTHON_MAC = ('https://github.com/astral-sh/python-build-standalone/releases/download/20261026/'
+              'cpython-3.14.10%2B20261026-aarch64-apple-darwin-install_only_stripped.tar.gz',
+              '95eb8c87d16af37c54e9765e31d8c56c0d8ffa9968ea0f704f73a9b83f84e9f9')
+TORCH_MAC = '2.15.0'                     # (la de PyPI: en la Mac trae la tarjeta de Apple; sin etiqueta +cpu/+cu…)
+# En la Mac la memoria es una sola (unificada): Gemma 4 E4B va ENTERA a la tarjeta (en Windows sus 5,25 GB de «per-layer embeddings» quedan en
+# la RAM): necesita más que en una NVIDIA
+NECESITA_MAC = {'gemma4': 17.0}
 # v5.5.8: los servidores de IA (voz y texto) con prioridad BAJA: la interfaz no se traba mientras trabajan (sin competencia van igual)
 SERVIDOR = SIN_VENTANA | (0x00004000 if sys.platform == 'win32' else 0)          # + BELOW_NORMAL_PRIORITY_CLASS
 
@@ -90,11 +106,15 @@ def _base_recursos():
 
 
 def carpeta():
+    if ES_MAC:
+        return Path.home() / 'Library' / 'Application Support' / 'CineCaptions' / 'motor_qwen'
     base = os.environ.get('LOCALAPPDATA') or str(Path.home() / 'AppData' / 'Local')
     return Path(base) / 'CineCaptions' / 'motor_qwen'
 
 
 def python_motor():
+    if ES_MAC:
+        return carpeta() / 'python' / 'bin' / 'python3.14'
     return carpeta() / 'python' / 'python.exe'
 
 
@@ -108,7 +128,7 @@ def requisitos():
 
 def info_instalado():
     """El listo.json del motor, o None si no esta (o quedo a medias)."""
-    if sys.platform != 'win32':
+    if not SOPORTADO:
         return None
     try:
         datos = json.loads((carpeta() / 'listo.json').read_text(encoding='utf-8'))
@@ -130,6 +150,8 @@ def instalado():
 # a pasar por pip lo que ya esta.
 # ---------------------------------------------------------------------------
 def _sitio():
+    if ES_MAC:
+        return carpeta() / 'python' / 'lib' / 'python3.14' / 'site-packages'
     return carpeta() / 'python' / 'Lib' / 'site-packages'
 
 
@@ -177,7 +199,7 @@ def completar_requisitos(aviso=None):
     y sus motores ya cerrados (nada tiene abiertos sus archivos). Devuelve lo instalado ([] si ya estaba al dia).
     v5.72: también al abrir el programa (vigilancia.poner_motores_al_dia, antes de cualquier GO): mientras dura, los arranques del
     motor esperan (esperar_puesta_al_dia) para que pip no cambie archivos que un servidor recién lanzado está cargando."""
-    if sys.platform != 'win32' or not python_motor().exists() or not _python_al_dia():
+    if not SOPORTADO or not python_motor().exists() or not _python_al_dia():
         return []
     if not _torch_valido(_dist_instalada('torch')):
         return []                                                          # otro torch: eso lo rehace instalar() entero
@@ -225,7 +247,7 @@ def modelo_descargado(repo, minimo=0):
 
 def detectar_por_archivos():
     """Lo que habria en listo.json si todo esta en su sitio, o None."""
-    if sys.platform != 'win32' or not python_motor().exists() or not _python_al_dia():
+    if not SOPORTADO or not python_motor().exists() or not _python_al_dia():
         return None
     torch_v = _dist_instalada('torch')
     if not _torch_valido(torch_v) or _faltan_requisitos():
@@ -235,7 +257,7 @@ def detectar_por_archivos():
         return None
     texto = next((clave for clave, repo, minimo, _gb, _usa in MODELOS_TEXTO if modelo_descargado(repo, minimo)), None)
     return {'version': VERSION_ENTORNO, 'modelo': modelo, 'modelo_texto': texto, 'torch': torch_v,
-            'cuda': '+cu' in torch_v, 'gpu': None, 'instalado': time.strftime('%Y-%m-%d %H:%M'),
+            'cuda': '+cu' in torch_v, 'gpu': _chip_mac() if ES_MAC else None, 'instalado': time.strftime('%Y-%m-%d %H:%M'),
             'detectado': True}
 
 
@@ -288,8 +310,10 @@ def ia_texto_preferida():
 
 def ia_texto_para_esta_gpu():
     """v5.47: las IA de texto que este equipo DEBERÍA tener (lo que baja motor_texto --descargar): GPU de 15 GB o más → Gemma 4 E4B, Qwen3.5-4B y
-    Qwen3-1.7B; 9,5 o más → Qwen3-4B; si no, Qwen3-1.7B."""
+    Qwen3-1.7B; 9,5 o más → Qwen3-4B; si no, Qwen3-1.7B. v5.86, Mac: con lo que la tarjeta de Apple puede usar de la memoria (Gemma entera)."""
     total = vram_total_gb() or 0
+    if ES_MAC:
+        return ['gemma4', 'qwen3.5', '1.7B'] if total >= 20 else ['4B'] if total >= 12 else ['1.7B']
     return ['gemma4', 'qwen3.5', '1.7B'] if total >= 15 else ['4B'] if total >= 9.5 else ['1.7B']
 
 
@@ -313,6 +337,8 @@ def modelo_texto(info=None, preferida=None):
         if not any(c in hay for c in claves[desde:]):
             desde = 0                                   # (la elegida y las de debajo no están: la mejor que haya)
         for clave, _repo, _minimo, necesita, _usa in MODELOS_TEXTO[desde:]:
+            if ES_MAC:
+                necesita = NECESITA_MAC.get(clave, necesita)
             if clave in hay and (libre is None or libre >= necesita or clave == hay[-1]):
                 return clave
     return ((info if info is not None else info_instalado()) or {}).get('modelo_texto') or 'auto'
@@ -323,6 +349,8 @@ def soporta(codigo_idioma):
 
 
 def hay_gpu_nvidia():
+    if ES_MAC:
+        return False
     try:
         r = subprocess.run(['nvidia-smi', '-L'], capture_output=True, text=True, timeout=10,
                            creationflags=SIN_VENTANA)
@@ -343,7 +371,10 @@ def _driver_nvidia():
 
 def torch_para_este_equipo():
     """v5.5.8: (variante, versión) de torch que toca aquí: 'cu132' (torch 2.15) con driver ≥ 595 (v5.53), 'cu130' (2.14.1)
-    de 580 a 594, 'cu128' (2.11) con uno anterior o si no se sabe, 'cpu' sin NVIDIA. Así nadie se queda sin GPU por el driver."""
+    de 580 a 594, 'cu128' (2.11) con uno anterior o si no se sabe, 'cpu' sin NVIDIA. Así nadie se queda sin GPU por el driver.
+    v5.86: en la Mac, ('mps', TORCH_MAC): la de PyPI (sin etiqueta), con la tarjeta de Apple."""
+    if ES_MAC:
+        return 'mps', TORCH_MAC
     if not hay_gpu_nvidia():
         return 'cpu', TORCH['cpu']
     d = _driver_nvidia()
@@ -354,12 +385,16 @@ def torch_para_este_equipo():
 def _torch_valido(version):
     """True si el torch instalado ('2.14.1+cu130') es uno de los que pone (o puso) el instalador: los motores con 2.14.1
     siguen valiendo con la 2.15 (v5.53); la 2.15 solo llega a instalaciones nuevas o con «Reparar»."""
+    if ES_MAC:
+        return version == TORCH_MAC
     base, _, variante = (version or '').partition('+')
     return bool(base) and (TORCH.get(variante or 'cpu') == base or version in TORCH_ACEPTADOS)
 
 
 def _python_al_dia():
     """El Python del motor es el de esta versión (3.14), no el 3.12 del motor 1.x."""
+    if ES_MAC:
+        return python_motor().exists()
     return (carpeta() / 'python' / PYTHON_DLL).exists()
 
 
@@ -514,7 +549,10 @@ _VRAM = {'gb': None}
 
 
 def vram_total_gb():
-    """VRAM total de la primera GPU NVIDIA en GB (0.0 si no hay), memorizada."""
+    """VRAM total de la primera GPU NVIDIA en GB (0.0 si no hay), memorizada. v5.86, Mac con Apple Silicon: lo que su tarjeta puede usar de
+    la memoria unificada (_memoria_mac)."""
+    if _VRAM['gb'] is None and ES_MAC:
+        _VRAM['gb'] = _memoria_mac()[0] if SOPORTADO else 0.0
     if _VRAM['gb'] is None:
         gb = 0.0
         try:
@@ -537,6 +575,10 @@ def vram_libre_gb():
     if time.time() - _LIBRE['t'] < 5.0:
         return _LIBRE['gb']
     gb = None
+    if ES_MAC:
+        gb = _memoria_mac(libre=True)[1] if SOPORTADO else None
+        _LIBRE.update(t=time.time(), gb=gb)
+        return gb
     try:
         r = subprocess.run(['nvidia-smi', '--query-gpu=memory.free', '--format=csv,noheader,nounits'],
                            capture_output=True, text=True, timeout=8, creationflags=SIN_VENTANA)
@@ -558,10 +600,54 @@ def resolve_abierto():
             r = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq Resolve.exe', '/NH'], capture_output=True, text=True, errors='replace', timeout=8,
                                creationflags=SIN_VENTANA)
             si = 'resolve.exe' in (r.stdout or '').lower()
+        elif ES_MAC:
+            si = subprocess.run(['pgrep', '-x', 'Resolve'], capture_output=True, timeout=8).returncode == 0
     except Exception:
         si = True
     _RESOLVE.update(t=time.time(), si=si)
     return si
+
+
+def _memoria_mac(libre=False):
+    """v5.86 (Mac con Apple Silicon): (total, libre) en GB de lo que la tarjeta puede usar de la memoria unificada: Metal recomienda como mucho
+    ~2/3 de la RAM (~3/4 desde 36 GB; torch.mps.recommended_max_memory, que aquí no se puede preguntar: torch vive en el Python del motor).
+    `libre` (vm_stat: páginas libres + inactivas + especulativas + purgables, lo que macOS da sin tirar de la memoria de intercambio) solo si se
+    pide; nunca más que el total."""
+    try:
+        ram = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / 1024 ** 3
+    except (ValueError, OSError, AttributeError):
+        return 0.0, None
+    total = ram * (0.75 if ram >= 36 else 2 / 3)
+    if not libre:
+        return total, None
+    try:
+        r = subprocess.run(['vm_stat'], capture_output=True, text=True, timeout=5)
+        pagina = int(re.search(r'page size of (\d+)', r.stdout).group(1))
+        paginas = 0
+        for clave in ('Pages free', 'Pages inactive', 'Pages speculative', 'Pages purgeable'):
+            m = re.search(re.escape(clave) + r':\s+(\d+)', r.stdout)
+            paginas += int(m.group(1)) if m else 0
+        return total, min(total, paginas * pagina / 1024 ** 3)
+    except Exception:
+        return total, None
+
+
+def _sin_dyld(entorno):
+    """v5.86 (Mac): el Python del motor no hereda las variables DYLD_* del programa empaquetado (le cambiarían de dónde carga sus librerías
+    —torch trae las suyas— y fallaría lejos de aquí). Devuelve el mismo diccionario."""
+    if ES_MAC:
+        for k in [k for k in entorno if k.startswith('DYLD_')]:
+            entorno.pop(k, None)
+    return entorno
+
+
+def _chip_mac():
+    """v5.86: «Apple M2 Pro» (lo que se ve en Ajustes en vez de la tarjeta NVIDIA)."""
+    try:
+        r = subprocess.run(['sysctl', '-n', 'machdep.cpu.brand_string'], capture_output=True, text=True, timeout=5)
+        return (r.stdout or '').strip() or 'Apple Silicon'
+    except Exception:
+        return 'Apple Silicon'
 
 
 _SIN_RESOLVE = {'v': False}
@@ -616,7 +702,7 @@ class _ServidorVoz:
         entorno['PYTHONIOENCODING'] = 'utf-8'
         entorno['PYTHONUNBUFFERED'] = '1'
         entorno.pop('PYTHONPATH', None)
-        entorno.pop('PYTHONHOME', None)
+        _sin_dyld(entorno).pop('PYTHONHOME', None)
         self.modelo = modelo
         esperar_puesta_al_dia()
         self.p = subprocess.Popen([str(python_motor()), '-s', '-u', str(script_motor()), '--servidor',
@@ -753,7 +839,7 @@ def _lanzar_script(script, argumentos, on_linea, timeout=None, sin_senal=None, c
     entorno['PYTHONIOENCODING'] = 'utf-8'
     entorno['PYTHONUNBUFFERED'] = '1'
     entorno.pop('PYTHONPATH', None)
-    entorno.pop('PYTHONHOME', None)
+    _sin_dyld(entorno).pop('PYTHONHOME', None)
     # v5.5.8: -s = sin la carpeta de paquetes del USUARIO (%APPDATA%\Python\Python314): con el Python 3.14 del motor, lo que otro
     # programa dejara ahí (otro torchaudio, numpy…) se mezclaba con el motor, y pip daba por instalado lo que solo estaba ahí
     esperar_puesta_al_dia()
@@ -958,12 +1044,47 @@ TIEMPO_MAX_PIP_S = 3600          # una instalación de pip (PyTorch CUDA pesa ~2
 TIEMPO_MAX_GET_PIP_S = 600
 
 
+def _python_mac(base):
+    """v5.86 (Mac con Apple Silicon): el Python 3.14 portátil de python-build-standalone en <carpeta>/python, comprobado con su sha256
+    (PYTHON_MAC). Trae pip; si faltara, ensurepip. Se arma aparte y se cambia al final: uno a medias nunca queda como «el Python del motor»."""
+    import hashlib
+    import tarfile
+    url, sha = PYTHON_MAC
+    tgz = base / 'python_mac.tar.gz'
+    _bajar(url, tgz)
+    h = hashlib.sha256()
+    with open(tgz, 'rb') as f:
+        for bloque in iter(lambda: f.read(1 << 20), b''):
+            h.update(bloque)
+    if h.hexdigest() != sha:
+        tgz.unlink(missing_ok=True)
+        raise RuntimeError('Python 3.14 para Mac: la descarga llegó dañada (sha256 distinto); vuelve a intentarlo.')
+    armado = base / 'python.armando'
+    shutil.rmtree(armado, ignore_errors=True)
+    with tarfile.open(tgz) as t:
+        t.extractall(armado, filter='data')
+    tgz.unlink(missing_ok=True)
+    shutil.rmtree(base / 'python', ignore_errors=True)
+    (armado / 'python').rename(base / 'python')
+    shutil.rmtree(armado, ignore_errors=True)
+    py = python_motor()
+    if not py.exists():
+        raise RuntimeError(f'Python 3.14 para Mac: no está {py} después de descomprimirlo.')
+    entorno = _sin_dyld({k: v for k, v in os.environ.items() if k not in ('PYTHONPATH', 'PYTHONHOME')})
+    r = subprocess.run([str(py), '-s', '-m', 'pip', '--version'], capture_output=True, text=True, timeout=120, env=entorno)
+    if r.returncode != 0:
+        r = subprocess.run([str(py), '-s', '-m', 'ensurepip', '--upgrade'], capture_output=True, text=True, timeout=TIEMPO_MAX_GET_PIP_S,
+                           env=entorno)
+        if r.returncode != 0:
+            raise RuntimeError('ensurepip: ' + (r.stderr or r.stdout)[-400:])
+
+
 def _pip(argumentos, aviso):
     entorno = dict(os.environ)
     entorno['PYTHONIOENCODING'] = 'utf-8'
     entorno['PIP_DISABLE_PIP_VERSION_CHECK'] = '1'
     entorno.pop('PYTHONPATH', None)
-    entorno.pop('PYTHONHOME', None)
+    _sin_dyld(entorno).pop('PYTHONHOME', None)
     try:
         p = subprocess.run([str(python_motor()), '-s', '-m', 'pip', 'install', '--no-warn-script-location',
                             '--progress-bar', 'off', '--disable-pip-version-check', *argumentos],
@@ -978,22 +1099,48 @@ def _pip(argumentos, aviso):
         aviso(' '.join(argumentos[:3]))
 
 
+_INSTALANDO = {'activo': False, 'f': 0.0, 'texto': ''}
+_LOCK_INSTALAR = threading.Lock()
+
+
+def instalando():
+    """v5.86: (fracción, texto) de una instalación del motor en marcha en este programa (la automática de la Mac o la de Ajustes), o None."""
+    return (_INSTALANDO['f'], _INSTALANDO['texto']) if _INSTALANDO['activo'] else None
+
+
 def instalar(progreso=None, aviso=None, modelo='auto'):
     """Instala (o repara) el motor. progreso(0..1, texto), aviso(texto).
-    Lanza excepcion si no se pudo; deja listo.json solo si TODO salio bien."""
+    Lanza excepcion si no se pudo; deja listo.json solo si TODO salio bien.
+    v5.86: una sola a la vez (en la Mac el programa la lanza solo al abrir y Ajustes podría pedir otra): la segunda falla al momento."""
+    if not _LOCK_INSTALAR.acquire(blocking=False):
+        raise RuntimeError(tr('El motor ya se está instalando.'))
+    _INSTALANDO.update(activo=True, f=0.0, texto='')
+
     def pr(f, texto):
+        _INSTALANDO.update(f=max(0.0, min(1.0, f)), texto=texto)
         if progreso:
             progreso(max(0.0, min(1.0, f)), texto)
+    try:
+        return _instalar(pr, aviso, modelo)
+    finally:
+        _INSTALANDO.update(activo=False)
+        _LOCK_INSTALAR.release()
 
-    if sys.platform != 'win32':
-        raise RuntimeError(tr('El motor Qwen3-ASR por ahora solo está para Windows.'))
+
+def _instalar(pr, aviso, modelo):
+
+    if not SOPORTADO:
+        raise RuntimeError(tr('Qwen3-ASR necesita una Mac con Apple Silicon: se usa Whisper.'))
     base = carpeta()
     base.mkdir(parents=True, exist_ok=True)
+    if ES_MAC and not python_motor().exists():
+        pr(0.01, tr('Descargando Python 3.14'))
+        _python_mac(base)
     # v5.2: listo.json ya NO se borra al empezar (una instalacion cortada dejaba
     # el motor entero sin su marca y la siguiente lo reinstalaba todo); se
     # reescribe al final
     py = python_motor()
-    if py.exists() and not _python_al_dia():
+    if not ES_MAC and py.exists() and not _python_al_dia():
         # v5.5.8: motor 1.x (Python 3.12 + qwen-asr): se quita entero y se monta el 2.x (sus modelos viejos se borran al final)
         pr(0.01, tr('Actualizando el motor de voz'))
         liberar()
@@ -1004,7 +1151,7 @@ def instalar(progreso=None, aviso=None, modelo='auto'):
             pass
         (base / 'listo.json').unlink(missing_ok=True)
         shutil.rmtree(base / 'python')
-    if not py.exists():
+    if not ES_MAC and not py.exists():
         pr(0.01, tr('Descargando Python 3.14'))
         zip_py = base / 'python_embebido.zip'
         _bajar(PYTHON_EMBEBIDO, zip_py)
@@ -1027,9 +1174,18 @@ def instalar(progreso=None, aviso=None, modelo='auto'):
             raise RuntimeError('get-pip: ' + (r.stderr or r.stdout)[-400:])
     variante, version_torch = torch_para_este_equipo()
     torch_v = _dist_instalada('torch')
-    gpu = variante != 'cpu'
-    if torch_v == f'{version_torch}+{variante}':
+    gpu = variante not in ('cpu', 'mps')                  # (CUDA: lo de la GPU de Whisper, al final)
+    if torch_v == (version_torch if variante == 'mps' else f'{version_torch}+{variante}'):
         pr(0.35, tr('PyTorch ya estaba instalado ({v})', v=torch_v))
+    elif variante == 'mps':
+        pr(0.05, tr('Descargando PyTorch ({tipo}, ~{peso})', tipo='Apple', peso='80 MB'))
+        liberar()
+        try:
+            import ia_texto
+            ia_texto.liberar()
+        except Exception:
+            pass
+        _pip([f'torch=={version_torch}'], aviso)            # (de PyPI: la de la Mac ya trae la tarjeta de Apple)
     else:
         pr(0.05, tr('Descargando PyTorch ({tipo}, ~{peso})', tipo='CUDA' if gpu else 'CPU',
                     peso='2,5 GB' if gpu else '200 MB'))

@@ -4647,6 +4647,10 @@
     "Premiere Pro: con «Usar con Premiere Pro» CineCaptions ya no abre ni usa DaVinci Resolve, y si Premiere está cerrado, GO lo abre con un proyecto junto a tu video y lo coloca todo solo.": "Premiere Pro：选择「与 Premiere Pro 一起使用」后，CineCaptions 不再打开或使用 DaVinci Resolve；如果 Premiere 已关闭，GO 会在视频旁创建项目并打开它，自动放好一切。",
     "Soltar un video en el icono de CineCaptions con el programa ya abierto lo lleva a la ventana abierta (antes se perdía).": "在 CineCaptions 已打开时把视频拖到它的图标上，现在会送到已打开的窗口（以前会丢失）。",
     "Mac: arreglado que CineCaptions no abriera después de instalarlo; y si un arranque se queda atascado, se cierra solo y lo anota en el Registro.": "Mac：修复了安装后 CineCaptions 无法打开的问题；如果启动卡住，会自动关闭并记录在日志中。",
-    "Más resistente: tus ajustes, la licencia y los sonidos ya no se pierden si el antivirus u otro programa tiene un archivo abierto un momento, y Cancelar durante la voz libera la tarjeta gráfica al instante.": "更稳定：即使杀毒软件或其他程序短暂占用文件，你的设置、许可证和音效也不会再丢失；在语音阶段取消会立即释放显卡。"
+    "Más resistente: tus ajustes, la licencia y los sonidos ya no se pierden si el antivirus u otro programa tiene un archivo abierto un momento, y Cancelar durante la voz libera la tarjeta gráfica al instante.": "更稳定：即使杀毒软件或其他程序短暂占用文件，你的设置、许可证和音效也不会再丢失；在语音阶段取消会立即释放显卡。",
+    "Qwen3-ASR necesita una Mac con Apple Silicon: se usa Whisper.": "Qwen3-ASR 需要搭载 Apple 芯片的 Mac：将使用 Whisper。",
+    "El motor ya se está instalando.": "引擎已在安装中。",
+    "Mac: «Captions detrás de ti», la persona delante de los gráficos de la Edición PRO y las posiciones PRO ya funcionan también en Mac, como en Windows.": "Mac：“人物身后的字幕”、PRO 剪辑图形前方的人物以及 PRO 位置现在在 Mac 上也能使用，和 Windows 一样。",
+    "Mac con Apple Silicon: el motor de voz Qwen3-ASR y la IA de texto (palabras grandes, ortografía y emojis) se instalan solos en segundo plano la primera vez que abres CineCaptions; el avance se ve en Ajustes › General.": "搭载 Apple 芯片的 Mac：语音引擎 Qwen3-ASR 和文字 AI（大字、拼写和表情）会在你第一次打开 CineCaptions 时在后台自动安装；可在 设置 › 通用 中查看进度。"
   }
 }

@@ -351,8 +351,9 @@ def mac_mcp_ruta_oficial():
 
 @caso('Resolve Mac')
 def mac_ia_de_texto_no_se_intenta():
-    with parches((sys, 'platform', 'darwin')):
-        esperar(motor_voz.info_instalado() is None and not ia_texto.activa(), 'en Mac no hay motor Qwen: no debe intentarse')
+    # (v5.86: la Mac con Apple Silicon ya tiene el motor —caso motor_qwen_en_mac_con_apple_silicon—; la Intel sigue sin él)
+    with parches((sys, 'platform', 'darwin'), (motor_voz, 'ES_MAC', True), (motor_voz, 'SOPORTADO', False)):
+        esperar(motor_voz.info_instalado() is None and not ia_texto.activa(), 'en una Mac Intel no hay motor Qwen: no debe intentarse')
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------------
@@ -1463,7 +1464,7 @@ def reparar_dice_si_no_bajo_la_ia_de_texto():
     # y Ajustes, al terminar «Reparar», ya no lo pinta en verde como si estuviera todo
     pintado = {}
     falso = types.SimpleNamespace(motor_estado=types.SimpleNamespace(configure=lambda **k: pintado.update(k)),
-                                  motor_btn=types.SimpleNamespace(configure=lambda **k: None, hide=lambda: None))
+                                  motor_btn=types.SimpleNamespace(configure=lambda **k: None, hide=lambda: None, setEnabled=lambda v: None))
     for texto, hay in ((None, []), ('1.7B', ['1.7B'])):
         pintado.clear()
         with parches((motor_voz, 'info_instalado', lambda: {'modelo': '1.7B', 'gpu': 'RTX 4070 Laptop', 'modelo_texto': texto}),
@@ -2445,6 +2446,242 @@ def postinstall_mac_limpia_y_pone_topes():
     esperar('\r' not in texto, 'postinstall con CRLF: bash no lo corre en la Mac')
     esperar(texto.count('limpiar_huerfanos') >= 3, 'falta limpiar_huerfanos antes o después de las tareas')
     esperar('pgrep -P 1 -f' in texto and 'con_tope "$TOPE"' in texto, 'faltan la limpieza de huérfanos o el tope por tarea')
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------
+# v5.86 (pedido: «en Mac aún no están todos los estilos y funciones»): el recorte de persona y el motor de voz e IA Qwen3 también en la Mac
+# ---------------------------------------------------------------------------------------------------------------------------------------
+def _cargar_archivo(nombre, *ruta):
+    spec = importlib.util.spec_from_file_location(nombre, os.path.join(RAIZ, *ruta))
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+@contextlib.contextmanager
+def _casa_falsa():
+    """Path.home() en una carpeta temporal (y de vuelta al salir, también si falla)."""
+    casa = pathlib.Path(tempfile.mkdtemp(prefix='cc_casa_'))
+    original = pathlib.Path.__dict__.get('home')
+    pathlib.Path.home = classmethod(lambda cls: casa)
+    try:
+        yield casa
+    finally:
+        pathlib.Path.home = original
+        import shutil
+        shutil.rmtree(casa, ignore_errors=True)
+
+
+@contextlib.contextmanager
+def _torch_falso(cuda=False, mps=True, gb=10.7):
+    """Un torch de mentira para elegir dispositivo y modelo en los scripts del motor (aquí no hay torch)."""
+    t = types.SimpleNamespace(float32='f32', bfloat16='bf16', float16='f16',
+                              cuda=types.SimpleNamespace(is_available=lambda: cuda, get_device_properties=lambda i: types.SimpleNamespace(
+                                  total_memory=gb * 1024 ** 3), is_bf16_supported=lambda: True),
+                              backends=types.SimpleNamespace(mps=types.SimpleNamespace(is_available=lambda: mps)),
+                              mps=types.SimpleNamespace(recommended_max_memory=lambda: gb * 1024 ** 3))
+    viejo, viejo_plat = sys.modules.get('torch'), sys.platform
+    sys.modules['torch'] = t
+    sys.platform = 'darwin'
+    try:
+        yield t
+    finally:
+        sys.platform = viejo_plat
+        if viejo is None:
+            sys.modules.pop('torch', None)
+        else:
+            sys.modules['torch'] = viejo
+
+
+@caso('Mac: estilos y motores')
+def recorte_de_persona_tambien_en_mac():
+    """«Captions detrás de ti», la persona delante de la PRO, la cara del Kinetic y las posiciones PRO: hasta la 5.85 la Mac los apagaba
+    (disponible() False y el motor dentro del programa rechazaba mate, caras y cuerpos)."""
+    import edicion_pro_persona as P
+    import motor_compat
+    with parches((motor_compat, 'EN_PROCESO', True), (motor_compat, 'instalado', lambda: True)):
+        esperar(P.disponible(), 'el recorte sigue apagado con el motor dentro del programa (Mac)')
+        pedidos = []
+        falso = types.SimpleNamespace(atender=lambda op, datos: pedidos.append(op) or {'ok': True}, _LOCK=threading.Lock(), _MODELOS={},
+                                      _ACTIVOS=0, _ULTIMO_USO=0.0)
+        with parches((motor_compat, '_worker', lambda: falso)):
+            s = motor_compat._EnProceso()
+            for op in ('mate', 'caras', 'cuerpos', 'descargar_modnet'):
+                s.pedir(op, {})
+    esperar(pedidos == ['mate', 'caras', 'cuerpos', 'descargar_modnet'], f'el motor de la Mac no atiende el recorte: {pedidos}')
+
+
+@caso('Mac: estilos y motores')
+def coreml_que_no_da_lo_mismo_vuelve_a_la_cpu():
+    """La tarjeta de Apple (CoreML) se queda solo si su primer alfa es igual al de la CPU (≤ 2/255); si no, todo el recorte va en la CPU y vale
+    el alfa de la CPU. (En las Macs de GitHub, 0,04/255 en Apple Silicon y 0,01/255 en Intel: se quedó la tarjeta.)"""
+    import numpy as np
+    W = _cargar_archivo('worker_sim', '2_recursos', 'motor_compat', 'worker.py')
+    ref = np.linspace(0, 1, 64, dtype=np.float32).reshape(1, 1, 8, 8)
+
+    class Sesion:
+        def __init__(self, *a, **k):
+            pass
+
+        def get_inputs(self):
+            return [types.SimpleNamespace(name='x')]
+
+        def run(self, _salidas, _entradas):
+            return [ref]
+    ort = types.SimpleNamespace(SessionOptions=lambda: types.SimpleNamespace(), InferenceSession=Sesion)
+    for desvio, queda in ((0.5 / 255, True), (10 / 255, False)):
+        W._MATE.update(gpu='CoreMLExecutionProvider', igual_cpu=None)
+        W._MODELOS.clear()
+        W._MODELOS[('onnx', 'm', 8, 8)] = 'sesión de la tarjeta'
+        a = W._comparar_con_cpu(ort, 'm', None, ref[0, 0] + desvio)
+        if queda:
+            esperar(W._MATE['gpu'] == 'CoreMLExecutionProvider' and W._MATE['igual_cpu'] and ('onnx', 'm', 8, 8) in W._MODELOS
+                    and ('onnx', 'm') not in W._MODELOS, f'con {desvio * 255:.1f}/255 no se quedó la tarjeta: {W._MATE}')
+        else:
+            esperar(W._MATE['gpu'] == '' and ('onnx', 'm', 8, 8) not in W._MODELOS and np.array_equal(a, ref[0, 0]),
+                    f'con {desvio * 255:.0f}/255 no volvió a la CPU: {W._MATE}')
+    texto = open(os.path.join(RAIZ, '2_recursos', 'motor_compat', 'worker.py'), encoding='utf-8').read()
+    esperar("'MLComputeUnits': 'CPUAndGPU'" in texto, 'CoreML sin limitar a la tarjeta (el Neural Engine calcula en 16 bits)')
+
+
+@caso('Mac: estilos y motores')
+def motor_qwen_en_mac_con_apple_silicon():
+    """El motor de voz e IA en la Mac con Apple Silicon: su carpeta y su Python (el portátil, comprobado con sha256), torch de PyPI con «mps»,
+    las IA de texto según la memoria unificada (Gemma entera: pide más que en NVIDIA) y nada de nvidia-smi. En la Mac Intel: no hay motor."""
+    with _casa_falsa() as casa, parches((motor_voz, 'ES_MAC', True), (motor_voz, 'SOPORTADO', True),
+                                         (motor_voz, '_VRAM', {'gb': None})):
+        base = casa / 'Library' / 'Application Support' / 'CineCaptions' / 'motor_qwen'
+        esperar(motor_voz.carpeta() == base, f'carpeta del motor: {motor_voz.carpeta()}')
+        esperar(motor_voz.python_motor() == base / 'python' / 'bin' / 'python3.14', f'Python del motor: {motor_voz.python_motor()}')
+        esperar(motor_voz._sitio() == base / 'python' / 'lib' / 'python3.14' / 'site-packages', f'site-packages: {motor_voz._sitio()}')
+        esperar(motor_voz.torch_para_este_equipo() == ('mps', motor_voz.TORCH_MAC), f'torch: {motor_voz.torch_para_este_equipo()}')
+        esperar(motor_voz._torch_valido(motor_voz.TORCH_MAC) and not motor_voz._torch_valido(motor_voz.TORCH_MAC + '+cpu'), 'torch válido en la Mac')
+        with parches((subprocess, 'run', lambda *a, **k: (_ for _ in ()).throw(AssertionError(f'subprocess en la Mac: {a[0]}')))):
+            esperar(motor_voz.hay_gpu_nvidia() is False, 'busca NVIDIA en la Mac')
+        esperar(motor_voz._sin_dyld({'DYLD_LIBRARY_PATH': '/Applications/CineCaptions.app/Contents/Frameworks', 'PATH': '/usr/bin'}) ==
+                {'PATH': '/usr/bin'}, 'el Python del motor hereda las DYLD_* del programa empaquetado')
+        url, sha = motor_voz.PYTHON_MAC
+        esperar(url.startswith('https://github.com/astral-sh/python-build-standalone/') and 'aarch64-apple-darwin' in url and len(sha) == 64,
+                f'Python portátil de la Mac: {url}')
+        esperar(motor_voz.info_instalado() is None, 'instalado sin nada en la carpeta')
+        motor_voz.python_motor().parent.mkdir(parents=True)
+        motor_voz.python_motor().write_bytes(b'')
+        (base / 'listo.json').write_text(json.dumps({'version': motor_voz.VERSION_ENTORNO, 'modelo': '1.7B', 'modelo_texto': '1.7B'}))
+        esperar((motor_voz.info_instalado() or {}).get('modelo') == '1.7B', 'no lee el listo.json de la Mac')
+        for gb, quiere in ((10.7, ['1.7B']), (16.0, ['4B']), (24.0, ['gemma4', 'qwen3.5', '1.7B'])):
+            motor_voz._VRAM['gb'] = gb
+            esperar(motor_voz.ia_texto_para_esta_gpu() == quiere, f'{gb} GB: {motor_voz.ia_texto_para_esta_gpu()} (quería {quiere})')
+        with parches((motor_voz, 'modelos_texto_descargados', lambda: ['gemma4', '1.7B']), (motor_voz, 'vram_para_ia_gb', lambda: 12.0)):
+            esperar(motor_voz.modelo_texto() == '1.7B', f'Mac con 12 GB libres: {motor_voz.modelo_texto()} (Gemma entera no cabe)')
+            with parches((motor_voz, 'ES_MAC', False)):
+                esperar(motor_voz.modelo_texto() == 'gemma4', 'en Windows con 12 GB libres Gemma sí cabe (5,25 GB quedan en la RAM)')
+        with parches((motor_voz, 'SOPORTADO', False)):
+            esperar(motor_voz.info_instalado() is None, 'Mac Intel: cuenta como instalado')
+            try:
+                motor_voz.instalar()
+                esperar(False, 'Mac Intel: instalar no falló')
+            except RuntimeError:
+                pass
+
+
+@caso('Mac: estilos y motores')
+def scripts_del_motor_eligen_la_tarjeta_de_apple():
+    """motor_qwen.py y motor_texto.py (corren en el Python del motor): en la Mac, «mps» en bf16 y el modelo según lo que Metal deja usar."""
+    Q = _cargar_archivo('motor_qwen_sim', '2_recursos', 'motor_qwen', 'motor_qwen.py')
+    T = _cargar_archivo('motor_texto_sim', '2_recursos', 'motor_qwen', 'motor_texto.py')
+    malos = []
+    for gb, voz, texto in ((5.3, '0.6B', '1.7B'), (10.7, '1.7B', '1.7B'), (16.0, '1.7B', '4B'), (24.0, '1.7B', 'gemma4')):
+        with _torch_falso(mps=True, gb=gb):
+            d, dtype, mem = Q.elegir_dispositivo('auto')
+            if (d, dtype, round(mem, 1)) != ('mps', 'bf16', gb) or Q.elegir_modelo('auto', d, mem) != voz:
+                malos.append(f'voz {gb} GB: {d} {dtype} {mem:.1f} {Q.elegir_modelo("auto", d, mem)}')
+            if T.elegir('auto') != (texto, 'mps', 'bf16'):
+                malos.append(f'texto {gb} GB: {T.elegir("auto")}')
+    with _torch_falso(mps=False):
+        if Q.elegir_dispositivo('auto')[0] != 'cpu' or T.elegir('auto')[1] != 'cpu':
+            malos.append('sin tarjeta no va a la CPU')
+    with _torch_falso(cuda=True, mps=False, gb=16.0):
+        if Q.elegir_dispositivo('auto')[0] != 'cuda:0' or T.elegir('auto') != ('gemma4', 'cuda:0', 'bf16'):
+            malos.append('NVIDIA cambió')
+    esperar(not malos, '; '.join(malos))
+
+
+@caso('Mac: estilos y motores')
+def una_sola_instalacion_del_motor_y_su_avance():
+    """La Mac instala el motor sola al abrir y Ajustes podría pedir otra: la segunda falla al momento, y Ajustes ve el avance (instalando())."""
+    vistos = []
+
+    def falso(pr, aviso, modelo):
+        pr(0.4, 'Descargando PyTorch')
+        vistos.append(motor_voz.instalando())
+        try:
+            motor_voz.instalar()
+            vistos.append('la segunda no falló')
+        except RuntimeError:
+            vistos.append('segunda rechazada')
+        return '0.6B'
+    with parches((motor_voz, '_instalar', falso)):
+        r = motor_voz.instalar()
+    esperar(r == '0.6B' and vistos == [(0.4, 'Descargando PyTorch'), 'segunda rechazada'], f'{r} {vistos}')
+    esperar(motor_voz.instalando() is None and not motor_voz._LOCK_INSTALAR.locked(), 'la instalación quedó «en marcha»')
+    import salud
+    with parches((motor_voz, 'instalando', lambda: (0.42, 'x'))):
+        fila = salud._fila_motor_qwen(motor_voz)
+    esperar(fila['ok'] is None and '42 %' in fila['detalle'], f'a medias cuenta como falla al arrancar: {fila}')
+
+
+@caso('Mac: estilos y motores')
+def la_mac_instala_el_motor_sola_al_abrir():
+    """Sin instalador que lo haga, la Mac con Apple Silicon instala el motor al abrir, en segundo plano; si falla, lo dice y no lo reintenta solo
+    hasta pasado un día; ya instalado, solo pone al día sus librerías. Nada de esto en la Mac Intel."""
+    import vigilancia
+    avisos, llamadas = [], []
+    reg = types.SimpleNamespace(info=lambda m, o='': avisos.append(('info', m)), ok=lambda m, o='': avisos.append(('ok', m)),
+                                aviso=lambda m, o='': avisos.append(('aviso', m)))
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_motor_'))
+    marca = carpeta / 'instalacion_auto.json'
+    estado = {'instalado': False, 'fallar': False}
+
+    def instalar(**k):
+        llamadas.append('instalar')
+        if estado['fallar']:
+            raise RuntimeError('sin conexión')
+        estado['instalado'] = True
+        return '1.7B'
+
+    def correr():
+        vigilancia._MOTORES_AL_DIA['v'] = None
+        vigilancia._motor_ia_en_mac()
+        hilo = vigilancia._MOTORES_AL_DIA['v']
+        if isinstance(hilo, threading.Thread):
+            hilo.join(10)
+    try:
+        with parches((vigilancia, '_registro', lambda: reg), (vigilancia, 'MAC_IA_ESPERA_S', 0), (motor_voz, 'SOPORTADO', True),
+                     (motor_voz, 'carpeta', lambda: carpeta), (motor_voz, 'asegurar_listo', lambda: None), (motor_voz, 'instalar', instalar),
+                     (motor_voz, 'instalado', lambda: estado['instalado']),
+                     (motor_voz, 'info_instalado', lambda: {'modelo_texto': '1.7B', 'gpu': 'Apple M2'} if estado['instalado'] else None),
+                     (motor_voz, 'completar_requisitos', lambda **k: llamadas.append('al día') or [])):
+            correr()
+            esperar(llamadas == ['instalar'] and 'listo' in json.loads(marca.read_text()), f'no lo instaló solo: {llamadas} {avisos}')
+            estado.update(instalado=False, fallar=True)
+            llamadas.clear()
+            correr()
+            esperar(llamadas == ['instalar'] and json.loads(marca.read_text()).get('fallo') and any(n == 'aviso' for n, _m in avisos),
+                    f'un fallo no queda anotado: {llamadas} {avisos}')
+            llamadas.clear()
+            correr()
+            esperar(not llamadas, f'lo reintenta enseguida tras un fallo: {llamadas}')
+            with parches((motor_voz, 'asegurar_listo', lambda: {'modelo_texto': '1.7B'})):
+                correr()
+            esperar(llamadas == ['al día'], f'ya instalado debía solo poner al día las librerías: {llamadas}')
+            llamadas.clear()
+            with parches((motor_voz, 'SOPORTADO', False)):
+                correr()
+            esperar(not llamadas, f'en la Mac Intel intenta instalar: {llamadas}')
+    finally:
+        vigilancia._MOTORES_AL_DIA['v'] = None
+        import shutil
+        shutil.rmtree(carpeta, ignore_errors=True)
 
 
 def main():

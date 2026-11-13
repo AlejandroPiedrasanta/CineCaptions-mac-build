@@ -88,6 +88,9 @@ def _fila_motor_qwen(mv):
     lo que le falta DE VERDAD al motor de voz e IA. Antes «faltan modelos» valía para cinco causas distintas (Python viejo, PyTorch, modelo
     de voz, alineador o solo la IA de texto) y siempre como falla. Sin la IA de texto la voz funciona y el texto se corrige con reglas: aviso."""
     nombre = 'Motor de IA (Qwen3)'
+    en_marcha = getattr(mv, 'instalando', lambda: None)()
+    if en_marcha:                        # (v5.86: la Mac lo instala sola al abrir: a medias no es una falla)
+        return {'nombre': nombre, 'ok': None, 'detalle': f'instalándose ({int(en_marcha[0] * 100)} %): mientras, se usa Whisper'}
     if not mv._python_al_dia():
         return {'nombre': nombre, 'ok': False, 'detalle': f'es el motor de una versión anterior (Python 3.12): {REPARAR_MOTOR}'}
     faltan = mv._faltan_requisitos()

@@ -373,6 +373,8 @@ def _sesion_mate(ort, clave, alto, ancho):
             ajustes = {'performance_preference': 'high_performance', 'device_filter': 'gpu'}
         elif gpu == 'CUDAExecutionProvider':
             ajustes = {'use_tf32': '0'}
+        elif gpu == 'CoreMLExecutionProvider':                         # (v5.86, Mac: la tarjeta de Apple, sin el Neural Engine, que va en
+            ajustes = {'ModelFormat': 'MLProgram', 'MLComputeUnits': 'CPUAndGPU'}   # 16 bits; el 1.er alfa se compara con la CPU: _mate_activo)
         try:
             sesion = ort.InferenceSession(clave, sess_options=opciones, providers=[(gpu, ajustes), 'CPUExecutionProvider'])
         except Exception:
@@ -383,6 +385,34 @@ def _sesion_mate(ort, clave, alto, ancho):
             return _sesion_mate(ort, clave, alto, ancho)
     _MODELOS[k] = sesion                                               # (al final: la usada más hace poco)
     return sesion
+
+
+_MATE_TOLERANCIA = 2 / 255                # diferencia máxima con la CPU para quedarse con la GPU (DirectML: 0,03/255)
+
+
+def _comparar_con_cpu(ort, clave, imagen, alfa):
+    """v5.86 (Mac): CoreML puede calcular en 16 bits según el equipo y en las Macs de GitHub no hay tarjeta con la que medirlo. El primer
+    alfa de la GPU se compara con el de la CPU: si se aparta más de _MATE_TOLERANCIA, todo el recorte sigue en la CPU (y vale el de la CPU)."""
+    import numpy as np
+    opciones = ort.SessionOptions()
+    opciones.log_severity_level = 3
+    with _LOCK:
+        cpu = _MODELOS.get(('onnx', clave))
+        if cpu is None:
+            cpu = _MODELOS[('onnx', clave)] = ort.InferenceSession(clave, sess_options=opciones, providers=['CPUExecutionProvider'])
+    referencia = cpu.run(None, {cpu.get_inputs()[0].name: imagen})[0][0, 0]
+    diferencia = float(np.abs(np.clip(alfa, 0, 1) - np.clip(referencia, 0, 1)).max())
+    with _LOCK:
+        if diferencia <= _MATE_TOLERANCIA:
+            _MATE['igual_cpu'] = True
+            del _MODELOS[('onnx', clave)]                              # (la de la CPU ya no hace falta)
+            print(f'mate: CoreML igual que la CPU (máx. {diferencia * 255:.2f}/255)', file=sys.stderr)
+            return alfa
+        print(f'mate: CoreML se aparta {diferencia * 255:.1f}/255 de la CPU: el recorte sigue en la CPU', file=sys.stderr)
+        _MATE['gpu'] = ''
+        for x in [x for x in _MODELOS if x[0] == 'onnx' and len(x) == 4]:
+            del _MODELOS[x]
+    return referencia
 
 
 def _mate_activo(datos):
@@ -417,6 +447,8 @@ def _mate_activo(datos):
                 del _MODELOS[x]
             sesion = _sesion_mate(ort, clave, alto, ancho)
         alfa = sesion.run(None, {sesion.get_inputs()[0].name: imagen})[0][0, 0]
+    if _MATE['gpu'] == 'CoreMLExecutionProvider' and not _MATE.get('igual_cpu'):
+        alfa = _comparar_con_cpu(ort, clave, imagen, alfa)
     alfa = np.clip(alfa, 0, 1)
     np.save(salida, alfa, allow_pickle=False)
     return {'alto': int(alfa.shape[0]), 'ancho': int(alfa.shape[1]), 'gpu': _MATE['gpu'] or ''}

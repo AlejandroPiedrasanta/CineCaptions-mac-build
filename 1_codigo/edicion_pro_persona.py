@@ -108,8 +108,7 @@ def disponible() -> bool:
     try:
         import motor_compat
         import av  # noqa: F401
-        if getattr(motor_compat, 'EN_PROCESO', False):   # v5.58: en el Mac el motor va dentro del programa, pero el recorte no está probado allí
-            return False
+        # (v5.86: también en el Mac, con el motor dentro del programa; hasta la 5.85 se apagaba allí «por no estar probado»)
         return motor_compat.instalado() and ruta_modelo() is not None
     except Exception:
         return False

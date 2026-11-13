@@ -13740,5 +13740,55 @@
   "ko": "더 견고해졌습니다: 백신이나 다른 프로그램이 파일을 잠시 열고 있어도 설정, 라이선스, 사운드가 더 이상 사라지지 않으며, 음성 단계에서 취소하면 그래픽 카드가 즉시 해제됩니다.",
   "zh": "更稳定：即使杀毒软件或其他程序短暂占用文件，你的设置、许可证和音效也不会再丢失；在语音阶段取消会立即释放显卡。",
   "ru": "Надёжнее: настройки, лицензия и звуки больше не теряются, если антивирус или другая программа ненадолго открыли файл, а «Отмена» во время распознавания речи сразу освобождает видеокарту."
+ },
+ "Qwen3-ASR necesita una Mac con Apple Silicon: se usa Whisper.": {
+  "en": "Qwen3-ASR needs a Mac with Apple Silicon: Whisper is used.",
+  "pt": "O Qwen3-ASR precisa de um Mac com Apple Silicon: usa-se o Whisper.",
+  "fr": "Qwen3-ASR nécessite un Mac avec Apple Silicon : Whisper est utilisé.",
+  "de": "Qwen3-ASR braucht einen Mac mit Apple Silicon: Whisper wird verwendet.",
+  "it": "Qwen3-ASR richiede un Mac con Apple Silicon: si usa Whisper.",
+  "ja": "Qwen3-ASR には Apple シリコン搭載の Mac が必要です：Whisper を使用します。",
+  "ko": "Qwen3-ASR에는 Apple Silicon Mac이 필요합니다: Whisper를 사용합니다.",
+  "zh": "Qwen3-ASR 需要搭载 Apple 芯片的 Mac：将使用 Whisper。",
+  "ru": "Для Qwen3-ASR нужен Mac с Apple Silicon: используется Whisper.",
+  "nl": "Qwen3-ASR heeft een Mac met Apple Silicon nodig: Whisper wordt gebruikt.",
+  "tr": "Qwen3-ASR için Apple Silicon işlemcili bir Mac gerekir: Whisper kullanılıyor.",
+  "pl": "Qwen3-ASR wymaga Maca z Apple Silicon: używany jest Whisper."
+ },
+ "El motor ya se está instalando.": {
+  "en": "The engine is already being installed.",
+  "pt": "O motor já está sendo instalado.",
+  "fr": "Le moteur est déjà en cours d’installation.",
+  "de": "Die Engine wird bereits installiert.",
+  "it": "Il motore è già in fase di installazione.",
+  "ja": "エンジンはすでにインストール中です。",
+  "ko": "엔진이 이미 설치 중입니다.",
+  "zh": "引擎已在安装中。",
+  "ru": "Движок уже устанавливается.",
+  "nl": "De engine wordt al geïnstalleerd.",
+  "tr": "Motor zaten yükleniyor.",
+  "pl": "Silnik jest już instalowany."
+ },
+ "Mac: «Captions detrás de ti», la persona delante de los gráficos de la Edición PRO y las posiciones PRO ya funcionan también en Mac, como en Windows.": {
+  "en": "Mac: “Captions behind you”, the person in front of the PRO Edit graphics and the PRO positions now work on Mac too, just like on Windows.",
+  "pt": "Mac: «Legendas atrás de você», a pessoa à frente dos gráficos da Edição PRO e as posições PRO agora funcionam também no Mac, como no Windows.",
+  "fr": "Mac : « Sous-titres derrière toi », la personne devant les graphiques de l’Édition PRO et les positions PRO fonctionnent désormais aussi sur Mac, comme sur Windows.",
+  "de": "Mac: „Untertitel hinter dir“, die Person vor den Grafiken der PRO-Bearbeitung und die PRO-Positionen funktionieren jetzt auch auf dem Mac, wie unter Windows.",
+  "it": "Mac: «Sottotitoli dietro di te», la persona davanti alla grafica dell’Edizione PRO e le posizioni PRO ora funzionano anche su Mac, come su Windows.",
+  "ja": "Mac：「あなたの後ろのキャプション」、PRO 編集のグラフィックの前に立つ人物、PRO の配置が、Windows と同じく Mac でも使えるようになりました。",
+  "ko": "Mac: «내 뒤의 자막», PRO 편집 그래픽 앞의 인물, PRO 위치가 이제 Windows처럼 Mac에서도 작동합니다.",
+  "zh": "Mac：“人物身后的字幕”、PRO 剪辑图形前方的人物以及 PRO 位置现在在 Mac 上也能使用，和 Windows 一样。",
+  "ru": "Mac: «Субтитры за тобой», человек перед графикой PRO-монтажа и PRO-позиции теперь работают и на Mac, как в Windows."
+ },
+ "Mac con Apple Silicon: el motor de voz Qwen3-ASR y la IA de texto (palabras grandes, ortografía y emojis) se instalan solos en segundo plano la primera vez que abres CineCaptions; el avance se ve en Ajustes › General.": {
+  "en": "Mac with Apple Silicon: the Qwen3-ASR voice engine and the text AI (big words, spelling and emojis) install themselves in the background the first time you open CineCaptions; you can follow the progress in Settings › General.",
+  "pt": "Mac com Apple Silicon: o motor de voz Qwen3-ASR e a IA de texto (palavras grandes, ortografia e emojis) se instalam sozinhos em segundo plano na primeira vez que você abre o CineCaptions; o progresso aparece em Ajustes › Geral.",
+  "fr": "Mac avec Apple Silicon : le moteur vocal Qwen3-ASR et l’IA de texte (grands mots, orthographe et emojis) s’installent seuls en arrière-plan la première fois que tu ouvres CineCaptions ; la progression s’affiche dans Réglages › Général.",
+  "de": "Mac mit Apple Silicon: Die Sprach-Engine Qwen3-ASR und die Text-KI (große Wörter, Rechtschreibung und Emojis) installieren sich beim ersten Öffnen von CineCaptions selbst im Hintergrund; den Fortschritt siehst du unter Einstellungen › Allgemein.",
+  "it": "Mac con Apple Silicon: il motore vocale Qwen3-ASR e l’IA di testo (parole grandi, ortografia ed emoji) si installano da soli in background la prima volta che apri CineCaptions; l’avanzamento si vede in Impostazioni › Generale.",
+  "ja": "Apple シリコン搭載の Mac：音声エンジン Qwen3-ASR とテキスト AI（大きな単語、スペル、絵文字）は、CineCaptions を初めて開いたときにバックグラウンドで自動的にインストールされます。進行状況は 設定 › 一般 で確認できます。",
+  "ko": "Apple Silicon Mac: 음성 엔진 Qwen3-ASR과 텍스트 AI(큰 단어, 맞춤법, 이모지)가 CineCaptions를 처음 열 때 백그라운드에서 자동으로 설치됩니다. 진행 상황은 설정 › 일반에서 볼 수 있습니다.",
+  "zh": "搭载 Apple 芯片的 Mac：语音引擎 Qwen3-ASR 和文字 AI（大字、拼写和表情）会在你第一次打开 CineCaptions 时在后台自动安装；可在 设置 › 通用 中查看进度。",
+  "ru": "Mac с Apple Silicon: голосовой движок Qwen3-ASR и текстовый ИИ (крупные слова, орфография и эмодзи) устанавливаются сами в фоне при первом запуске CineCaptions; ход установки виден в Настройки › Общие."
  }
 }

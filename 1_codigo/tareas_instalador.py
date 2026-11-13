@@ -552,8 +552,8 @@ def _tarea_modelo(estado):
 # ---------------------------------------------------------------------------
 def _tarea_motor_ia(estado):
     import motor_voz
-    if sys.platform != 'win32':
-        estado.ok('El motor Qwen3 por ahora solo está para Windows: se usa Whisper')
+    if not motor_voz.SOPORTADO:          # (v5.86: también la Mac con Apple Silicon; la Intel, sin un PyTorch nuevo, no)
+        estado.ok('El motor Qwen3 necesita Windows o una Mac con Apple Silicon: se usa Whisper')
         return
     # v5.2: mirando los archivos (no solo listo.json), en un segundo
     info = motor_voz.asegurar_listo()

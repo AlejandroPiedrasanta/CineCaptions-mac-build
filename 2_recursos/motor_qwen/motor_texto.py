@@ -184,9 +184,27 @@ def cabe_en_disco(clave):
     return libre >= TAMANO_GB.get(clave, 10.0) + 2.0, round(libre, 1)
 
 
+def _mps(torch):
+    """v5.86: (sí, GB) de la tarjeta de una Mac con Apple Silicon: lo que Metal le deja usar de la memoria unificada."""
+    try:
+        if sys.platform != 'darwin' or not torch.backends.mps.is_available():
+            return False, 0.0
+        try:
+            return True, torch.mps.recommended_max_memory() / 1024 ** 3
+        except Exception:
+            return True, os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / 1024 ** 3 * 2 / 3
+    except Exception:
+        return False, 0.0
+
+
 def elegir(pedido):
     import torch
     if not torch.cuda.is_available():
+        hay, memoria = _mps(torch)
+        if hay:                          # (v5.86, Mac: Gemma va ENTERA a la tarjeta —sin la RAM aparte de _cargar_gemma—: pide más que en NVIDIA)
+            if pedido in REPOS:
+                return pedido, 'mps', torch.bfloat16
+            return ('gemma4' if memoria >= 20 else '4B' if memoria >= 12 else '1.7B'), 'mps', torch.bfloat16
         return '1.7B' if pedido not in REPOS else pedido, 'cpu', torch.float32
     vram = torch.cuda.get_device_properties(0).total_memory / 1024 ** 3
     dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
