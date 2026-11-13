@@ -1670,24 +1670,26 @@ class Interruptor(QAbstractButton):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         h = self.height()
-        pista = QRectF(1, (h - 22) / 2, 40, 22)
+        # v5.87: la pista en píxeles ENTEROS de la pantalla (a 150 % caía en medio píxel: borde de abajo borroso) y sin el «neón»
+        # (dos aros del acento casi transparentes que, sobre el fondo oscuro, se veían como un borde verde sucio alrededor)
+        dpr = self.devicePixelRatioF() or 1.0
+        o = p.deviceTransform().map(QPointF(0.0, 0.0))  # (dónde cae el widget en la pantalla: a 150 % puede empezar en medio píxel)
+        pista = QRectF((round(o.x() + dpr) - o.x()) / dpr, (round(o.y() + (h - 22) / 2 * dpr) - o.y()) / dpr, 40, 22)
         t = self._pos
         color = mezclar(ACCENT, '#1C2840', t)
         if not self.isEnabled():
             color = QColor('#16223A')
         p.setPen(Qt.PenStyle.NoPen)
-        if self.isEnabled() and t > 0.05:
-            for grosor, alfa in ((9.0, 22), (4.0, 52)):          # el neon del interruptor encendido
-                halo = QColor(ACCENT)
-                halo.setAlpha(int(alfa * min(1.0, t)))
-                p.setBrush(halo)
-                p.drawRoundedRect(pista.adjusted(-grosor / 2, -grosor / 2, grosor / 2, grosor / 2), 11 + grosor / 2, 11 + grosor / 2)
         p.setBrush(color)
         p.drawRoundedRect(pista, 11, 11)
-        x = pista.left() + 3 + t * (pista.width() - 22)
+        bola = QRectF(pista.left() + 3 + t * (pista.width() - 22), pista.top() + 3, 16, 16)
+        if self.isEnabled():                          # la bolita apoyada: una sombra corta y suave debajo
+            for crece, baja, alfa in ((1.2, 1.4, 26), (0.4, 0.8, 42)):
+                p.setBrush(QColor(0, 0, 0, alfa))
+                p.drawEllipse(bola.adjusted(-crece, -crece + baja, crece, crece + baja))
         # (v5.63: con un acento claro la pista encendida es blanca: la bolita se oscurece al encender)
         p.setBrush(mezclar(texto_acento(), '#FFFFFF', t) if self.isEnabled() else QColor('#5A6B87'))
-        p.drawEllipse(QRectF(x, pista.top() + 3, 16, 16))
+        p.drawEllipse(bola)
         if self.text():
             p.setPen(QColor(self._color if self.isEnabled() else '#5A6B87'))
             p.setFont(self.font())

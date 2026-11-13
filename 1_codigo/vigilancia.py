@@ -508,6 +508,25 @@ def revisar_salud_al_arrancar():
     if any(f.get('cuda') == 'faltan' for f in filas):
         preparar_gpu_voz()
     poner_motores_al_dia()
+    try:                                              # v5.87: el instalador de la última actualización (0,6-1,2 GB) no se queda en la carpeta temporal
+        import actualizaciones
+        quitados = actualizaciones.limpiar_descargas_viejas()
+        if quitados:
+            r.info(f'Actualización: quité lo descargado de la anterior ({quitados / 1024 ** 2:.0f} MB).', 'arranque')
+    except Exception:
+        pass
+    if sys.platform.startswith('win') and getattr(sys, 'frozen', False):
+        try:                                          # v5.87: las versiones nuevas se instalan solas también con el programa cerrado (actualizar_fondo)
+            import actualizar_fondo
+            hecho = actualizar_fondo.asegurar_programada()
+            if hecho == 'creada':
+                r.info(f'Actualizaciones: tarea «{actualizar_fondo.NOMBRE_TAREA}» lista (cada {actualizar_fondo.CADA_H} h, con el programa '
+                       'cerrado).', 'arranque')
+            elif hecho.startswith('fallo'):
+                r.aviso(f'Actualizaciones: no pude programar la búsqueda con el programa cerrado ({hecho[7:]}); se actualiza al abrirlo.',
+                        'arranque')
+        except Exception as e:
+            r.aviso(f'Actualizaciones: no pude programar la búsqueda con el programa cerrado ({type(e).__name__}: {e}).', 'arranque')
     avisar_equipo()
     return fallas
 
@@ -556,6 +575,19 @@ def poner_motores_al_dia():
 
 MAC_IA_ESPERA_S = 90                     # tras abrir, antes de empezar la descarga (el arranque y un primer GO van primero)
 MAC_IA_REINTENTO_S = 24 * 3600           # tras un intento fallido, el siguiente automático (con «Instalar» en Ajustes, cuando quiera)
+MAC_IA_DISCO_GB = 12                     # lo mínimo libre para empezar solo: Python + PyTorch (~1,5 GB), voz y alineador (2,5-5) y la IA de texto ligera (4)
+
+
+def _gb_libres(carpeta):
+    """GB libres en el disco de esa carpeta (o de la primera que exista hacia arriba), o None."""
+    try:
+        import shutil
+        p = Path(carpeta)
+        while not p.exists() and p.parent != p:
+            p = p.parent
+        return shutil.disk_usage(p).free / 1024 ** 3
+    except Exception:
+        return None
 
 
 def _motor_ia_en_mac():
@@ -587,6 +619,14 @@ def _motor_ia_en_mac():
                 return
             time.sleep(MAC_IA_ESPERA_S)
             if motor_voz.instalando() or motor_voz.instalado():       # (ya la pidió Ajustes en este rato)
+                return
+            libre = _gb_libres(Path.home())
+            if libre is not None and libre < MAC_IA_DISCO_GB:
+                # v5.87: sin sitio no se empieza (antes bajaba GB hasta llenar el disco y quedaba a medias); se reintenta mañana
+                archivos_seguros.escribir_json(marca, {'fallo': time.time(), 'motivo': f'disco: {libre:.1f} GB libres'})
+                r.aviso(f'Motor de voz e IA: no lo instalo solo porque en el disco quedan {libre:.1f} GB y necesita unos {MAC_IA_DISCO_GB} GB. '
+                        'Libera espacio y lo intento mañana (o ahora con «Instalar motor Qwen3-ASR» en Ajustes › General). Mientras, la voz va '
+                        'con Whisper.', 'arranque')
                 return
             r.info('Motor de voz e IA (Qwen3-ASR y la IA de texto): lo instalo en segundo plano, de 4 a 15 GB según la memoria de esta Mac; '
                    'mientras, la voz va con Whisper. El avance se ve en Ajustes › General.', 'arranque')

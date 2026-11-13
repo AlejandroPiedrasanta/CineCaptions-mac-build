@@ -211,28 +211,24 @@ fi
 # 8) .dmg -------------------------------------------------------------------------------------------------------
 paso "Imagen de disco .dmg"
 STAGE="$OBRA/dmg"; rm -rf "$STAGE"; mkdir -p "$STAGE"
-cp "$PKG" "$STAGE/"
-cp "$AQUI/Desinstalar_CineCaptions.command" "$STAGE/"; chmod +x "$STAGE/Desinstalar_CineCaptions.command"
-cat > "$STAGE/LEEME.txt" <<TXT
-CineCaptions $VERSION para Mac ($NOMBRE_ARQ) · By Cinema Productions
-
-1. Abre "Instalar_CineCaptions.pkg" y sigue los pasos.
-   Si macOS dice que no se puede abrir: clic derecho sobre el .pkg > Abrir > Abrir
-   (o Ajustes del Sistema > Privacidad y seguridad > "Abrir de todos modos").
-2. Abre CineCaptions desde Aplicaciones.
-3. Para desinstalar: doble clic en "Desinstalar_CineCaptions.command".
-
-En DaVinci Resolve: Preferencias > Sistema > General > Uso de scripting externo = Local.
-TXT
+# v5.87 (el usuario: «en Mac el instalador hazlo más intuitivo, se verá mejor»): la ventana del .dmg con fondo y los dos pasos (doble clic en
+# «Instalar CineCaptions» → ábrelo desde Aplicaciones), los consejos que antes iban en un LEEME.txt y sin barras. Lo arma dmgbuild
+# (7_mac/dmg/ajustes_dmg.py) escribiendo el .DS_Store él mismo: sin el Finder ni AppleScript, que en las Mac de GitHub no son de fiar.
+cp "$PKG" "$STAGE/Instalar CineCaptions.pkg"
+cp "$AQUI/Desinstalar_CineCaptions.command" "$STAGE/Desinstalar.command"; chmod +x "$STAGE/Desinstalar.command"
+"$VPY" -m pip install --progress-bar off -q 'dmgbuild==1.6.7' || falla "No pude instalar dmgbuild (la ventana del .dmg)"
+FONDO="$OBRA/fondo_dmg.tiff"
+tiffutil -cathidpicheck "$AQUI/dmg/fondo.png" "$AQUI/dmg/fondo@2x.png" -out "$FONDO" >/dev/null || falla "No pude preparar el fondo del .dmg"
 SALIDA="${CINECAPTIONS_SALIDA:-$RAIZ/INSTALADORES/Mac}"; mkdir -p "$SALIDA"
 rm -f "$SALIDA"/CineCaptions_Mac_${NOMBRE_ARQ}_*.dmg          # la version anterior de esta arquitectura se quita
 DMG="$SALIDA/CineCaptions_Mac_${NOMBRE_ARQ}_$VERSION.dmg"
 # v5.5.0: en las Mac de GitHub hdiutil a veces falla con «Resource busy» (el disco lo está mirando el sistema): hasta 5 intentos
 for intento in 1 2 3 4 5; do
-    hdiutil create -volname "CineCaptions $VERSION" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null && break
-    [ "$intento" = 5 ] && falla "hdiutil no pudo crear la imagen de disco"
+    "$VPY" -m dmgbuild -s "$AQUI/dmg/ajustes_dmg.py" -D stage="$STAGE" -D fondo="$FONDO" -D icono="$OBRA/CineCaptions.icns" \
+        "CineCaptions $VERSION" "$DMG" >/dev/null && break
+    [ "$intento" = 5 ] && falla "dmgbuild no pudo crear la imagen de disco"
     echo "    hdiutil ocupado (intento $intento de 5): reintento en 15 s"
-    sleep 15
+    rm -f "$DMG"; sleep 15
 done
 [ -n "${FIRMA_APP:-}" ] && codesign --sign "$FIRMA_APP" "$DMG"
 if [ -n "${NOTARIO_PERFIL:-}" ] && [ -n "${FIRMA_APP:-}" ]; then

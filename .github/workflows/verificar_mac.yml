@@ -1,0 +1,88 @@
+# CineCaptions · By Cinema Productions
+# v5.87: VERIFICA el programa en Macs de verdad (Apple Silicon e Intel) sin publicar nada: compila como para el instalador (con su autoprueba),
+# corre 1_codigo/herramientas_dev/verificar_mac.py (simulador de equipos, todas las ventanas, cada opción encendida y apagada, GO con los
+# 9 estilos sin editores y con un Premiere simulado) y prueba la actualización (el .pkg del .dmg, instalarlo y que el programa se vuelva a abrir).
+# Se lanza al subir una rama «verificar-mac-…» (o a mano). Resultado: el artefacto «Verificacion-Mac-<arq>» (resumen.txt y un registro por parte).
+name: Verificar Mac
+on:
+  workflow_dispatch:
+  push:
+    branches: ['verificar-mac-*']
+jobs:
+  verificar:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - nombre: AppleSilicon
+            runner: macos-15
+            python: '3.14'
+          - nombre: Intel
+            runner: macos-15-intel
+            python: '3.13'
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 170
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.13.0'
+      - name: Compilar (con la autoprueba del compilado)
+        id: compilar
+        env:
+          CINECAPTIONS_PYTHON: python3
+          CINECAPTIONS_SIN_PANTALLA: '1'
+        run: bash 7_mac/Construir_Instalador_Mac.sh
+      - name: Registro de la autoprueba
+        if: always()
+        run: cat 6_compilacion_mac/autoprueba.txt || true
+      - name: Verificar todo (simulador, ventanas, opciones, GO con los 9 estilos, Premiere simulado)
+        if: always()
+        run: |
+          VPY=6_compilacion_mac/venv314/bin/python
+          mkdir -p verificacion
+          "$VPY" 1_codigo/herramientas_dev/verificar_mac.py verificacion || echo "VERIFICACION_CON_FALLOS" >> verificacion/resumen.txt
+          cat verificacion/resumen.txt
+      - name: Actualización (sacar el .pkg del .dmg, instalarlo y volver a abrir el programa)
+        if: always()
+        run: |
+          VPY=6_compilacion_mac/venv314/bin/python
+          DMG=$(ls INSTALADORES/Mac/CineCaptions_Mac_*.dmg | head -1)
+          sleep 3000 &
+          PIDF=$!
+          "$VPY" - "$DMG" "$PIDF" <<'EOF' 2>&1 | tee verificacion/actualizacion.txt
+          import os, subprocess, sys, time
+          sys.path.insert(0, '1_codigo')
+          import actualizaciones as A
+          dmg, pid = sys.argv[1], int(sys.argv[2])
+          pkg = A._pkg_de_dmg(dmg)
+          print('pkg sacado del dmg:', pkg, os.path.exists(pkg))
+          script, log = '/tmp/actualizar_mac.sh', '/tmp/actualizacion_mac.log'
+          open(script, 'w').write(A.SCRIPT_MAC)
+          os.chmod(script, 0o755)
+          p = subprocess.Popen(['/bin/bash', script, str(pid), str(pkg), A.APP_MAC, log, 'prueba'], start_new_session=True)
+          time.sleep(4)
+          os.kill(pid, 9)                                   # el «programa» viejo se cierra: el script sigue solo
+          p.wait(timeout=1500)
+          texto = open(log).read()
+          print(texto)
+          time.sleep(25)
+          r = subprocess.run(['pgrep', '-fl', 'CineCaptions.app/Contents/MacOS'], capture_output=True, text=True)
+          print('procesos de CineCaptions:', r.stdout.strip() or '(ninguno)')
+          ok = os.path.isdir(A.APP_MAC) and 'instalado' in texto and 'abierto' in texto and bool(r.stdout.strip())
+          subprocess.run(['pkill', '-f', 'CineCaptions.app/Contents/MacOS'])
+          print('ACTUALIZACION', 'OK' if ok else 'FALLA')
+          sys.exit(0 if ok else 1)
+          EOF
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: Verificacion-Mac-${{ matrix.nombre }}
+          path: |
+            verificacion/
+            6_compilacion_mac/autoprueba.txt
+          retention-days: 3
+          if-no-files-found: warn

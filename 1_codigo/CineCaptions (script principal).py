@@ -265,6 +265,14 @@ def _codigo_de(valor):
     if valor in LANG_CODE_BY_NAME:
         return LANG_CODE_BY_NAME[valor]
     return CODIGO_POR_NOMBRE_ES.get(IDIOMAS_RENOMBRADOS.get(valor, valor))
+def modo_al_abrir(prefs, modos=('normal', 'dinamico', 'destacados')):
+    """v5.87 (cliente de Mac: «sigue sin verse los estilos… solo dice no hay plantilla de básicos»): el modo con el que abre el programa.
+    Antes, unas preferencias SIN «modo» (escritas por otra parte del programa antes de que la ventana guardara las suyas) daban el modo de
+    SUBTÍTULOS BÁSICOS, y uno guardado así se quedaba para siempre: el programa no trae plantillas de básicos y su selector («Formato de los
+    subtítulos») está oculto, así que la página Estilo solo decía «No hay plantillas de básicos» y no enseñaba ningún estilo, sin forma de
+    salir. Ahora: el dinámico (el de los estilos), salvo «destacados» guardado tal cual."""
+    modo = (prefs or {}).get('modo')
+    return 'destacados' if modo == 'destacados' and 'destacados' in modos else 'dinamico'
 ACCENT = ui.ACCENT
 ACCENT_HOVER = ui.ACCENT_HOVER
 BG_COLOR = ui.BG_COLOR
@@ -7514,6 +7522,10 @@ class SubtitleApp(QWidget):
                 self._estudio_ventana._al_cerrar()
             except Exception:
                 pass
+        try:                                          # v5.87: la versión nueva ya descargada se instala sola al cerrar (sin ventanas)
+            self._instalar_al_cerrar()
+        except Exception:
+            pass
         super().closeEvent(e)
     # -- Inicio ---------------------------------------------------------------
     def _pagina_inicio(self):
@@ -8185,6 +8197,7 @@ class SubtitleApp(QWidget):
                         pass
                     self._pintar_opciones_go()
                     registro.info(f"Hay una versión nueva de CineCaptions: {r.get('version')} (la instalada es la {APP_VERSION}).", 'actualizaciones')
+                self._predescargar_actualizacion(nueva)
                 self._avisar_actualizacion()
             elif r.get('estado') == 'al_dia':
                 self._act_comprobada = True
@@ -8196,6 +8209,50 @@ class SubtitleApp(QWidget):
                         pass
                     self._pintar_opciones_go()
         correr_en_hilo(self, lambda: actualizaciones.comprobar_ligero(APP_VERSION, False), fin)
+    def _predescargar_actualizacion(self, r):
+        """v5.87 (pedido: «que auto lo descargue y se instalen»): en cuanto sale una versión nueva se descarga sola en segundo plano (con su
+        SHA-256 firmado) y se instala SOLA al cerrar el programa (_instalar_al_cerrar). Una vez por versión; si falla, se reintenta a los 30 min.
+        «Actualizar ahora» la aprovecha (_ofrecer_actualizacion espera a que acabe en vez de bajarla otra vez)."""
+        archivo = (r or {}).get('archivo')
+        pre = getattr(self, '_predescarga', None) or {}
+        if not archivo or not r.get('version') or getattr(self, '_descargando_actualizacion', False):
+            return
+        if pre.get('version') == r['version'] and (pre.get('hilo') is not None and (pre['hilo'].is_alive() or pre.get('ruta'))):
+            return
+        if pre.get('version') == r['version'] and time.time() - pre.get('fallo_ts', 0) < 1800:
+            return
+        est = {'version': r['version'], 'ruta': None, 'fallo_ts': 0}
+
+        def trabajo():
+            import actualizaciones
+            try:
+                est['ruta'] = actualizaciones.descargar(archivo, APP_VERSION)
+                registro.info(f"Versión {r['version']} descargada y comprobada: se instala sola al cerrar CineCaptions.", 'actualizaciones')
+            except Exception as e:
+                est['fallo_ts'] = time.time()
+                registro.info(f"Versión {r['version']}: no pude descargarla en segundo plano ({type(e).__name__}: {e}); lo reintento.",
+                              'actualizaciones')
+        est['hilo'] = threading.Thread(target=trabajo, daemon=True, name='predescarga-actualizacion')
+        self._predescarga = est
+        est['hilo'].start()
+    def _instalar_al_cerrar(self):
+        """v5.87: con la versión nueva ya descargada y comprobada, al cerrar el programa se instala sola y sin ventanas (Windows: el instalador
+        en silencio; Mac: el servicio del sistema, sin contraseña). Nada si ya se lanzó un instalador o la descarga no terminó."""
+        pre = getattr(self, '_predescarga', None) or {}
+        ruta = pre.get('ruta')
+        if not ruta or getattr(self, '_instalador_lanzado', False) or not Path(ruta).is_file():
+            return False
+        try:
+            import actualizaciones
+            if not actualizaciones.es_mas_nueva(pre.get('version') or '', APP_VERSION):
+                return False
+            ok = actualizaciones.instalar(ruta, silencioso=True)        # (al cerrar: un Popen o un archivo; la ventana ya se va)
+        except Exception:
+            ok = False
+        if ok:
+            self._instalador_lanzado = True
+            registro.info(f"Actualización a {pre.get('version')}: se instala sola ahora que se cerró CineCaptions.", 'actualizaciones')
+        return ok
     def _trabajando_ahora(self):
         return getattr(self, '_go_corriendo', False) or getattr(self, '_editor', None) is not None or (getattr(self, 'worker', None) is not None and self.worker.is_alive())
     def _avisar_actualizacion(self):
@@ -8317,7 +8374,15 @@ class SubtitleApp(QWidget):
                 est['fase'] = 1
         def trabajo():
             try:
-                est['ruta'] = actualizaciones.descargar(archivo, APP_VERSION, progreso=progreso, cancelado=lambda: est['cancelado'])
+                # v5.87: la que se bajó sola en segundo plano (_predescargar_actualizacion): se espera a que acabe y se usa (dos descargas a la
+                # vez en la misma carpeta se borrarían una a la otra)
+                pre = getattr(self, '_predescarga', None) or {}
+                if pre.get('version') == r.get('version') and pre.get('hilo') is not None:
+                    pre['hilo'].join()
+                    if pre.get('ruta') and Path(pre['ruta']).is_file():
+                        est['ruta'], est['fase'] = pre['ruta'], 1
+                if not est['ruta']:
+                    est['ruta'] = actualizaciones.descargar(archivo, APP_VERSION, progreso=progreso, cancelado=lambda: est['cancelado'])
             except BaseException as e:
                 est['error'] = str(e) or type(e).__name__
                 return
@@ -8325,7 +8390,8 @@ class SubtitleApp(QWidget):
                 # v5.4.45: el instalador se lanza AQUI, en el hilo de la descarga: lanzar un .exe de 230 MB (Windows lo
                 # escanea antes de abrirlo) desde el hilo de la interfaz la dejaba 3 s congelada (registro del 11-10)
                 est['fase'] = 2
-                est['lanzado'] = actualizaciones.instalar(est['ruta'])
+                est['lanzado'] = actualizaciones.instalar(est['ruta'], aviso_mac=tr(
+                    'CineCaptions se actualiza a la {v}: escribe la contraseña de tu Mac para instalarla.', v=r['version']))
         self._descargando_actualizacion = True
         def trabajo_y_liberar():
             try:
@@ -8371,8 +8437,10 @@ class SubtitleApp(QWidget):
                 return
             panel.terminar(tr('Instalando…'))
             self._instalador_lanzado = True
-            if sys.platform.startswith('win'):
-                despues(1500, lambda: QApplication.instance().quit(), self)       # el instalador ya está en marcha: CineCaptions se cierra y él lo vuelve a abrir
+            if sys.platform.startswith('win') or sys.platform == 'darwin':
+                # el instalador ya está en marcha: CineCaptions se cierra y él lo vuelve a abrir (v5.87: también en la Mac,
+                # actualizaciones._instalar_mac; hasta la 5.86 pedía abrir el .pkg a mano con el programa abierto y no se volvía a abrir)
+                despues(1500, lambda: QApplication.instance().quit(), self)
             else:
                 despues(1200, lambda: dlg.cerrar(), self)
                 messagebox.showinfo(tr('Actualización descargada'), tr('Se abrió el disco de CineCaptions {v}: abre «Instalar_CineCaptions.pkg» para terminar.', v=r['version']), parent=self)
@@ -8791,6 +8859,10 @@ class SubtitleApp(QWidget):
             pass                               # ante la duda, como siempre: con Resolve
         return None
     def _texto_pide_video(self, motivo):
+        if motivo == 'ajuste' and ((getattr(self, '_estado_sistema', None) or {}).get('modo') in ('studio', 'puente')):
+            # v5.87 (informe de un cliente: Resolve Studio abierto en la página Edit, «Video sin editores» elegido y GO sin video): con Resolve
+            # conectado lo más probable es que quiera su timeline; la línea de Inicio dice también cómo volver a él
+            return tr('Arrastra tu video aquí, o en Ajustes › General elige «Usar con DaVinci Resolve» para usar tu timeline')
         return (tr('Primero arrastra tu video aquí: GO lo subtitula y lo coloca en Premiere Pro') if motivo == 'premiere' else
                 tr('Primero arrastra tu video aquí: GO te lo devuelve con los subtítulos puestos'))
 
@@ -9796,9 +9868,13 @@ class SubtitleApp(QWidget):
                             return
                         if not piezas.get('ok') or not piezas.get('textos'):
                             piezas = None
-                        elif piezas.get('faltan_fuentes'):     # (sin ellas Premiere para con «Resolver fuentes»: van con Arial)
-                            registro.aviso(tr('En Premiere Pro estas letras van con Arial porque no están bien instaladas en este equipo: {f}. Instálalas y reinicia Premiere.',
-                                              f=', '.join(piezas['faltan_fuentes'])), 'GO · Premiere Pro')
+                        else:
+                            if piezas.get('faltan_fuentes'):     # (sin ellas Premiere para con «Resolver fuentes»: van con Arial)
+                                registro.aviso(tr('En Premiere Pro estas letras van con Arial porque no están bien instaladas en este equipo: {f}. Instálalas y reinicia Premiere.',
+                                                  f=', '.join(piezas['faltan_fuentes'])), 'GO · Premiere Pro')
+                            if piezas.get('fuentes_reiniciar'):  # v5.87: instaladas, pero el Premiere abierto no las tiene en su lista
+                                registro.aviso(tr('Premiere Pro aún no ve estas letras (las instaladas mientras estaba abierto o que faltan en su lista de letras): {f}. Esta vez van con Arial del mismo ancho; reinicia Premiere y saldrán con la suya.',
+                                                  f=', '.join(piezas['fuentes_reiniciar'])), 'GO · Premiere Pro')
                     else:
                         registro.info(tr('Premiere Pro tiene abierto el panel anterior de CineCaptions: reinícialo una vez para que los textos lleguen editables. Esta vez van como una capa de video.'),
                                       'GO · Premiere Pro')
@@ -14067,10 +14143,7 @@ class SubtitleApp(QWidget):
             self.destino_var.set(NOMBRE_POR_CODIGO[destino])
         self._refrescar_destinos()
         self.translate_var.set(bool(p.get('traducir')))
-        modo = p.get('modo')
-        if modo not in self.MODOS.values():
-            modo = 'dinamico' if p.get('dinamico') else 'normal'
-        self.modo_var.set(self._etiqueta_de_modo[modo])
+        self.modo_var.set(self._etiqueta_de_modo[modo_al_abrir(p, self.MODOS.values())])
         look = p.get('look')
         if look in self.LOOKS.values():
             self.look_var.set(self._etiqueta_de_look[look])
@@ -16126,6 +16199,28 @@ def _licencia_al_abrir():
     except Exception:
         guardar_log_de_error(traceback.format_exc())
         return False
+def _cerrar_bien_al_terminar(ventana):
+    """v5.87 (Mac): el instalador de una versión nueva cierra la vieja con SIGTERM (7_mac/pkg/scripts/postinstall). Por defecto Python moría
+    al momento, sin guardar las preferencias ni la marca de «se cerró bien» (el siguiente arranque lo contaba como caída). Ahora SIGTERM cierra
+    la ventana como el botón (closeEvent guarda) y sale. Python atiende la señal entre dos líneas de Python: el latido de la interfaz
+    (registro.vigilar_congelaciones) las corre a menudo. En Windows no hay SIGTERM entre programas: nada que hacer."""
+    if sys.platform.startswith('win'):
+        return
+    try:
+        import signal
+
+        def al_terminar(_senal, _marco):
+            def cerrar():
+                try:
+                    ventana.close()
+                finally:
+                    QApplication.instance().quit()
+            ui.QTimer.singleShot(0, cerrar)
+        signal.signal(signal.SIGTERM, al_terminar)
+    except Exception:
+        pass
+
+
 def main():
     ui.ajustar_planificacion()
     try:                                              # v5.34: la clave de Epidemic (EPIDEMIC_API_KEY) sale del entorno al arrancar: Resolve, la IA local y node no la heredan
@@ -16195,6 +16290,7 @@ def main():
                                                       # v5.85: atascado de verdad (4 min, interfaz sin responder) → se cierra solo y la próxima vez abre
     ventana = SubtitleApp(initial_video=initial)
     ventana.show()
+    _cerrar_bien_al_terminar(ventana)
     vigilancia.arranque_listo()
     ui.despues(3000, ventana._chequeo_de_arranque, ventana)      # v5.11: librerías / motores / MCP: lo que falle queda en el Registro y se avisa
     ui.despues(4000, ui.congelar_gc, ventana)          # con todo ya cargado: el recolector de basura deja de recorrerlo (menos microcortes)

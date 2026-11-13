@@ -12,10 +12,12 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    herramientas_dev\   (48 archivos)
+    herramientas_dev\   (50 archivos)
     remotion\   (16767 archivos)
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
+    actualizar_fondo.py
+        actualizaciones con el programa CERRADO: avisa, descarga, comprueba e instala sola (Windows y Mac).
     actualizar_ui.py
         la ventana «Actualizando CineCaptions» (v5.49, propuesta A + B elegida por el usuario; pulida: «más profesional,
     ajustes_ui.py

@@ -4651,6 +4651,21 @@
     "Qwen3-ASR necesita una Mac con Apple Silicon: se usa Whisper.": "Qwen3-ASR には Apple シリコン搭載の Mac が必要です：Whisper を使用します。",
     "El motor ya se está instalando.": "エンジンはすでにインストール中です。",
     "Mac: «Captions detrás de ti», la persona delante de los gráficos de la Edición PRO y las posiciones PRO ya funcionan también en Mac, como en Windows.": "Mac：「あなたの後ろのキャプション」、PRO 編集のグラフィックの前に立つ人物、PRO の配置が、Windows と同じく Mac でも使えるようになりました。",
-    "Mac con Apple Silicon: el motor de voz Qwen3-ASR y la IA de texto (palabras grandes, ortografía y emojis) se instalan solos en segundo plano la primera vez que abres CineCaptions; el avance se ve en Ajustes › General.": "Apple シリコン搭載の Mac：音声エンジン Qwen3-ASR とテキスト AI（大きな単語、スペル、絵文字）は、CineCaptions を初めて開いたときにバックグラウンドで自動的にインストールされます。進行状況は 設定 › 一般 で確認できます。"
+    "Mac con Apple Silicon: el motor de voz Qwen3-ASR y la IA de texto (palabras grandes, ortografía y emojis) se instalan solos en segundo plano la primera vez que abres CineCaptions; el avance se ve en Ajustes › General.": "Apple シリコン搭載の Mac：音声エンジン Qwen3-ASR とテキスト AI（大きな単語、スペル、絵文字）は、CineCaptions を初めて開いたときにバックグラウンドで自動的にインストールされます。進行状況は 設定 › 一般 で確認できます。",
+    "CineCaptions se actualiza a la {v}: escribe la contraseña de tu Mac para instalarla.": "CineCaptions を {v} にアップデートします。インストールするには Mac のパスワードを入力してください。",
+    "{n} conectado · reinícialo una vez para estrenar el panel nuevo": "{n} 接続済み · 新しいパネルを使うには一度再起動してください",
+    "Reinícialo una vez: panel nuevo": "一度再起動：新しいパネル",
+    "Premiere Pro corre el panel de CineCaptions de antes (se actualizó con Premiere abierto): GO funciona, pero las animaciones de los textos llegan al reiniciar Premiere una vez.": "Premiere Pro は以前の CineCaptions パネルで動いています（Premiere を開いたまま更新されました）。GO は動きますが、テキストのアニメーションは Premiere を一度再起動すると反映されます。",
+    "Premiere Pro está en su pantalla de inicio: le abro el proyecto…": "Premiere Pro がホーム画面です：プロジェクトを開いています…",
+    "Premiere Pro se cerró mientras colocaba (lo que ya estaba puesto quedó en el proyecto recuperado). Ábrelo y pulsa GO otra vez.": "配置中に Premiere Pro が閉じました（配置済みのものは復元されたプロジェクトに残っています）。開いてもう一度 GO を押してください。",
+    "Premiere Pro aún no ve estas letras (las instaladas mientras estaba abierto o que faltan en su lista de letras): {f}. Esta vez van con Arial del mismo ancho; reinicia Premiere y saldrán con la suya.": "Premiere Pro はまだこれらのフォントを認識していません（開いている間にインストールされたか、フォント一覧にありません）：{f}。今回は同じ幅の Arial になります。Premiere を再起動すると本来のフォントで表示されます。",
+    "Arrastra tu video aquí, o en Ajustes › General elige «Usar con DaVinci Resolve» para usar tu timeline": "ここに動画をドラッグするか、設定 › 一般 で「DaVinci Resolve で使う」を選んでタイムラインを使ってください",
+    "Hay una versión nueva de CineCaptions ({v}): se está instalando sola.": "CineCaptions の新しいバージョン（{v}）があります。自動でインストールしています。",
+    "CineCaptions se actualizó a la {v}.": "CineCaptions を {v} にアップデートしました。",
+    "Actualizaciones automáticas: aunque CineCaptions esté cerrado, busca las versiones nuevas, te avisa y las instala solo (en Mac sin pedir contraseña); con el programa abierto, la descarga sola y la instala al cerrarlo.": "自動アップデート：CineCaptions を閉じていても新しいバージョンを探し、お知らせして自動でインストールします（Mac ではパスワード不要）。開いているときは自動でダウンロードし、閉じるときにインストールします。",
+    "Mac: los estilos vuelven a verse en la página Estilo (en algunos equipos solo salía «No hay plantillas de básicos»).": "Mac：スタイルページにスタイルが再び表示されるようになりました（一部の環境では「基本テンプレートがありません」としか出ませんでした）。",
+    "Mac: al actualizar, CineCaptions se cierra y se vuelve a abrir solo, y el instalador tiene una ventana nueva con los dos pasos.": "Mac：アップデート時に CineCaptions が自動で閉じて再び開くようになり、インストーラーは 2 つの手順を示す新しいウィンドウになりました。",
+    "Premiere Pro: cada caption llega con su animación, ya no se pierde ninguna palabra y GO abre tu proyecto aunque Premiere esté en su pantalla de inicio.": "Premiere Pro：各キャプションがアニメーション付きで届き、単語の抜けもなくなりました。Premiere がホーム画面のときでも GO がプロジェクトを開きます。",
+    "Más resistente: con «Video sin editores» y Resolve abierto, Inicio te dice cómo volver a tu timeline; lo descargado de una actualización ya no ocupa espacio y la IA de la Mac no se instala si falta sitio en el disco.": "より安定：「エディターなしの動画」で Resolve が開いているとき、ホームでタイムラインに戻る方法を案内します。アップデートのダウンロードは容量を占めなくなり、ディスクの空きが足りないときは Mac の AI をインストールしません。"
   }
 }

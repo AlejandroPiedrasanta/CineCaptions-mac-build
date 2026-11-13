@@ -3,9 +3,9 @@
  CineCaptions · By Cinema Productions
 ==============================================================================
 
-Entrega (carpeta INSTALADORES/Mac): CineCaptions_Mac_AppleSilicon_<version>.dmg y CineCaptions_Mac_Intel_<version>.dmg  →  dentro, Instalar_CineCaptions.pkg
+Entrega (carpeta INSTALADORES/Mac): CineCaptions_Mac_AppleSilicon_<version>.dmg y CineCaptions_Mac_Intel_<version>.dmg  →  dentro, «Instalar CineCaptions.pkg»
 (instala en Aplicaciones, deja los scripts en el menú de Resolve y las
-tipografías, igual que el instalador de Windows) + Desinstalar_CineCaptions.command.
+tipografías, igual que el instalador de Windows) + «Desinstalar.command» (v5.87: en una ventana con fondo y los dos pasos, 7_mac/dmg/; sin LEEME.txt).
 
 IMPORTANTE: PyInstaller no compila para Mac desde Windows. Hay dos vías:
 

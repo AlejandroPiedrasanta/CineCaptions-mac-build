@@ -38,9 +38,10 @@ RESULTADOS = []          # (grupo, nombre, ok, detalle)
 CASOS = []
 
 
-def caso(grupo, lento=False):
+def caso(grupo, lento=False, solo_windows=False):
+    # solo_windows (v5.87): el caso simula un PC con Windows (registro, rutas C:\, CUDA): en una Mac (verificar_mac.py) se salta
     def deco(f):
-        CASOS.append((grupo, f, lento))
+        CASOS.append((grupo, f, lento or ('windows' if solo_windows or grupo == 'Resolve Windows' else False)))
         return f
     return deco
 
@@ -575,7 +576,7 @@ def sin_nvidia_no_rompe():
     esperar(elegir(0, 0, ['1.7B']) == '1.7B')
 
 
-@caso('Equipo y GPU')
+@caso('Equipo y GPU', solo_windows=True)
 def torch_por_driver():
     casos = {None: 'cpu', 560: 'cu128', 585: 'cu130', 595: 'cu132', 610: 'cu132', 0: 'cu128'}
     for driver, esperado in casos.items():
@@ -767,7 +768,7 @@ def tel_errores_de_arranque_se_mandan():
         registro.registro().limpiar()
         registro.error('La sesión anterior se cortó en mitad de «GO» (prueba de arranque)', 'arranque')
         esperar(tel.iniciar(), 'iniciar() debía arrancar')
-        esperar(tel.esperar_envios(20) and any('se cortó' in x['mensaje'] for x in srv.errores()), f'{srv.errores()}')
+        esperar(tel.esperar_envios(45) and any('se cortó' in x['mensaje'] for x in srv.errores()), f'{srv.errores()}')   # (45 s: la Mac Intel de GitHub es lenta)
         tel.detener()                                  # (el hilo no debe seguir vivo en los casos siguientes)
     __import__('shutil').rmtree(logs, ignore_errors=True)
 
@@ -1174,7 +1175,7 @@ def _anotado_al_arrancar(**estado):
             for n, m, o in anotado if 'Motor de IA' in m and n in ('aviso', 'error')]      # (la nota del resumen, «con aviso: …», es info)
 
 
-@caso('Informes de clientes')
+@caso('Informes de clientes', solo_windows=True)
 def cliente_rtx4070_8gb_sin_ia_de_texto_es_aviso_y_lo_dice():
     f = _fila_qwen(texto=())
     d = f['detalle']
@@ -1186,7 +1187,7 @@ def cliente_rtx4070_8gb_sin_ia_de_texto_es_aviso_y_lo_dice():
     esperar(all('IA de texto' in n[2] and 'librer' not in n[2] for n in notas), [n[2] for n in notas])
 
 
-@caso('Informes de clientes')
+@caso('Informes de clientes', solo_windows=True)
 def motor_qwen_cada_falta_dice_que_falta():
     casos = [(dict(python=False), 'versión anterior', 'pieza'), (dict(librerias=['transformers==5.22.2']), 'librerías', 'librerías'),
              (dict(torch='2.9.0+cu126'), 'PyTorch', 'pieza'), (dict(asr=False), 'modelo de voz', 'pieza'), (dict(alineador=False), 'alineador', 'pieza')]
@@ -1200,7 +1201,7 @@ def motor_qwen_cada_falta_dice_que_falta():
     esperar(not malas, '\n      '.join(malas))
 
 
-@caso('Informes de clientes')
+@caso('Informes de clientes', solo_windows=True)
 def motor_qwen_completo_sin_avisos():
     f = _fila_qwen(texto=('1.7B',))
     esperar(f['ok'] is True and 'IA de texto 1.7B' in f['detalle'], f)
@@ -1438,7 +1439,7 @@ def _reparar_motor(lineas_texto, codigo_texto):
     return [(n, m, o) for n, m, o in anotado if n in ('aviso', 'error')], (progreso or [''])[-1], listo
 
 
-@caso('Informes de clientes')
+@caso('Informes de clientes', solo_windows=True)
 def reparar_dice_si_no_bajo_la_ia_de_texto():
     """«Reparar el motor» terminaba en «Motor Qwen3-ASR listo» aunque la IA de texto no se hubiera bajado (sin espacio, sin red): ahora lo dice
     en el Registro (qué no se bajó, por qué y qué hacer) y en el progreso."""
@@ -2467,7 +2468,12 @@ def _casa_falsa():
     try:
         yield casa
     finally:
-        pathlib.Path.home = original
+        # (v5.87, visto en la Mac Intel de GitHub: en Python 3.13 `home` no está en Path.__dict__ sino en su clase madre; poner None aquí dejaba
+        # Path.home roto para todos los casos siguientes)
+        if original is not None:
+            pathlib.Path.home = original
+        else:
+            del pathlib.Path.home
         import shutil
         shutil.rmtree(casa, ignore_errors=True)
 
@@ -2491,6 +2497,327 @@ def _torch_falso(cuda=False, mps=True, gb=10.7):
             sys.modules.pop('torch', None)
         else:
             sys.modules['torch'] = viejo
+
+
+@caso('Datos del usuario')
+def go_sin_video_con_video_sin_editores_no_es_un_error():
+    """Informe de un cliente (5.84, Windows, Resolve Studio abierto): con «Video sin editores» elegido y ningún video, GO paraba en rojo
+    («Error · Detuvo la tarea» en el paso timeline). Desde la 5.85 GO no arranca: Inicio dice en ámbar qué hacer y el Registro guarda un
+    AVISO (no un error). Lo mismo con Premiere y sin Resolve; con un video, o con Resolve, GO sigue."""
+    import registro as R
+    M = principal()
+    video = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False)
+    video.close()
+    malos = []
+    try:
+        for motivo, hay_video, pide in (('ajuste', False, True), ('premiere', False, True), ('sin_resolve', False, True),
+                                        ('ajuste', True, False), (None, False, False)):
+            anotado, reposo = [], []
+            falso = types.SimpleNamespace(_go_archivo=None, video_var=types.SimpleNamespace(get=lambda v=hay_video: video.name if v else ''),
+                                          _motivo_mp4=lambda m=motivo: m, go_panel=types.SimpleNamespace(reposo=lambda *a, **k: reposo.append(k)))
+            falso._texto_pide_video = lambda m, f=falso: M.SubtitleApp._texto_pide_video(f, m)
+            with parches((R, 'aviso', lambda *a, **k: anotado.append(('aviso', a))), (R, 'error', lambda *a, **k: anotado.append(('error', a)))):
+                r = M.SubtitleApp._go_pide_video(falso)
+            if r != pide or (pide and ([n for n, _a in anotado] != ['aviso'] or not reposo or reposo[0].get('tono') != 'aviso')) \
+                    or (not pide and anotado):
+                malos.append(f'{motivo} con video={hay_video}: {r} {anotado} {reposo}')
+        # v5.87: con Resolve conectado (el caso del informe) la línea de Inicio dice también cómo volver a usar el timeline
+        falso = types.SimpleNamespace(_estado_sistema={'modo': 'studio'})
+        texto = M.SubtitleApp._texto_pide_video(falso, 'ajuste')
+        if 'Usar con DaVinci Resolve' not in texto:
+            malos.append(f'con Resolve conectado no dice cómo volver al timeline: «{texto}»')
+        if 'Usar con DaVinci Resolve' in M.SubtitleApp._texto_pide_video(types.SimpleNamespace(), 'ajuste'):
+            malos.append('sin Resolve conectado habla de Resolve')
+    finally:
+        os.unlink(video.name)
+    esperar(not malos, '; '.join(malos))
+
+
+@caso('Mac: estilos y motores')
+def actualizar_en_mac_se_instala_y_vuelve_a_abrir():
+    """El usuario: «en Mac al actualizar no se actualiza bien, no se abre solo, tengo que cerrarlo y volverlo a abrir». Hasta la 5.86 la Mac
+    solo abría el .dmg; ahora saca el .pkg, deja un script aparte que espera a que el programa se cierre, lo instala y lo vuelve a abrir, y el
+    programa se cierra (como en Windows)."""
+    import plistlib
+    import actualizaciones as A
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix='cc_act_'))
+    montaje = tmp / 'montado'
+    montaje.mkdir()
+    (montaje / 'Instalar_CineCaptions.pkg').write_bytes(b'pkg de prueba')
+    dmg = tmp / 'CineCaptions_Mac_AppleSilicon_9.99.dmg'
+    dmg.write_bytes(b'dmg')
+    ordenes, lanzados = [], []
+
+    def run(orden, **k):
+        ordenes.append(orden[:2])
+        salida = plistlib.dumps({'system-entities': [{'mount-point': str(montaje)}]}) if orden[1] == 'attach' else b''
+        return types.SimpleNamespace(returncode=0, stdout=salida, stderr=b'')
+    try:
+        with parches((A.subprocess, 'run', run), (A.subprocess, 'Popen', lambda orden, **k: lanzados.append((orden, k))),
+                     (A, 'carpeta_descargas', lambda: tmp)):
+            ok = A._instalar_mac(dmg, 'contraseña')
+        esperar(ok and (tmp / 'CineCaptions_Mac_AppleSilicon_9.99.pkg').read_bytes() == b'pkg de prueba', 'no sacó el .pkg del .dmg')
+        esperar(['hdiutil', 'attach'] in ordenes and ['hdiutil', 'detach'] in ordenes, f'el .dmg no se monta y desmonta: {ordenes}')
+        orden, k = lanzados[0]
+        esperar(orden[0] == '/bin/bash' and orden[2] == str(os.getpid()) and orden[4] == A.APP_MAC and k.get('start_new_session'),
+                f'el script no queda aparte esperando a ESTE programa: {orden} {k}')
+        esperar(os.path.isabs(orden[3]), f'el .pkg va con ruta relativa (el script corre en otra carpeta y installer no lo encuentra): {orden[3]}')
+        script = (tmp / 'actualizar_mac.sh').read_text(encoding='utf-8')
+        esperar('kill -0 "$PID"' in script and 'installer -pkg "$PKG" -target /' in script and 'with administrator privileges' in script
+                and '/usr/bin/open "$APP"' in script and 'open -W "$PKG"' in script, 'al script le falta esperar, instalar, el respaldo o reabrir')
+    finally:
+        import shutil
+        shutil.rmtree(tmp, ignore_errors=True)
+    fuente = open(os.path.join(CODIGO, 'CineCaptions (script principal).py'), encoding='utf-8').read()
+    esperar("if sys.platform.startswith('win') or sys.platform == 'darwin':" in fuente, 'en la Mac el programa no se cierra tras lanzar la actualización')
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------
+# v5.87 (pedido: «que notifiquen si sale una versión nueva aunque esté cerrado, que auto lo descargue y se instalen, Mac y Windows»)
+# ---------------------------------------------------------------------------------------------------------------------------------------
+@contextlib.contextmanager
+def _fondo_falso(estado_comprobar, abierto=False, plataforma='win32', fallar=False, root=False):
+    """actualizar_fondo con red, descarga, instalador y notificaciones de mentira; devuelve lo que pasó."""
+    import actualizaciones
+    import actualizar_fondo as F
+    hecho = {'notificaciones': [], 'descargas': 0, 'instalaciones': [], 'abiertos': 0}
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_fondo_'))
+    archivo = {'url': 'https://x/CineCaptions_9.99.exe', 'sha256': 'ab' * 32, 'tam': 10}
+
+    def descargar(arch, version_local='', **k):
+        hecho['descargas'] += 1
+        if fallar:
+            raise RuntimeError('sin conexión')
+        p = carpeta / 'CineCaptions_9.99.exe'
+        p.write_bytes(b'x' * 10)
+        return p
+    viejo_plat = sys.platform
+    sys.platform = plataforma
+    try:
+        with parches((actualizaciones, 'comprobar', lambda v, canal_beta=False, timeout=12: (
+                         {'estado': estado_comprobar, 'version': '9.99', 'archivo': archivo} if estado_comprobar == 'nueva' else {'estado': estado_comprobar})),
+                     (actualizaciones, 'descargar', descargar), (F, 'carpeta_estado', lambda: carpeta), (F, 'version_instalada', lambda: '5.87'),
+                     (F, 'programa_abierto', lambda casa=None: abierto), (F, 'notificar', lambda t, titulo='CineCaptions': hecho['notificaciones'].append(t)),
+                     (F, '_instalar_windows', lambda ruta: hecho['instalaciones'].append(('win', str(ruta))) or True),
+                     (F, '_instalar_mac', lambda ruta: hecho['instalaciones'].append(('mac', str(ruta))) or True),
+                     (F, '_abrir_como_usuario', lambda: hecho.__setitem__('abiertos', hecho['abiertos'] + 1)),
+                     (F, 'es_root', lambda: root), (F, '_tomar_pedidos', lambda: hecho.get('pedidos', [])),
+                     (F, '_textos', lambda: (lambda t, **k: t.format(**k)))):
+            yield F, hecho, carpeta
+    finally:
+        sys.platform = viejo_plat
+        import shutil
+        shutil.rmtree(carpeta, ignore_errors=True)
+
+
+@caso('Actualizaciones con el programa cerrado')
+def con_el_programa_cerrado_avisa_descarga_e_instala():
+    """Windows (tarea programada): hay versión nueva y CineCaptions está cerrado → notificación, descarga comprobada e instalador en
+    silencio. Mac (servicio de root): lo mismo, instala sin contraseña y avisa al terminar."""
+    with _fondo_falso('nueva', plataforma='win32') as (F, hecho, _c):
+        r = F.correr()
+    esperar(r == 'instalando' and hecho['descargas'] == 1 and hecho['instalaciones'] and hecho['instalaciones'][0][0] == 'win'
+            and len(hecho['notificaciones']) == 1 and '9.99' in hecho['notificaciones'][0], f'Windows: {r} {hecho}')
+    with _fondo_falso('nueva', plataforma='darwin', root=True) as (F, hecho, _c):
+        r = F.correr()
+    esperar(r == 'instalada' and hecho['instalaciones'][0][0] == 'mac' and len(hecho['notificaciones']) == 2, f'Mac: {r} {hecho}')
+
+
+@caso('Actualizaciones con el programa cerrado')
+def con_el_programa_abierto_no_toca_nada():
+    """Con CineCaptions abierto la tarea de fondo no descarga ni instala (lo hace el programa al cerrarse); al día, tampoco."""
+    with _fondo_falso('nueva', abierto=True) as (F, hecho, _c):
+        r = F.correr()
+    esperar(r == 'abierto' and not hecho['descargas'] and not hecho['instalaciones'] and not hecho['notificaciones'], f'abierto: {r} {hecho}')
+    with _fondo_falso('al_dia') as (F, hecho, _c):
+        r = F.correr()
+    esperar(r == 'al_dia' and not hecho['descargas'], f'al día: {r} {hecho}')
+    with _fondo_falso('error') as (F, hecho, _c):
+        r = F.correr()
+    esperar(r == 'sin_red' and not hecho['descargas'], f'sin red: {r} {hecho}')
+
+
+@caso('Actualizaciones con el programa cerrado')
+def un_fallo_no_se_reintenta_enseguida_salvo_un_pedido():
+    """Si la descarga falla, la tarea de cada 4 h no lo vuelve a intentar hasta pasadas REINTENTO_S; un pedido del programa (Mac: «Actualizar»
+    o al cerrar) sí, y al final vuelve a abrir el programa aunque falle."""
+    with _fondo_falso('nueva', fallar=True, plataforma='darwin', root=True) as (F, hecho, _c):
+        r1 = F.correr()
+        r2 = F.correr()
+        hecho['pedidos'] = [{'reabrir': True, 'pid': 1}]
+        r3 = F.correr()
+    esperar((r1, r2, r3) == ('fallo', 'espera', 'fallo') and hecho['abiertos'] == 1, f'{(r1, r2, r3)} {hecho}')
+
+
+@caso('Actualizaciones con el programa cerrado')
+def programa_abierto_lo_dice_el_candado():
+    """La tarea sabe si CineCaptions está abierto por el MISMO candado que usa el programa (~/.cinecaptions.lock), tomado por otro proceso."""
+    import actualizar_fondo as F
+    casa = pathlib.Path(tempfile.mkdtemp(prefix='cc_casa_'))
+    try:
+        esperar(F.programa_abierto(casa) is False, 'sin archivo de candado cuenta como abierto')
+        listo = casa / 'listo'
+        codigo = ('import msvcrt, sys, time, pathlib\n' if sys.platform.startswith('win') else 'import fcntl, sys, time, pathlib\n') + (
+            f"f = open(r'{casa / '.cinecaptions.lock'}', 'w+')\n"
+            + ("msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)\n" if sys.platform.startswith('win') else "fcntl.flock(f.fileno(), fcntl.LOCK_EX)\n")
+            + f"pathlib.Path(r'{listo}').write_text('1')\ntime.sleep(20)\n")
+        dueno = subprocess.Popen([getattr(sys, '_base_executable', sys.executable), '-c', codigo])   # (sin el lanzador del venv: kill mata al dueño)
+        try:
+            for _ in range(100):
+                if listo.exists():
+                    break
+                time.sleep(0.05)
+            esperar(F.programa_abierto(casa) is True, 'con el candado tomado por otro proceso no lo ve abierto')
+        finally:
+            dueno.kill()
+            dueno.wait(5)
+        esperar(F.programa_abierto(casa) is False, 'con el candado libre lo sigue viendo abierto')
+    finally:
+        import shutil
+        shutil.rmtree(casa, ignore_errors=True)
+
+
+@caso('Actualizaciones con el programa cerrado')
+def windows_tarea_programada_sin_permisos_de_administrador():
+    """La tarea de Windows: XML válido, cada CADA_H h, «en cuanto se pueda» si el equipo estaba apagado, sin permisos de administrador
+    (LeastPrivilege, sin disparador de inicio de sesión ni carpeta propia: los dos piden administrador), con el .exe instalado y la tarea
+    nueva; el desinstalador la quita."""
+    import xml.etree.ElementTree as ET
+    import actualizar_fondo as F
+    exe = r'C:\Users\Ana Pérez\AppData\Local\Programs\CineCaptions\CineCaptions.exe'
+    texto = F.xml_tarea(exe, r'EQUIPO\Ana Pérez')
+    raiz = ET.fromstring(texto.split('?>', 1)[1])
+    ns = {'t': 'http://schemas.microsoft.com/windows/2004/02/mit/task'}
+    esperar(raiz.find('.//t:TimeTrigger/t:Repetition/t:Interval', ns).text == f'PT{F.CADA_H}H', 'sin repetición cada CADA_H h')
+    esperar(raiz.find('.//t:Settings/t:StartWhenAvailable', ns).text == 'true', 'sin «en cuanto se pueda»')
+    esperar(raiz.find('.//t:Principal/t:RunLevel', ns).text == 'LeastPrivilege', 'pide administrador')
+    esperar(raiz.find('.//t:LogonTrigger', ns) is None and '\\' not in F.NOMBRE_TAREA, 'disparador o carpeta que piden administrador')
+    esperar(raiz.find('.//t:Exec/t:Command', ns).text == f'"{exe}"' and raiz.find('.//t:Exec/t:Arguments', ns).text == '--tarea actualizar_fondo',
+            'la acción no corre el .exe instalado con la tarea')
+    cs = open(os.path.join(RAIZ, '3_compilar', 'Instalador.cs'), encoding='utf-8').read()
+    esperar(f'/Delete /TN \\"{F.NOMBRE_TAREA}\\" /F' in cs, 'el desinstalador no quita la tarea programada')
+    import tareas_instalador
+    esperar('actualizar_fondo' in tareas_instalador.TAREAS, 'falta la tarea actualizar_fondo')
+
+
+@caso('Actualizaciones con el programa cerrado')
+def mac_servicio_de_root_seguro_y_sin_contrasena():
+    """El .pkg pone el servicio del sistema (de root): al encender, cada 4 h y al momento con un pedido (QueueDirectories); no lo recarga
+    si ya corre (podría ser él quien instala); carpetas de root (la de pedidos con sticky bit). El servicio solo lee pedidos de archivos
+    normales; el desinstalador lo quita. «Actualizar» en la Mac va por el servicio (sin contraseña) si está."""
+    texto = open(os.path.join(RAIZ, '7_mac', 'pkg', 'scripts', 'postinstall'), encoding='utf-8').read()
+    for pieza in ('<key>QueueDirectories</key>', '<key>StartInterval</key><integer>14400</integer>', '<key>RunAtLoad</key><true/>',
+                  'launchctl print "system/$ETIQUETA" >/dev/null 2>&1 || launchctl bootstrap system "$PLIST"', 'chmod 1777 "$COMPARTIDA/pedidos"',
+                  'chown root:wheel "$PLIST"', '[ -L "$COMPARTIDA" ]', '<string>actualizar_fondo</string>'):
+        esperar(pieza in texto, f'al postinstall le falta: {pieza}')
+    esperar(texto.index('ETIQUETA="com.cinemaproductions') < texto.index('USUARIO=$(stat'), 'el servicio se pone después de salir sin usuario')
+    des = open(os.path.join(RAIZ, '7_mac', 'Desinstalar_CineCaptions.command'), encoding='utf-8').read()
+    esperar('launchctl bootout system/com.cinemaproductions.cinecaptions.actualizar' in des, 'el desinstalador no quita el servicio')
+    import actualizar_fondo as F
+    import actualizaciones as A
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_ped_')) / 'pedidos'
+    carpeta.mkdir()
+    (carpeta / 'pedido_1.json').write_text(json.dumps({'reabrir': True, 'pid': 123, 'dmg': '/x.dmg'}))
+    (carpeta / 'grande.json').write_text('{"a": "' + 'x' * 5000 + '"}')
+    try:
+        with parches((F, 'PEDIDOS_MAC', carpeta), (sys, 'platform', 'darwin'), (F, 'es_root', lambda: False)):
+            pedidos = F._tomar_pedidos()
+        esperar(pedidos == [{'reabrir': True, 'pid': 123, 'dmg': '/x.dmg'}] and not list(carpeta.iterdir()),
+                f'pedidos mal leídos o sin vaciar: {pedidos} {list(carpeta.iterdir())}')
+        llamado = []
+        with parches((sys, 'platform', 'darwin'), (F, 'pedir_al_servicio', lambda reabrir=True, dmg=None: llamado.append((reabrir, dmg)) or True)):
+            ok = A._instalar_mac('/tmp/CineCaptions_9.99.dmg', 'contraseña')
+        esperar(ok and llamado == [(True, '/tmp/CineCaptions_9.99.dmg')], f'«Actualizar» en la Mac no va por el servicio: {llamado}')
+    finally:
+        import shutil
+        shutil.rmtree(carpeta.parent, ignore_errors=True)
+
+
+@caso('Actualizaciones con el programa cerrado')
+def programa_abierto_descarga_sola_e_instala_al_cerrar():
+    """Con el programa abierto, la versión nueva se descarga sola y se instala SIN ventanas al cerrarlo (Windows: /silencioso /noabrir
+    /sinmodelo; Mac: el servicio, sin contraseña). Sin descarga terminada, cerrar no instala nada."""
+    import actualizaciones as A
+    M = principal()
+    lanzados = []
+    ruta = pathlib.Path(tempfile.mkdtemp(prefix='cc_cerrar_')) / 'Instalar_CineCaptions_9.99.exe'
+    ruta.write_bytes(b'x')
+    try:
+        falso = types.SimpleNamespace(_predescarga={'version': '9.99', 'ruta': str(ruta)}, _instalador_lanzado=False)
+        with parches((A, 'instalar', lambda r, aviso_mac='', silencioso=False: lanzados.append((r, silencioso)) or True)):
+            ok = M.SubtitleApp._instalar_al_cerrar(falso)
+            falso2 = types.SimpleNamespace(_predescarga={'version': '9.99', 'ruta': None}, _instalador_lanzado=False)
+            ok2 = M.SubtitleApp._instalar_al_cerrar(falso2)
+        esperar(ok and lanzados == [(str(ruta), True)] and falso._instalador_lanzado and not ok2, f'{ok} {ok2} {lanzados}')
+        con_silencio = []
+        with parches((A.subprocess, 'Popen', lambda orden, **k: con_silencio.append(orden)), (sys, 'platform', 'win32')):
+            A.instalar(str(ruta), silencioso=True)
+        esperar(con_silencio and con_silencio[0][1:] == ['/silencioso', '/noabrir', '/sinmodelo'], f'Windows al cerrar: {con_silencio}')
+    finally:
+        import shutil
+        shutil.rmtree(ruta.parent, ignore_errors=True)
+
+
+@caso('Mac: estilos y motores')
+def instalar_a_mano_con_la_vieja_abierta_la_cierra_y_abre_la_nueva():
+    """Quien actualiza desde la 5.86 (o instala el .pkg a mano) tiene la versión VIEJA abierta mientras el .pkg reemplaza sus archivos: el
+    postinstall la cierra con SIGTERM (y el programa, con SIGTERM, cierra la ventana como el botón: guarda) y al terminar abre la nueva."""
+    texto = open(os.path.join(RAIZ, '7_mac', 'pkg', 'scripts', 'postinstall'), encoding='utf-8').read()
+    esperar('\r' not in texto, 'postinstall con CRLF')
+    esperar('pgrep -f "^$BIN\\$"' in texto and 'kill -TERM "$P"' in texto and 'pkill -9 -f "^$BIN\\$"' in texto,
+            'el postinstall no cierra la versión vieja abierta (solo la ventana: la orden exacta)')
+    esperar('ESTABA_ABIERTO" = 1 ]' in texto and '/usr/bin/open "$APP"' in texto, 'el postinstall no vuelve a abrir la versión nueva')
+    M = principal()
+    capturado, hechos = {}, []
+    import signal as S
+    ventana = types.SimpleNamespace(close=lambda: hechos.append('close'))
+    app = types.SimpleNamespace(quit=lambda: hechos.append('quit'))
+    with parches((sys, 'platform', 'darwin'), (S, 'signal', lambda s, f: capturado.update({s: f})),
+                 (M.ui.QTimer, 'singleShot', staticmethod(lambda ms, f: f())), (M.QApplication, 'instance', staticmethod(lambda: app))):
+        M._cerrar_bien_al_terminar(ventana)
+        manejador = capturado.get(getattr(S, 'SIGTERM', 15))
+        esperar(manejador is not None, 'no hay manejador de SIGTERM en la Mac')
+        manejador(15, None)
+    esperar(hechos == ['close', 'quit'], f'SIGTERM no cierra la ventana como el botón: {hechos}')
+
+
+@caso('Mac: estilos y motores')
+def descargas_viejas_de_actualizacion_se_quitan():
+    """El instalador de la última actualización (hasta 1,2 GB en la Mac: .dmg + .pkg) se quedaba en la carpeta temporal hasta la siguiente;
+    al abrir se quita lo que tenga más de una hora (lo reciente puede ser una actualización en marcha)."""
+    import actualizaciones as A
+    raiz = pathlib.Path(tempfile.mkdtemp(prefix='cc_tmp_'))
+    c = raiz / 'cinecaptions_actualizacion'
+    c.mkdir()
+    viejo, nuevo = c / 'CineCaptions_Mac_AppleSilicon_5.86.dmg', c / 'Instalar_CineCaptions_5.87.exe'
+    viejo.write_bytes(b'x' * 1000)
+    nuevo.write_bytes(b'y' * 10)
+    os.utime(viejo, (time.time() - 7200, time.time() - 7200))
+    try:
+        with parches((A.tempfile, 'gettempdir', lambda: str(raiz))):
+            quitados = A.limpiar_descargas_viejas()
+        esperar(quitados == 1000 and not viejo.exists() and nuevo.exists(), f'quitados={quitados} viejo={viejo.exists()} nuevo={nuevo.exists()}')
+    finally:
+        import shutil
+        shutil.rmtree(raiz, ignore_errors=True)
+
+
+@caso('Mac: estilos y motores')
+def preferencias_sin_modo_no_dejan_sin_estilos():
+    """Cliente de Mac (5.86): «sigue sin verse los estilos… solo dice no hay plantilla de básicos». Unas preferencias sin «modo» (o con el
+    modo básico guardado) abrían en SUBTÍTULOS BÁSICOS: sin plantillas y con su selector oculto, la página Estilo no enseñaba ningún estilo."""
+    M = principal()
+    casos = [({}, 'dinamico'), ({'tema_ui': 'oscuro', 'motor_voz': 'qwen3'}, 'dinamico'), ({'modo': 'normal'}, 'dinamico'),
+             ({'dinamico': False}, 'dinamico'), ({'modo': 'raro'}, 'dinamico'), ({'modo': 'dinamico'}, 'dinamico'),
+             ({'modo': 'destacados'}, 'destacados'), (None, 'dinamico')]
+    malos = [f'{p} → {M.modo_al_abrir(p)}' for p, debe in casos if M.modo_al_abrir(p) != debe]
+    esperar(not malos, '; '.join(malos))
+    fuente = open(os.path.join(CODIGO, 'CineCaptions (script principal).py'), encoding='utf-8').read()
+    esperar('modo_al_abrir(p, self.MODOS.values())' in fuente, '_cargar_preferencias no usa modo_al_abrir')
+    import plantillas
+    plantillas.invalidar_packs()
+    nombres = {p.nombre for p in plantillas.listar_packs()}
+    esperar(all(n in nombres for n in plantillas.FABRICA), f'no cargan los estilos de fábrica: {sorted(set(plantillas.FABRICA) - nombres)}')
 
 
 @caso('Mac: estilos y motores')
@@ -2640,7 +2967,7 @@ def la_mac_instala_el_motor_sola_al_abrir():
                                 aviso=lambda m, o='': avisos.append(('aviso', m)))
     carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_motor_'))
     marca = carpeta / 'instalacion_auto.json'
-    estado = {'instalado': False, 'fallar': False}
+    estado = {'instalado': False, 'fallar': False, 'libre': 100.0}
 
     def instalar(**k):
         llamadas.append('instalar')
@@ -2657,6 +2984,7 @@ def la_mac_instala_el_motor_sola_al_abrir():
             hilo.join(10)
     try:
         with parches((vigilancia, '_registro', lambda: reg), (vigilancia, 'MAC_IA_ESPERA_S', 0), (motor_voz, 'SOPORTADO', True),
+                     (vigilancia, '_gb_libres', lambda c: estado['libre']),
                      (motor_voz, 'carpeta', lambda: carpeta), (motor_voz, 'asegurar_listo', lambda: None), (motor_voz, 'instalar', instalar),
                      (motor_voz, 'instalado', lambda: estado['instalado']),
                      (motor_voz, 'info_instalado', lambda: {'modelo_texto': '1.7B', 'gpu': 'Apple M2'} if estado['instalado'] else None),
@@ -2678,10 +3006,227 @@ def la_mac_instala_el_motor_sola_al_abrir():
             with parches((motor_voz, 'SOPORTADO', False)):
                 correr()
             esperar(not llamadas, f'en la Mac Intel intenta instalar: {llamadas}')
+            # v5.87: sin sitio en el disco no empieza (antes bajaba GB hasta llenarlo), lo dice y lo reintenta mañana
+            marca.unlink()
+            avisos.clear()
+            estado.update(libre=5.0, fallar=False)
+            correr()
+            esperar(not llamadas and any(n == 'aviso' and 'GB' in m for n, m in avisos) and json.loads(marca.read_text()).get('fallo'),
+                    f'con 5 GB libres empezó a instalar o no lo dijo: {llamadas} {avisos}')
     finally:
         vigilancia._MOTORES_AL_DIA['v'] = None
         import shutil
         shutil.rmtree(carpeta, ignore_errors=True)
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------
+# K. Premiere Pro (v5.87, el usuario: «pule más la comunicación con Premiere Pro y que funcione en Mac Premiere Pro»)
+# ---------------------------------------------------------------------------------------------------------------------------------------
+import premiere  # noqa: E402
+import premiere_textos  # noqa: E402
+
+
+@contextlib.contextmanager
+def _entorno_premiere():
+    """Una cola y unas extensiones de Premiere en una carpeta temporal (nunca las del usuario) y las cachés limpias."""
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix='cc_premiere_'))
+    viejo = {k: os.environ.get(k) for k in ('CINECAPTIONS_PREMIERE_COLA', 'CINECAPTIONS_PREMIERE_EXT', 'CINECAPTIONS_PREMIERE_EXE',
+                                            'CINECAPTIONS_PREMIERE_MOGRT')}
+    os.environ['CINECAPTIONS_PREMIERE_COLA'] = str(tmp / 'cola')
+    os.environ['CINECAPTIONS_PREMIERE_EXT'] = str(tmp / 'ext')
+    for k in ('CINECAPTIONS_PREMIERE_EXE', 'CINECAPTIONS_PREMIERE_MOGRT'):
+        os.environ.pop(k, None)
+    premiere._PLANTILLAS.clear()
+    try:
+        yield tmp
+    finally:
+        for k, v in viejo.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+        premiere._PLANTILLAS.clear()
+        import shutil
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def _latido(cola, **extra):
+    cola.mkdir(parents=True, exist_ok=True)
+    (cola / 'latido.json').write_text(json.dumps(dict({'t': time.time() * 1000, 'version': '26.5.2', 'proyecto': 'p.prproj', 'panel': 2}, **extra)),
+                                      encoding='utf-8')
+
+
+@caso('Premiere')
+def premiere_mac_rutas_de_la_cola_y_el_panel():
+    viejo = {k: os.environ.pop(k, None) for k in ('CINECAPTIONS_PREMIERE_COLA', 'CINECAPTIONS_PREMIERE_EXT')}
+    try:
+        with parches((sys, 'platform', 'darwin')):
+            cola, ext = premiere.carpeta_cola(), premiere.carpeta_extensiones()
+    finally:
+        os.environ.update({k: v for k, v in viejo.items() if v is not None})
+    base = pathlib.Path.home() / 'Library' / 'Application Support'
+    esperar(cola == base / 'CineCaptions' / 'premiere' and ext == base / 'Adobe' / 'CEP' / 'extensions', f'{cola} · {ext}')
+
+
+@caso('Premiere')
+def premiere_mac_plantilla_dentro_de_la_app():
+    # en Mac la «Basic Title» va dentro de la .app (la carpeta exacta no la publica Adobe): se busca sin entrar en Frameworks ni PlugIns
+    with _entorno_premiere() as tmp:
+        app = tmp / 'Applications' / 'Adobe Premiere Pro 2026' / 'Adobe Premiere Pro 2026.app'
+        senuelo = app / 'Contents' / 'Frameworks' / 'X.framework' / 'Essential Graphics' / 'Basic Title.mogrt'
+        buena = app / 'Contents' / 'Resources' / 'Plantillas' / 'Essential Graphics' / 'Basic Title.mogrt'
+        senuelo.parent.mkdir(parents=True)
+        senuelo.write_bytes(b'x')
+        esperar(premiere.plantilla_texto(app) is None, 'entró en Frameworks a buscar la plantilla')
+        premiere._PLANTILLAS.clear()
+        buena.parent.mkdir(parents=True)
+        buena.write_bytes(b'x')
+        r = premiere.plantilla_texto(app)
+        esperar(r is not None and _norm(r) == _norm(buena), f'no encontró la de Resources: {r}')
+
+
+@caso('Premiere')
+def premiere_plantilla_la_dice_el_panel():
+    # v5.87: el panel (rev 15) dice en el latido la plantilla que encontró su Premiere; queda en disco y sirve con Premiere cerrado
+    with _entorno_premiere() as tmp:
+        mogrt = tmp / 'otra' / 'Basic Title.mogrt'
+        mogrt.parent.mkdir(parents=True)
+        mogrt.write_bytes(b'x')
+        _latido(tmp / 'cola', t=1000, plantilla=str(mogrt), rev=15)
+        with parches((premiere, 'ejecutable', lambda: None)):
+            r = premiere.plantilla_texto()
+        esperar(r is not None and _norm(r) == _norm(mogrt), str(r))
+
+
+@caso('Premiere')
+def premiere_mac_abre_con_open_y_el_proyecto():
+    vistos = []
+
+    class _P:
+        def __init__(self, args, **k):
+            vistos.append(list(args))
+    with parches((sys, 'platform', 'darwin'), (subprocess, 'Popen', _P)):
+        ok = premiere.abrir('/Applications/Adobe Premiere Pro 2026/Adobe Premiere Pro 2026.app', '/Users/x/v (CineCaptions).prproj')
+    esperar(ok and vistos == [['open', '-a', '/Applications/Adobe Premiere Pro 2026/Adobe Premiere Pro 2026.app', '/Users/x/v (CineCaptions).prproj']],
+            str(vistos))
+
+
+@caso('Premiere')
+def premiere_mac_modo_depuracion_con_defaults():
+    vistos = []
+
+    def run(args, **k):
+        vistos.append(list(args))
+        return types.SimpleNamespace(returncode=1 if args[1] == 'read' else 0, stdout='', stderr='')
+    with parches((sys, 'platform', 'darwin'), (subprocess, 'run', run)):
+        cambiado = premiere._modo_depuracion()
+    escritos = [a for a in vistos if a[1] == 'write']
+    esperar(cambiado and [a[2] for a in escritos] == [f'com.adobe.CSXS.{n}' for n in range(9, 14)]
+            and all(a[3:] == ['PlayerDebugMode', '1'] for a in escritos), str(vistos))
+
+
+@caso('Premiere')
+def premiere_en_su_pantalla_de_inicio_le_abre_el_proyecto():
+    # v5.87: Premiere abierto sin proyecto (su pantalla de inicio): el panel no carga ni late. Antes GO esperaba 4 min y fallaba;
+    # ahora le pasa el proyecto junto al video (como un doble clic) y el panel, ya cargado, coloca
+    with _entorno_premiere() as tmp:
+        abiertos = []
+        video = tmp / 'v.mp4'
+        video.write_bytes(b'x')
+        pedido = {'id': 'abc', 'proyecto_nuevo': str(tmp / 'v (CineCaptions).prproj'), 'textos': [], 'sfx': []}
+        with parches((premiere, 'instalar_panel', lambda: {'ok': True, 'instalado': False, 'ruta': '', 'texto': ''}),
+                     (premiere, 'ejecutable', lambda: pathlib.Path('C:/Premiere/Adobe Premiere Pro.exe')),
+                     (premiere, 'abierto', lambda: True), (premiere, 'panel_vivo', lambda *a, **k: bool(abiertos)),
+                     (premiere, 'abrir', lambda exe=None, proyecto=None: abiertos.append(proyecto) or True),
+                     (premiere, 'resultado', lambda i: {'ok': True, 'id': i} if abiertos else None),
+                     (premiere, 'ESPERA_INICIO_S', 0.3)):
+            r = premiere.colocar(pedido, espera_abrir_s=6)
+        esperar(r.get('ok') and len(abiertos) == 1 and abiertos[0] is not None and pathlib.Path(abiertos[0]).is_file(),
+                f'r={r} abiertos={abiertos}')
+
+
+@caso('Premiere')
+def premiere_se_cierra_mientras_coloca():
+    # v5.87 (visto en real: Premiere se cayó colocando y GO esperó 300 s para decir «¿hay una ventana abierta?»): se dice en segundos
+    with _entorno_premiere():
+        t0 = time.time()
+        with parches((premiere, 'instalar_panel', lambda: {'ok': True, 'instalado': False, 'ruta': '', 'texto': ''}),
+                     (premiere, 'ejecutable', lambda: pathlib.Path('C:/Premiere/Adobe Premiere Pro.exe')),
+                     (premiere, 'abierto', lambda: False), (premiere, 'panel_vivo', lambda *a, **k: True),
+                     (premiere, 'enviar', lambda p: p['id']),            # (sin pedido.json en la cola = el panel ya lo tomó)
+                     (premiere, 'resultado', lambda i: None), (premiere, 'MIRAR_PROCESO_S', 0.05)):
+            r = premiere.colocar({'id': 'x', 'textos': [], 'sfx': []}, espera_abrir_s=30, espera_colocar_s=30)
+    esperar(r.get('causa') == 'premiere_cerrado' and time.time() - t0 < 5, f'{r} en {time.time() - t0:.1f} s')
+
+
+@caso('Premiere')
+def premiere_panel_viejo_se_avisa():
+    with _entorno_premiere() as tmp:
+        _latido(tmp / 'cola', rev=premiere.rev_instalada() - 1)
+        viejo = premiere.panel_viejo()
+        txt = premiere.textos_estado({'conectado': True, 'nombre': 'Adobe Premiere Pro 2026', 'panel_viejo': True})
+        _latido(tmp / 'cola', rev=premiere.rev_instalada())
+        nuevo = premiere.panel_viejo()
+    esperar(premiere.rev_instalada() >= 15 and viejo and not nuevo and txt[1] == 'aviso', f'{premiere.rev_instalada()} {viejo} {nuevo} {txt}')
+
+
+@caso('Premiere')
+def premiere_textos_llevan_su_animacion():
+    import numpy as np
+    a = np.zeros((40, 200), dtype=np.float32)
+    a[10:30, 20:180] = 1.0
+    capa = {'rgb': np.zeros((40, 200, 3), dtype=np.float32), 'a': a, 'x': 440, 'y': 900, 't0': 2.0, 't1': 3.5, 'entrada': 0.09,
+            'tipo': 'kinetic', 'k': 'hero lima', 'rol': 'main', 'pack': 'Kinetic', 'em': 80.0}
+    an = premiere_textos.animacion(capa, (540.0, 925.0), 30.0)
+    esperar(an and {'op', 'es', 'gi'} <= set(an) and an['op'][0][1] < 5 and an['es'][0][1] < 60 and an['op'][-1][0] < 1.5
+            and all(len(v) <= 20 for v in an.values()), json.dumps(an)[:400])
+    seco = premiere_textos.animacion(dict(capa, entrada=0.0), (540.0, 925.0), 30.0)
+    esperar(seco is None, 'una pieza de corte seco (la caja del Estilo 3) no debe animarse')
+
+
+@caso('Premiere')
+def premiere_letra_instalada_con_premiere_abierto():
+    # una letra instalada DESPUÉS de abrir Premiere no la ve hasta reiniciarlo: esa vez va Arial (Premiere pararía con «Resolver fuentes»)
+    with _entorno_premiere() as tmp:
+        f = tmp / 'Letra.ttf'
+        f.write_bytes(b'x')
+        antes = premiere_textos._PREMIERE_DESDE[0]
+        try:
+            premiere_textos._PREMIERE_DESDE[0] = time.time() - 100
+            no_la_ve = premiere_textos._la_ve_premiere(('Letra', 'Regular'), str(f))
+            premiere_textos._PREMIERE_DESDE[0] = time.time() + 100
+            la_ve = premiere_textos._la_ve_premiere(('Letra', 'Regular'), str(f))
+            premiere_textos._PREMIERE_DESDE[0] = None
+            cerrado = premiere_textos._la_ve_premiere(('Letra', 'Regular'), str(f))
+        finally:
+            premiere_textos._PREMIERE_DESDE[0] = antes
+    esperar(not no_la_ve and la_ve and cerrado, f'{no_la_ve} {la_ve} {cerrado}')
+
+
+@caso('Premiere')
+def premiere_letra_registrada_pero_no_cargada():
+    # v5.87 (Estilo 6 real: «Instrument Serif» registrada y con su archivo, pero Windows NO la tenía cargada en la sesión: Premiere la
+    # cambiaba en silencio por otra más ancha y las palabras se montaban). Con Premiere abierto va Arial; cerrado, se carga y va la suya
+    PT = premiere_textos
+    cargadas = []
+
+    def cargar(ruta):
+        cargadas.append(ruta)
+        PT._FAMILIAS[:] = [{'poppins', 'poppinsextrabold', 'instrumentserif'}]
+        return True
+    resultados = []
+    try:
+        with parches((PT, '_cargar_en_la_sesion', cargar), (sys, 'platform', 'win32')):
+            for corre in (True, False):
+                PT._FAMILIAS[:] = [{'poppins', 'poppinsextrabold', 'inter24pt24pt'}]
+                PT._PREMIERE_CORRE[0], PT._PREMIERE_DESDE[0] = corre, None
+                resultados.append((corre, PT._la_ve_premiere(('Poppins', 'ExtraBold'), 'p.ttf', 'Poppins-ExtraBold'),
+                                   PT._la_ve_premiere(('Inter 24pt', 'Bold'), 'i.ttf', 'Inter24pt-Bold'),
+                                   PT._la_ve_premiere(('Instrument Serif', 'Regular'), 'y.ttf', 'InstrumentSerif-Regular')))
+    finally:
+        PT._FAMILIAS.clear()
+        PT._PREMIERE_CORRE[0] = False
+    esperar(resultados == [(True, True, True, False), (False, True, True, True)] and cargadas == ['y.ttf', 'y.ttf'], f'{resultados} {cargadas}')
 
 
 def main():
@@ -2690,7 +3235,10 @@ def main():
         nombre = f.__name__
         if FILTRO and FILTRO.lower() not in (grupo + ' ' + nombre).lower():
             continue
-        if lento and RAPIDO:
+        if lento == 'windows' and not sys.platform.startswith('win'):
+            RESULTADOS.append((grupo, nombre, None, 'saltado (simula un PC con Windows)'))
+            continue
+        if lento is True and RAPIDO:
             RESULTADOS.append((grupo, nombre, None, 'saltado (--rapido)'))
             continue
         try:

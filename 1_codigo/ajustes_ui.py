@@ -592,6 +592,13 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.87', [
+        'Actualizaciones automáticas: aunque CineCaptions esté cerrado, busca las versiones nuevas, te avisa y las instala solo (en Mac sin pedir contraseña); con el programa abierto, la descarga sola y la instala al cerrarlo.',
+        'Mac: los estilos vuelven a verse en la página Estilo (en algunos equipos solo salía «No hay plantillas de básicos»).',
+        'Mac: al actualizar, CineCaptions se cierra y se vuelve a abrir solo, y el instalador tiene una ventana nueva con los dos pasos.',
+        'Premiere Pro: cada caption llega con su animación, ya no se pierde ninguna palabra y GO abre tu proyecto aunque Premiere esté en su pantalla de inicio.',
+        'Más resistente: con «Video sin editores» y Resolve abierto, Inicio te dice cómo volver a tu timeline; lo descargado de una actualización ya no ocupa espacio y la IA de la Mac no se instala si falta sitio en el disco.',
+    ]),
     ('5.86', [
         'Mac: «Captions detrás de ti», la persona delante de los gráficos de la Edición PRO y las posiciones PRO ya funcionan también en Mac, como en Windows.',
         'Mac con Apple Silicon: el motor de voz Qwen3-ASR y la IA de texto (palabras grandes, ortografía y emojis) se instalan solos en segundo plano la primera vez que abres CineCaptions; el avance se ve en Ajustes › General.',

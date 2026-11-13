@@ -235,9 +235,47 @@ def _obligatoria(datos, version_local, archivo):
 
 
 def carpeta_descargas():
+    if sys.platform == 'darwin' and hasattr(os, 'geteuid') and os.geteuid() == 0:
+        # v5.87: el servicio de root de la Mac (actualizar_fondo) descarga en una carpeta SOLO suya: en /tmp, otro usuario podría crearla
+        # antes y cambiar el .dmg entre la comprobación del SHA-256 y la instalación (que es de root)
+        c = Path('/Library/Application Support/CineCaptions/actualizar/descarga')
+        c.mkdir(parents=True, exist_ok=True)
+        os.chown(c, 0, 0)
+        os.chmod(c, 0o700)
+        return c
     c = Path(tempfile.gettempdir()) / 'cinecaptions_actualizacion'
     c.mkdir(parents=True, exist_ok=True)
     return c
+
+
+def limpiar_descargas_viejas(edad_s=3600):
+    """v5.87: lo que dejó la última actualización (el .exe, o el .dmg y el .pkg de la Mac: hasta 1,2 GB) se quedaba en la carpeta temporal
+    hasta la SIGUIENTE actualización. Al abrir el programa se quita lo que tenga más de `edad_s` (ya instalado; lo reciente puede ser de una
+    actualización en marcha: no se toca). Devuelve los bytes quitados. No lanza."""
+    quitados = 0
+    try:
+        c = Path(tempfile.gettempdir()) / 'cinecaptions_actualizacion'
+        if not c.is_dir():
+            return 0
+        ahora = time.time()
+        for p in c.iterdir():
+            try:
+                st = p.stat()
+                if ahora - st.st_mtime < edad_s:
+                    continue
+                if p.is_dir():
+                    import shutil
+                    tam = sum(f.stat().st_size for f in p.rglob('*') if f.is_file())
+                    shutil.rmtree(p)
+                else:
+                    tam = st.st_size
+                    p.unlink()
+                quitados += tam
+            except OSError:
+                pass
+    except Exception:
+        pass
+    return quitados
 
 
 def sha256_de(ruta, bloque=1 << 20):
@@ -320,19 +358,118 @@ def _descargar_una_vez(archivo, version_local='', progreso=None, cancelado=None,
         raise
 
 
-def instalar(ruta):
+def instalar(ruta, aviso_mac='', silencioso=False):
     """Lanza lo descargado y devuelve True si arrancó. Windows: el instalador (se instala solo, cierra y reemplaza esta versión y vuelve a abrir
-    CineCaptions). Mac: abre el .dmg (el usuario abre el .pkg que trae)."""
+    CineCaptions). Mac (v5.87): igual, con _instalar_mac. `aviso_mac`: el texto de la ventana de la contraseña de macOS.
+    v5.87 `silencioso` (al CERRAR el programa con la versión nueva ya descargada): sin ventanas y sin volver a abrirlo; Windows con
+    /silencioso /noabrir /sinmodelo (los motores los pone al día el programa al abrirse), Mac solo por el servicio del sistema (sin contraseña:
+    sin él, False, nada de pedir la contraseña a quien solo cerraba)."""
     ruta = str(ruta)
     try:
         if sys.platform.startswith('win'):
             # DETACHED_PROCESS: sobrevive al cierre del programa. cwd = la carpeta del propio instalador: si heredara la del programa (los accesos
             # directos la fijan a la carpeta de instalación) Windows no dejaría renombrarla ni reemplazar la versión instalada.
-            subprocess.Popen([ruta, '/empezar'], close_fds=True, creationflags=0x00000008, cwd=os.path.dirname(ruta) or tempfile.gettempdir())
+            args = ['/silencioso', '/noabrir', '/sinmodelo'] if silencioso else ['/empezar']
+            subprocess.Popen([ruta] + args, close_fds=True, creationflags=0x00000008, cwd=os.path.dirname(ruta) or tempfile.gettempdir())
         elif sys.platform == 'darwin':
-            subprocess.Popen(['open', ruta], close_fds=True)
+            if silencioso:
+                import actualizar_fondo
+                return actualizar_fondo.pedir_al_servicio(reabrir=False, dmg=ruta)
+            return _instalar_mac(ruta, aviso_mac)
         else:
             return False
         return True
     except OSError:
         return False
+
+
+# v5.87 (el usuario: «en Mac al actualizar no se actualiza bien, no se abre solo, tengo que cerrarlo y volverlo a abrir»): hasta la 5.86 la Mac
+# solo abría el .dmg y pedía abrir el .pkg a mano CON EL PROGRAMA ABIERTO: el .pkg reemplazaba la app mientras corría la vieja, nada la cerraba
+# ni la volvía a abrir. Ahora, como en Windows: se saca el .pkg del .dmg, este script espera a que CineCaptions se cierre, lo instala (con la
+# contraseña de la Mac: la ventana de macOS) y vuelve a abrir CineCaptions. Sin contraseña (cancelada), el instalador de macOS de siempre; al
+# terminar, se abre igual. Lo que pasa queda en ~/DaVinciSubtitles/actualizacion_mac.log.
+APP_MAC = '/Applications/CineCaptions.app'            # (donde instala el .pkg)
+SCRIPT_MAC = r'''#!/bin/bash
+# CineCaptions · actualización en la Mac (actualizaciones._instalar_mac): espera a que el programa se cierre, instala el .pkg y lo vuelve a abrir.
+# $1 PID del programa · $2 el .pkg · $3 la app que abrir al terminar · $4 el registro · $5 el texto de la ventana de la contraseña
+PID="$1"; PKG="$2"; APP="$3"; LOG="$4"; AVISO="$5"
+{
+echo "== $(date '+%Y-%m-%d %H:%M:%S')  actualización: $PKG"
+for i in $(seq 1 120); do kill -0 "$PID" 2>/dev/null || break; sleep 0.5; done
+if kill -0 "$PID" 2>/dev/null; then
+    echo "el programa no se cerró en 60 s: lo cierro"
+    kill -TERM "$PID" 2>/dev/null; sleep 5; kill -9 "$PID" 2>/dev/null; sleep 1
+fi
+if /usr/bin/sudo -n /usr/sbin/installer -pkg "$PKG" -target / 2>/dev/null; then
+    echo "instalado"
+elif /usr/bin/osascript -e 'on run argv' \
+        -e 'do shell script "/usr/sbin/installer -pkg " & quoted form of (item 1 of argv) & " -target /" with prompt (item 2 of argv) with administrator privileges' \
+        -e 'end run' "$PKG" "$AVISO"; then
+    echo "instalado (con la contraseña)"
+else
+    echo "sin contraseña o no se pudo: abro el instalador de macOS"
+    /usr/bin/open -W "$PKG"
+fi
+sleep 1
+/usr/bin/open "$APP" && echo "abierto: $APP"
+} >> "$LOG" 2>&1
+'''
+
+
+def _pkg_de_dmg(dmg):
+    """El .pkg que trae el .dmg descargado, copiado junto a él (se monta sin ventanas ni Finder y se desmonta al acabar)."""
+    import plistlib
+    import shutil
+    r = subprocess.run(['hdiutil', 'attach', '-nobrowse', '-readonly', '-noautoopen', '-plist', str(dmg)], capture_output=True, timeout=300)
+    if r.returncode != 0:
+        raise RuntimeError('hdiutil attach: ' + (r.stderr or b'').decode('utf-8', 'replace').strip()[-300:])
+    montajes = [e['mount-point'] for e in plistlib.loads(r.stdout).get('system-entities', []) if e.get('mount-point')]
+    try:
+        pkgs = sorted(p for m in montajes for p in Path(m).glob('*.pkg'))
+        if not pkgs:
+            raise RuntimeError('el .dmg no trae ningún .pkg')
+        destino = Path(dmg).resolve().with_suffix('.pkg')         # (absoluta: el script corre en otra carpeta; relativa, installer no la encontraba)
+        if destino.is_dir():
+            shutil.rmtree(destino, ignore_errors=True)
+        if pkgs[0].is_dir():
+            shutil.copytree(pkgs[0], destino, dirs_exist_ok=True)
+        else:
+            shutil.copy(pkgs[0], destino)                          # (sin copy2: con la fecha de AHORA, limpiar_descargas_viejas no lo toca enseguida)
+        return destino
+    finally:
+        for m in montajes:
+            if subprocess.run(['hdiutil', 'detach', m, '-quiet'], capture_output=True, timeout=120).returncode != 0:
+                subprocess.run(['hdiutil', 'detach', m, '-force', '-quiet'], capture_output=True, timeout=120)
+
+
+def _instalar_mac(dmg, aviso='', reabrir=True):
+    """v5.87: prepara el .pkg y deja en marcha SCRIPT_MAC (aparte: sobrevive al cierre del programa). True si quedó en marcha; quien llama
+    cierra el programa (el script espera a que se cierre). Corre en un hilo (hdiutil tarda segundos).
+    Con el servicio del sistema (actualizar_fondo, lo pone el .pkg desde la 5.87) se le deja el pedido y él instala SIN contraseña (pedido
+    del usuario: «sin contraseña»); el script con la ventana de la contraseña queda para una Mac que aún no lo tiene."""
+    try:
+        import actualizar_fondo
+        if actualizar_fondo.pedir_al_servicio(reabrir=reabrir, dmg=dmg):
+            return True
+    except Exception:
+        pass
+    try:
+        pkg = _pkg_de_dmg(dmg)
+    except Exception:
+        return False
+    app = APP_MAC
+    if not Path(app).is_dir() and getattr(sys, 'frozen', False):
+        propia = Path(sys.executable).resolve().parents[2]
+        if propia.suffix == '.app':
+            app = str(propia)
+    script = carpeta_descargas() / 'actualizar_mac.sh'
+    script.write_text(SCRIPT_MAC, encoding='utf-8')
+    os.chmod(script, 0o755)
+    registro = Path.home() / 'DaVinciSubtitles' / 'actualizacion_mac.log'
+    registro.parent.mkdir(parents=True, exist_ok=True)
+    entorno = {k: v for k, v in os.environ.items() if not k.startswith(('DYLD_', 'PYTHON', '_PYI', 'QT_'))}
+    subprocess.Popen(['/bin/bash', str(script), str(os.getpid()), str(Path(pkg).resolve()), app, str(registro),
+                      aviso or 'CineCaptions se actualiza: escribe la contraseña de tu Mac para instalar la versión nueva.'],
+                     close_fds=True, start_new_session=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                     env=entorno, cwd=str(carpeta_descargas()))
+    return True

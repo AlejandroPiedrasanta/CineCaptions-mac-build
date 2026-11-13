@@ -4651,6 +4651,21 @@
     "Qwen3-ASR necesita una Mac con Apple Silicon: se usa Whisper.": "Qwen3-ASR에는 Apple Silicon Mac이 필요합니다: Whisper를 사용합니다.",
     "El motor ya se está instalando.": "엔진이 이미 설치 중입니다.",
     "Mac: «Captions detrás de ti», la persona delante de los gráficos de la Edición PRO y las posiciones PRO ya funcionan también en Mac, como en Windows.": "Mac: «내 뒤의 자막», PRO 편집 그래픽 앞의 인물, PRO 위치가 이제 Windows처럼 Mac에서도 작동합니다.",
-    "Mac con Apple Silicon: el motor de voz Qwen3-ASR y la IA de texto (palabras grandes, ortografía y emojis) se instalan solos en segundo plano la primera vez que abres CineCaptions; el avance se ve en Ajustes › General.": "Apple Silicon Mac: 음성 엔진 Qwen3-ASR과 텍스트 AI(큰 단어, 맞춤법, 이모지)가 CineCaptions를 처음 열 때 백그라운드에서 자동으로 설치됩니다. 진행 상황은 설정 › 일반에서 볼 수 있습니다."
+    "Mac con Apple Silicon: el motor de voz Qwen3-ASR y la IA de texto (palabras grandes, ortografía y emojis) se instalan solos en segundo plano la primera vez que abres CineCaptions; el avance se ve en Ajustes › General.": "Apple Silicon Mac: 음성 엔진 Qwen3-ASR과 텍스트 AI(큰 단어, 맞춤법, 이모지)가 CineCaptions를 처음 열 때 백그라운드에서 자동으로 설치됩니다. 진행 상황은 설정 › 일반에서 볼 수 있습니다.",
+    "CineCaptions se actualiza a la {v}: escribe la contraseña de tu Mac para instalarla.": "CineCaptions를 {v}(으)로 업데이트합니다. 설치하려면 Mac 암호를 입력하세요.",
+    "{n} conectado · reinícialo una vez para estrenar el panel nuevo": "{n} 연결됨 · 새 패널을 쓰려면 한 번 다시 시작하세요",
+    "Reinícialo una vez: panel nuevo": "한 번 다시 시작: 새 패널",
+    "Premiere Pro corre el panel de CineCaptions de antes (se actualizó con Premiere abierto): GO funciona, pero las animaciones de los textos llegan al reiniciar Premiere una vez.": "Premiere Pro가 이전 CineCaptions 패널로 실행 중입니다(Premiere가 열린 상태에서 업데이트됨). GO는 작동하지만 텍스트 애니메이션은 Premiere를 한 번 다시 시작하면 적용됩니다.",
+    "Premiere Pro está en su pantalla de inicio: le abro el proyecto…": "Premiere Pro가 홈 화면에 있습니다: 프로젝트를 여는 중…",
+    "Premiere Pro se cerró mientras colocaba (lo que ya estaba puesto quedó en el proyecto recuperado). Ábrelo y pulsa GO otra vez.": "배치하는 중에 Premiere Pro가 닫혔습니다(이미 배치된 것은 복구된 프로젝트에 남아 있습니다). 다시 열고 GO를 누르세요.",
+    "Premiere Pro aún no ve estas letras (las instaladas mientras estaba abierto o que faltan en su lista de letras): {f}. Esta vez van con Arial del mismo ancho; reinicia Premiere y saldrán con la suya.": "Premiere Pro가 아직 이 글꼴을 보지 못합니다(열려 있는 동안 설치되었거나 글꼴 목록에 없음): {f}. 이번에는 같은 너비의 Arial로 들어갑니다. Premiere를 다시 시작하면 원래 글꼴로 나옵니다.",
+    "Arrastra tu video aquí, o en Ajustes › General elige «Usar con DaVinci Resolve» para usar tu timeline": "여기에 동영상을 끌어다 놓거나, 설정 › 일반에서 «DaVinci Resolve와 함께 사용»을 선택해 타임라인을 사용하세요",
+    "Hay una versión nueva de CineCaptions ({v}): se está instalando sola.": "CineCaptions 새 버전({v})이 있습니다. 자동으로 설치하고 있습니다.",
+    "CineCaptions se actualizó a la {v}.": "CineCaptions가 {v}(으)로 업데이트되었습니다.",
+    "Actualizaciones automáticas: aunque CineCaptions esté cerrado, busca las versiones nuevas, te avisa y las instala solo (en Mac sin pedir contraseña); con el programa abierto, la descarga sola y la instala al cerrarlo.": "자동 업데이트: CineCaptions가 닫혀 있어도 새 버전을 찾아 알려 주고 직접 설치합니다(Mac에서는 암호 없이). 프로그램이 열려 있으면 업데이트를 알아서 내려받고 닫을 때 설치합니다.",
+    "Mac: los estilos vuelven a verse en la página Estilo (en algunos equipos solo salía «No hay plantillas de básicos»).": "Mac: 스타일 페이지에 스타일이 다시 보입니다(일부 컴퓨터에서는 «기본 템플릿이 없습니다»만 나왔습니다).",
+    "Mac: al actualizar, CineCaptions se cierra y se vuelve a abrir solo, y el instalador tiene una ventana nueva con los dos pasos.": "Mac: 업데이트할 때 CineCaptions가 알아서 닫혔다가 다시 열리며, 설치 프로그램은 두 단계가 보이는 새 창으로 바뀌었습니다.",
+    "Premiere Pro: cada caption llega con su animación, ya no se pierde ninguna palabra y GO abre tu proyecto aunque Premiere esté en su pantalla de inicio.": "Premiere Pro: 모든 캡션이 애니메이션과 함께 들어가고 더 이상 단어가 빠지지 않으며, Premiere가 홈 화면에 있어도 GO가 프로젝트를 엽니다.",
+    "Más resistente: con «Video sin editores» y Resolve abierto, Inicio te dice cómo volver a tu timeline; lo descargado de una actualización ya no ocupa espacio y la IA de la Mac no se instala si falta sitio en el disco.": "더 안정적으로: «편집기 없는 동영상»에서 Resolve가 열려 있으면 홈에서 타임라인으로 돌아가는 방법을 알려 줍니다. 업데이트 다운로드는 더 이상 공간을 차지하지 않으며, 디스크 공간이 부족하면 Mac의 AI를 설치하지 않습니다."
   }
 }

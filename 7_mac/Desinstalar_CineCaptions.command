@@ -11,6 +11,11 @@ if [ -x "$APP/Contents/MacOS/CineCaptions" ]; then
     grep -v '^PROGRESO' /tmp/cinecaptions_quitar.txt 2>/dev/null; rm -f /tmp/cinecaptions_quitar.txt
 fi
 echo "Se pedirá tu contraseña para borrar la app de Aplicaciones."
+# v5.87: el servicio que instalaba las versiones nuevas con el programa cerrado (lo pone el .pkg: postinstall)
+sudo launchctl bootout system/com.cinemaproductions.cinecaptions.actualizar 2>/dev/null
+sudo rm -f /Library/LaunchDaemons/com.cinemaproductions.cinecaptions.actualizar.plist /Library/Logs/CineCaptions_actualizar.log
+sudo rm -rf "/Library/Application Support/CineCaptions/actualizar" /Users/Shared/CineCaptions
+sudo rmdir "/Library/Application Support/CineCaptions" 2>/dev/null
 sudo rm -rf "$APP"
 sudo pkgutil --forget com.cinemaproductions.cinecaptions >/dev/null 2>&1
 # v5.4.45: los audios temporales que renderiza Resolve para transcribir (carpeta interna, fuera de la vista)

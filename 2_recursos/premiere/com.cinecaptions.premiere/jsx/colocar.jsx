@@ -11,7 +11,10 @@
 
 var CC = (typeof CC !== 'undefined' && CC) ? CC : {};
 CC.PANEL = 2;                                    // protocolo del panel (latido.panel): 2 = textos editables
-CC.REV = 14;                                 // revisión de ESTE archivo (latido.rev): CineCaptions sabe si Premiere corre un panel viejo
+CC.REV = 15;                                 // revisión de ESTE archivo (latido.rev): CineCaptions sabe si Premiere corre un panel viejo
+// v5.87 (rev 15): animación de cada pieza (`anim`: fotogramas clave), cada texto comprobado en su sitio (a veces Premiere lo dejaba en el 0),
+// latido con `inicio` (las letras instaladas después no las ve este Premiere) y `plantilla` (la «Basic Title» que encuentra él: Mac y Windows)
+if (!CC.INICIO) { CC.INICIO = new Date().getTime(); }
 // (sin recarga en caliente: probado en Premiere 26.5, `$.evalFile` del panel desde CC.revisar da «Stack overrun» al sustituir las funciones
 // en marcha y deja ExtendScript tocado; un panel nuevo entra al reiniciar Premiere, como siempre)
 CC.TICKS = 254016000000;                         // ticks de Premiere por segundo
@@ -96,11 +99,44 @@ CC.hayProyecto = function () {
 };
 
 CC.latido = function () {
-    var info = { t: new Date().getTime(), version: String(app.version), proyecto: '', panel: CC.PANEL, rev: CC.REV };
+    var info = { t: new Date().getTime(), version: String(app.version), proyecto: '', panel: CC.PANEL, rev: CC.REV, inicio: CC.INICIO,
+                 plantilla: CC.plantillaTexto(), so: String($.os) };
     try {
         if (CC.hayProyecto()) { info.proyecto = String(app.project.name); }
     } catch (e) {}
     CC.escribir(new File(CC.carpeta().fsName + '/latido.json'), CC.aTexto(info));
+};
+
+CC.plantillaTexto = function () {               // v5.87: la «Basic Title.mogrt» de ESTE Premiere (Windows: junto al .exe; Mac: dentro de la .app)
+    if (CC._plantilla !== undefined) { return CC._plantilla; }
+    CC._plantilla = '';
+    try {
+        var base = Folder.appPackage, bases = [], i, j, k;
+        if (!base || !base.exists) { return ''; }
+        bases.push(base);
+        if (base.parent) { bases.push(base.parent); }
+        var rel = ['Essential Graphics/Basic Title.mogrt', 'Contents/Essential Graphics/Basic Title.mogrt',
+                   'Resources/Essential Graphics/Basic Title.mogrt', 'Contents/Resources/Essential Graphics/Basic Title.mogrt'];
+        for (i = 0; i < bases.length; i++) {
+            for (j = 0; j < rel.length; j++) {
+                var f = new File(bases[i].fsName + '/' + rel[j]);
+                if (f.exists) { CC._plantilla = f.fsName; return CC._plantilla; }
+            }
+        }
+        for (i = 0; i < bases.length; i++) {      // (otra carpeta: hasta dos niveles más abajo, solo carpetas)
+            var d1 = bases[i].getFiles(function (x) { return x instanceof Folder; }) || [];
+            for (j = 0; j < d1.length && j < 80; j++) {
+                var g = new File(d1[j].fsName + '/Essential Graphics/Basic Title.mogrt');
+                if (g.exists) { CC._plantilla = g.fsName; return CC._plantilla; }
+                var d2 = d1[j].getFiles(function (x) { return x instanceof Folder; }) || [];
+                for (k = 0; k < d2.length && k < 80; k++) {
+                    var h = new File(d2[k].fsName + '/Essential Graphics/Basic Title.mogrt');
+                    if (h.exists) { CC._plantilla = h.fsName; return CC._plantilla; }
+                }
+            }
+        }
+    } catch (e) {}
+    return CC._plantilla;
 };
 
 CC.bin = function (padre, nombre) {
@@ -285,8 +321,79 @@ CC.fundido = function (it, entrada) {             // la entrada de cada pieza: d
     } catch (e) {}
 };
 
+CC.claves = function (prop, lista, base, valor) {   // v5.87: fotogramas clave [[s desde el inicio del clip, valor…]] (tiempo del clip = entrada + s)
+    if (!prop || !lista || lista.length < 2) { return false; }
+    try {
+        prop.setTimeVarying(true);
+        for (var i = 0; i < lista.length; i++) {
+            var tt = base + lista[i][0];
+            prop.addKey(tt);
+            prop.setValueAtKey(tt, valor(lista[i]), i === lista.length - 1);
+        }
+        return true;
+    } catch (e) {
+        return false;
+    }
+};
+
+CC.animar = function (it, t, esTexto, ancho, alto, norm) {
+    // v5.87: la animación de la pieza (premiere_textos.animacion: la de la vista de Creativo, a imagen de los macros de Resolve).
+    // Texto: escala, giro y posición en su capa de texto; imagen: en Movimiento. Opacidad del clip y recorte por la derecha (Movimiento).
+    var a = t.anim;
+    if (!a) { return false; }
+    var base = 0, hecho = false;
+    try { base = it.inPoint.seconds; } catch (e0) { return false; }
+    var mov = CC.componente(it, ['AE.ADBE Motion']);
+    var capa = esTexto ? CC.componente(it, ['AE.ADBE Text']) : mov;
+    var uno = function (k) { return k[1]; };
+    if (a.op) { hecho = CC.claves(CC.propiedad(CC.componente(it, ['AE.ADBE Opacity']), ['Opacity', 'Opacidad'], 0), a.op, base, uno) || hecho; }
+    if (a.es) { hecho = CC.claves(CC.propiedad(capa, ['Scale', 'Escala'], esTexto ? 3 : 1), a.es, base, uno) || hecho; }
+    if (a.gi) { hecho = CC.claves(CC.propiedad(capa, ['Rotation', 'Rotación'], esTexto ? 6 : 4), a.gi, base, uno) || hecho; }
+    if (a.po) {
+        hecho = CC.claves(CC.propiedad(capa, ['Position', 'Posición'], esTexto ? 2 : 0), a.po, base,
+                          function (k) { return norm ? [k[1] / ancho, k[2] / alto] : [k[1], k[2]]; }) || hecho;
+    }
+    if (a.cr) { hecho = CC.claves(CC.propiedad(mov, ['Crop Right', 'Recortar hacia la derecha'], 9), a.cr, base, uno) || hecho; }
+    return hecho;
+};
+
+CC.tieneTexto = function (it) {
+    return !!(it && CC.componente(it, ['AE.ADBE Text']));
+};
+
+CC.importarTexto = function (seq, t, v) {
+    // v5.87: el texto en SU sitio. Visto en Premiere 26.5 (Estilo 3): a veces importMGT devuelve un clip en el segundo 0 y sin capa de texto
+    // («MI», «AÑOS», «DE» faltaban): se busca el clip que sí cayó en t0 y, si no hay, se quita lo que cayó mal y se vuelve a importar.
+    var track = seq.videoTracks[v];
+    var quitar = function (it, antes) {           // solo lo que acaba de caer mal (nunca un texto que ya estaba en la pista)
+        try {
+            var s = it.start.seconds;
+            for (var i = 0; i < antes.length; i++) { if (Math.abs(antes[i] - s) < 0.001) { return; } }
+            it.remove(false, false);
+        } catch (e) {}
+    };
+    for (var intento = 0; intento < 3; intento++) {
+        var it = null, w, antes = [];
+        try {
+            for (w = 0; w < track.clips.numItems; w++) { antes.push(track.clips[w].start.seconds); }
+        } catch (e0) {}
+        try { it = seq.importMGT(t.mogrt, CC.ticks(t.t0), v, 0); } catch (e) { CC._errorImportar = String(e.message || e); }
+        var enSitio = false;
+        try { enSitio = !!it && Math.abs(it.start.seconds - t.t0) < 0.02; } catch (e1) { enSitio = false; }
+        var ahi = enSitio ? it : CC.clipEn(track, t.t0);
+        if (ahi) {                                // (sin capa de texto, colocarTexto lo pone con Movimiento; nada de $.sleep: ExtendScript
+            if (!enSitio && it) { quitar(it, antes); }   // corre en el hilo principal de Premiere y dormir ahí lo traba)
+            return ahi;
+        }
+        if (!it) { break; }                       // (Premiere no la acepta: no insistir)
+        quitar(it, antes);                        // cayó fuera de su sitio: fuera, y otra vez
+        CC.reintentos = (CC.reintentos || 0) + 1;
+    }
+    return null;
+};
+
 CC.colocarTexto = function (it, t, ancho, alto, diag) {   // la capa de texto: al 100 % (la plantilla la adapta al ancho de la secuencia), en su sitio y con su giro
-    var comp = CC.componente(it, ['AE.ADBE Text']);
+    var comp = CC.componente(it, ['AE.ADBE Text']), norm = true;
     try {
         var escala = CC.propiedad(comp, ['Scale', 'Escala'], 3);
         if (diag) { diag.escala_antes = String(escala.getValue()); }
@@ -298,7 +405,7 @@ CC.colocarTexto = function (it, t, ancho, alto, diag) {   // la capa de texto: a
     try {
         var v = pos.getValue();
         if (diag) { diag.pos_antes = String(v); }
-        var norm = (v instanceof Array) && Math.abs(v[0]) <= 2 && Math.abs(v[1]) <= 2;
+        norm = (v instanceof Array) && Math.abs(v[0]) <= 2 && Math.abs(v[1]) <= 2;
         pos.setValue(norm ? [t.x / ancho, t.y / alto] : [t.x, t.y], true);       // (ancla: centro del avance, línea de base)
     } catch (e) {
         if (diag) { diag.error_pos = String(e.message || e); }
@@ -313,6 +420,7 @@ CC.colocarTexto = function (it, t, ancho, alto, diag) {   // la capa de texto: a
             if (giro) { giro.setValue(t.rot, true); }
         } catch (e3) {}
     }
+    return norm;
 };
 
 CC.recortar = function (it, t, fps) {             // v5.85, Estilo 5: la línea se destapa palabra a palabra («Recortar hacia la derecha» de Movimiento)
@@ -372,21 +480,26 @@ CC.ponerTextos = function (seq, p, primera, res) {
     // v5.85: cada texto trae SU plantilla (premiere_textos.mogrt_de_texto: la «Basic Title» del propio Premiere con el texto y el estilo dentro;
     // en Premiere 26 escribir el «Texto de origen» por ExtendScript no se dibuja). Al importarla, Premiere la convierte en un texto normal.
     var textos = p.textos || [], ancho = seq.frameSizeHorizontal || p.ancho, alto = seq.frameSizeVertical || p.alto;
-    var diag = {}, puestos = 0, i;
+    var diag = {}, puestos = 0, animados = 0, i;
     res.diag = diag;
+    CC.reintentos = 0;
+    CC._errorImportar = '';
     for (i = 0; i < textos.length; i++) {
         var t = textos[i], v = primera + (t.pista || 0);
         if (v >= seq.videoTracks.numTracks || !t.mogrt) { continue; }
-        var it = null;
-        try { it = seq.importMGT(t.mogrt, CC.ticks(t.t0), v, 0); } catch (e) { if (!diag.error_importar) { diag.error_importar = String(e.message || e); } }
-        if (!it) { it = CC.clipEn(seq.videoTracks[v], t.t0); }
+        var it = CC.importarTexto(seq, t, v);
+        if (CC._errorImportar && !diag.error_importar) { diag.error_importar = CC._errorImportar; }
         if (!it) {
             if (puestos === 0) { return { ok: false, causa: 'textos', error: 'Premiere no puso la plantilla del texto «' + t.texto + '»' }; }
             continue;
         }
         CC.fijarFin(it, t.t1);
-        CC.colocarTexto(it, t, ancho, alto, puestos === 0 ? diag : null);
-        CC.fundido(it, t.entrada);
+        var norm = CC.colocarTexto(it, t, ancho, alto, puestos === 0 ? diag : null);
+        if (CC.tieneTexto(it) && CC.animar(it, t, true, ancho, alto, norm)) {
+            animados++;
+        } else {
+            CC.fundido(it, t.entrada);
+        }
         CC.recortar(it, t, p.fps);
         if (puestos === 0) { diag.clip = CC.diagnostico(it); }
         try { it.name = t.texto; } catch (e4) {}
@@ -403,12 +516,14 @@ CC.ponerTextos = function (seq, p, primera, res) {
     res.textos = puestos;
     res.textos_total = textos.length;
     res.textos_estilo = puestos;
+    res.textos_animados = animados;
+    res.reintentos = CC.reintentos || 0;
     return null;
 };
 
 CC.ponerImagenes = function (seq, proj, bin, p, primera, res) {
     var imagenes = p.imagenes || [], ancho = seq.frameSizeHorizontal || p.ancho, alto = seq.frameSizeVertical || p.alto;
-    var rutas = [], vistas = {}, i, puestas = 0;
+    var rutas = [], vistas = {}, i, puestas = 0, animadas = 0;
     for (i = 0; i < imagenes.length; i++) {
         var k = CC.norma(imagenes[i].ruta);
         if (!vistas[k]) { vistas[k] = true; rutas.push(imagenes[i].ruta); }
@@ -427,12 +542,17 @@ CC.ponerImagenes = function (seq, proj, bin, p, primera, res) {
             CC.propiedad(mov, ['Position', 'Posición'], 0).setValue([im.x / ancho, im.y / alto], true);
             CC.propiedad(mov, ['Scale', 'Escala'], 1).setValue(100, true);
         } catch (e) {}
-        CC.fundido(it, im.entrada);
+        if (CC.animar(it, im, false, ancho, alto, true)) {
+            animadas++;
+        } else {
+            CC.fundido(it, im.entrada);
+        }
         puestas++;
         CC.avance(p, (res.textos || 0) + puestas, CC.totalPiezas(p));
     }
     res.imagenes = puestas;
     res.imagenes_total = imagenes.length;
+    res.imagenes_animadas = animadas;
 };
 
 CC.fotos = function (seq, p, res) {              // (pruebas) cuadros de la secuencia en PNG, para compararlos con el dibujo de CineCaptions

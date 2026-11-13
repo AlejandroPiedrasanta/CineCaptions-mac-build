@@ -1596,6 +1596,17 @@ class Instalacion
         }
         string subMenu = Path.Combine(Sitio.MenuInicio, Programa.Nombre);              // la carpeta del Setup original
         if (Directory.Exists(subMenu)) BorrarCarpetaSiExiste(subMenu);
+        // v5.87: la tarea programada que instala las versiones nuevas con el programa cerrado (actualizar_fondo.py la crea al abrirse)
+        if (!Sitio.EsPrueba)
+        {
+            try
+            {
+                ProcessStartInfo psi = new ProcessStartInfo("schtasks.exe", "/Delete /TN \"CineCaptions Actualizaciones\" /F");
+                psi.UseShellExecute = false; psi.CreateNoWindow = true; psi.RedirectStandardOutput = true; psi.RedirectStandardError = true;
+                using (Process p = Process.Start(psi)) { p.WaitForExit(15000); if (p.ExitCode == 0) quitados.Add("tarea de actualizaciones"); }
+            }
+            catch (Exception ex) { Log("Tarea de actualizaciones: " + ex.Message); }
+        }
         try
         {
             string clave = Programa.ClaveDesinstalar;

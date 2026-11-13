@@ -21,9 +21,65 @@ limpiar_huerfanos() {
 }
 limpiar_huerfanos
 
+# v5.87 (pedido: «que notifiquen si sale una versión nueva aunque esté cerrado y se instalen solas», en Mac «sin contraseña»): el servicio
+# del sistema que lo hace (CineCaptions --tarea actualizar_fondo → 1_codigo/actualizar_fondo.py, de root): al encender, cada 4 h y al momento
+# cuando el programa deja un pedido en /Users/Shared/CineCaptions/pedidos («Actualizar» o al cerrarlo). Solo instala lo que trae el manifiesto
+# FIRMADO. Las carpetas son de root (un usuario no puede cambiarlas por un enlace a otra parte); la de pedidos, escribible por todos con
+# sticky bit. Si el servicio ya estaba cargado NO se recarga: podría ser él quien está instalando esta versión (recargarlo lo cortaría a
+# medias); el plist nuevo vale desde el próximo arranque.
+ETIQUETA="com.cinemaproductions.cinecaptions.actualizar"
+PLIST="/Library/LaunchDaemons/$ETIQUETA.plist"
+SERVICIO="/Library/Application Support/CineCaptions/actualizar"
+COMPARTIDA="/Users/Shared/CineCaptions"
+if [ -L "$COMPARTIDA" ] || { [ -e "$COMPARTIDA" ] && [ "$(stat -f%u "$COMPARTIDA")" != "0" ]; }; then rm -rf "$COMPARTIDA"; fi
+mkdir -p "$COMPARTIDA/pedidos" "$SERVICIO/casa"
+chown root:wheel "$COMPARTIDA" "$COMPARTIDA/pedidos" "/Library/Application Support/CineCaptions" "$SERVICIO" "$SERVICIO/casa"
+chmod 755 "$COMPARTIDA" "/Library/Application Support/CineCaptions" "$SERVICIO"; chmod 1777 "$COMPARTIDA/pedidos"; chmod 700 "$SERVICIO/casa"
+cat > "$PLIST.nuevo" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key><string>$ETIQUETA</string>
+    <key>ProgramArguments</key>
+    <array><string>$BIN</string><string>--tarea</string><string>actualizar_fondo</string></array>
+    <key>RunAtLoad</key><true/>
+    <key>StartInterval</key><integer>14400</integer>
+    <key>QueueDirectories</key><array><string>$COMPARTIDA/pedidos</string></array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key><string>$SERVICIO/casa</string>
+        <key>QT_QPA_PLATFORM</key><string>offscreen</string>
+        <key>CINECAPTIONS_IDIOMA</key><string>es</string>
+    </dict>
+    <key>StandardOutPath</key><string>/Library/Logs/CineCaptions_actualizar.log</string>
+    <key>StandardErrorPath</key><string>/Library/Logs/CineCaptions_actualizar.log</string>
+    <key>Nice</key><integer>5</integer>
+    <key>LowPriorityIO</key><true/>
+</dict>
+</plist>
+PLIST
+if cmp -s "$PLIST.nuevo" "$PLIST" 2>/dev/null; then rm -f "$PLIST.nuevo"; else mv -f "$PLIST.nuevo" "$PLIST"; fi
+chown root:wheel "$PLIST"; chmod 644 "$PLIST"
+launchctl print "system/$ETIQUETA" >/dev/null 2>&1 || launchctl bootstrap system "$PLIST" 2>/dev/null
+
 USUARIO=$(stat -f%Su /dev/console 2>/dev/null)
 [ -z "$USUARIO" ] || [ "$USUARIO" = "root" ] && exit 0
 UID_U=$(id -u "$USUARIO")
+
+# v5.87 (el usuario: «al actualizar no se abre solo, tengo que cerrarlo y volverlo a abrir»): si la versión VIEJA seguía abierta (se instaló
+# el .pkg a mano o desde el aviso de la 5.86), sus archivos ya los reemplazó este instalador: se cierra (SIGTERM: guarda y sale; si no, a los
+# 8 s se corta) y al terminar se abre la nueva. Solo la ventana del programa (la orden exacta, sin «--tarea» ni hijos de librerías). Si nada
+# estaba abierto no se abre nada (la actualización de la 5.87 en adelante la vuelve a abrir su propio script).
+ESTABA_ABIERTO=0
+for P in $(pgrep -f "^$BIN\$" 2>/dev/null); do
+    ESTABA_ABIERTO=1
+    kill -TERM "$P" 2>/dev/null
+done
+if [ "$ESTABA_ABIERTO" = 1 ]; then
+    for i in 1 2 3 4 5 6 7 8; do pgrep -f "^$BIN\$" >/dev/null 2>&1 || break; sleep 1; done
+    pkill -9 -f "^$BIN\$" 2>/dev/null
+fi
 CASA=$(dscl . -read "/Users/$USUARIO" NFSHomeDirectory 2>/dev/null | awk '{print $2}')
 [ -d "$CASA" ] || exit 0
 
@@ -63,5 +119,9 @@ for TAREA in scripts fuentes modelo; do
     rm -f "$ESTADO"
 done
 limpiar_huerfanos
+if [ "$ESTABA_ABIERTO" = 1 ]; then
+    echo "-- estaba abierto: abro la versión nueva" >> "$LOG"
+    launchctl asuser "$UID_U" sudo -u "$USUARIO" /usr/bin/open "$APP" >> "$LOG" 2>&1
+fi
 chown "$USUARIO" "$LOG" 2>/dev/null
 exit 0

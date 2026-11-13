@@ -51,7 +51,7 @@ import traceback
 from pathlib import Path
 
 TAREAS = ('verificar', 'scripts', 'quitar_scripts', 'fuentes', 'modelo', 'motor_ia', 'motor_compat', 'transcribir', 'sonda_resolve',
-          'equipo', 'equipo_admin')
+          'equipo', 'equipo_admin', 'actualizar_fondo')
 # v5.1: Whisper queda de respaldo (el motor principal es Qwen3-ASR, motor_ia)
 MODELO_WHISPER = 'large-v3-turbo'
 MODELO_BYTES_APROX = 1_620_000_000
@@ -109,6 +109,14 @@ def ejecutar(argv):
     if estado.final is None:
         estado.ok()
     return estado.final
+
+
+# ---------------------------------------------------------------------------
+# actualizar_fondo (v5.87): la versión nueva con el programa CERRADO (la tarea programada de Windows y el servicio del sistema de la Mac)
+# ---------------------------------------------------------------------------
+def _tarea_actualizar_fondo(estado, *_resto):
+    import actualizar_fondo
+    estado.ok(actualizar_fondo.correr(info=estado.info))
 
 
 # ---------------------------------------------------------------------------
@@ -221,6 +229,18 @@ def _tarea_verificar(estado):
                   if not (base / n).exists()]
         if faltan:
             raise RuntimeError('faltan: ' + ', '.join(faltan))
+
+    @prueba('Estilos de fábrica')
+    def _():
+        # v5.87 (cliente de Mac: «no hay estilos»): que el programa COMPILADO cargue los 9 estilos de fábrica, cada uno con sus formatos (la
+        # carpeta plantillas_incluidas podía estar y no leerse ningún pack); sin esto el instalador no sale
+        import plantillas
+        plantillas.invalidar_packs()
+        cargados = {p.nombre: p for p in plantillas.listar_packs()}
+        faltan = [n for n in plantillas.FABRICA if n not in cargados]
+        vacios = [n for n in plantillas.FABRICA if n in cargados and not cargados[n].formatos]
+        if faltan or vacios:
+            raise RuntimeError(('no cargan: ' + ', '.join(faltan) if faltan else '') + (' · sin formatos: ' + ', '.join(vacios) if vacios else ''))
 
     @prueba('Ventanas (Qt)')
     def _():

@@ -53,6 +53,8 @@ LATIDO_S = 10.0                           # el panel escribe cada ~3 s; más vie
 ESPERA_ABRIR_S = 240.0                    # Premiere tarda en arrancar (y el usuario puede tener que elegir un proyecto)
 ESPERA_COLOCAR_S = 300.0                  # importar y colocar (muchos sonidos en un proyecto grande)
 ESPERA_SIN_AVANCE_S = 150.0               # v5.85: con textos, mientras el panel avance se sigue esperando (VIRAL: > 5 min); parado tanto, se corta
+ESPERA_INICIO_S = 9.0                     # v5.87: Premiere abierto y el panel sin latir tanto (late cada ~3 s) = su pantalla de inicio: se le abre el proyecto
+MIRAR_PROCESO_S = 4.0                     # v5.87: mientras coloca, cada cuánto se mira que Premiere siga abierto (dos veces sin él = se cerró)
 PISTAS_SFX = 6
 PROYECTO_VACIO = 'proyecto_vacio.xml'     # v5.85: el proyecto sin nada con el que GO abre Premiere (2_recursos/premiere; crear_proyecto)
 
@@ -124,18 +126,58 @@ def plantilla_texto(exe=None):
     if os.environ.get('CINECAPTIONS_PREMIERE_MOGRT'):             # (pruebas)
         p = Path(os.environ['CINECAPTIONS_PREMIERE_MOGRT'])
         return p if p.is_file() else None
+    if exe is None:                                                # v5.87: la que encontró el propio Premiere (panel rev 15, Mac y Windows;
+        try:                                                       # el latido queda en disco: sirve también con Premiere cerrado)
+            p = Path(str((latido() or {}).get('plantilla') or ''))
+            if p.name.lower().endswith('.mogrt') and p.is_file():
+                return p
+        except (OSError, ValueError):
+            pass
     exe = Path(exe) if exe else ejecutable()
     if exe is None:
         return None
+    clave = str(exe)
+    if clave in _PLANTILLAS:
+        return _PLANTILLAS[clave]
     bases = [exe / 'Contents', exe.parent] if exe.suffix == '.app' else [exe.parent]
+    encontrada = None
     for b in bases:
         for cand in (b / 'Essential Graphics' / 'Basic Title.mogrt', b / 'Resources' / 'Essential Graphics' / 'Basic Title.mogrt'):
             if cand.is_file():
-                return cand
-    for b in bases:                                                # (otra versión con otra carpeta: hasta 3 niveles, sin recorrer todo)
-        for patron in ('*/Basic Title.mogrt', '*/*/Basic Title.mogrt', '*/*/*/Basic Title.mogrt'):
-            for cand in b.glob(patron):
-                return cand
+                encontrada = cand
+                break
+        if encontrada:
+            break
+    if encontrada is None:                                         # (otra versión con otra carpeta: hasta 4 niveles, sin entrar en lo enorme)
+        encontrada = _buscar_plantilla(bases)
+    _PLANTILLAS[clave] = encontrada
+    return encontrada
+
+
+_PLANTILLAS = {}
+_SIN_ENTRAR = {'frameworks', 'plugins', 'macos', '_codesignature', 'lib', 'locales', 'dictionaries', 'cep', 'node_modules'}
+
+
+def _buscar_plantilla(bases, niveles=4):
+    """«Basic Title.mogrt» bajo esas carpetas, hasta `niveles` de hondo y sin entrar en las carpetas de librerías (una .app de Mac tiene
+    decenas de miles de archivos dentro de Frameworks/PlugIns)."""
+    pendientes = [(Path(b), 0) for b in bases]
+    vistas = 0
+    while pendientes and vistas < 4000:
+        carpeta, nivel = pendientes.pop(0)
+        try:
+            hijos = list(os.scandir(carpeta))
+        except OSError:
+            continue
+        for h in hijos:
+            vistas += 1
+            try:
+                if h.is_file() and h.name.lower() == 'basic title.mogrt':
+                    return Path(h.path)
+                if h.is_dir(follow_symlinks=False) and nivel + 1 < niveles and h.name.lower() not in _SIN_ENTRAR:
+                    pendientes.append((Path(h.path), nivel + 1))
+            except OSError:
+                continue
     return None
 
 
@@ -338,6 +380,29 @@ def panel_vivo(max_s=LATIDO_S):
 
 
 PANEL_TEXTOS = 2                          # v5.85: desde esta versión del panel (latido «panel»), los textos editables
+_REV = []
+
+
+def rev_instalada():
+    """v5.87: la revisión del panel que trae ESTE CineCaptions (CC.REV de jsx/colocar.jsx); 0 si no se puede leer."""
+    if not _REV:
+        try:
+            import re
+            m = re.search(r'CC\.REV\s*=\s*(\d+)', (origen_panel() / 'jsx' / 'colocar.jsx').read_text(encoding='utf-8', errors='replace'))
+            _REV.append(int(m.group(1)) if m else 0)
+        except (OSError, ValueError):
+            _REV.append(0)
+    return _REV[0]
+
+
+def panel_viejo(lat=None):
+    """v5.87: True si el Premiere conectado corre un panel anterior al que trae CineCaptions (se actualizó con Premiere abierto: el panel
+    nuevo —animaciones, textos comprobados— entra al reiniciar Premiere una vez). Con un panel viejo GO sigue funcionando."""
+    lat = lat if lat is not None else (latido() or {})
+    try:
+        return bool(lat) and 0 < int(lat.get('rev') or 0) < rev_instalada()
+    except (TypeError, ValueError):
+        return False
 
 
 def admite_textos():
@@ -371,7 +436,8 @@ def estado():
     vivo = panel_vivo()
     lat = (latido() or {}) if vivo else {}
     return {'instalado': exe is not None or vivo, 'nombre': nombre_de(exe), 'abierto': vivo or (exe is not None and abierto()),
-            'conectado': vivo, 'version': str(lat.get('version') or ''), 'proyecto': str(lat.get('proyecto') or '')}
+            'conectado': vivo, 'version': str(lat.get('version') or ''), 'proyecto': str(lat.get('proyecto') or ''),
+            'panel_viejo': vivo and panel_viejo(lat)}
 
 
 def textos_estado(est):
@@ -382,6 +448,9 @@ def textos_estado(est):
     n = est.get('nombre') or 'Adobe Premiere Pro'
     if est.get('conectado'):
         detalle = ' · '.join(x for x in (n, est.get('version'), tr('proyecto «{p}»', p=est['proyecto']) if est.get('proyecto') else '') if x)
+        if est.get('panel_viejo'):                  # v5.87: CineCaptions se actualizó con Premiere abierto
+            return (tr('{n} conectado · reinícialo una vez para estrenar el panel nuevo', n=n), 'aviso',
+                    (tr('Premiere Pro conectado'), tr('Reinícialo una vez: panel nuevo')))
         return tr('{n} detectado · conectado', n=n), 'ok', (tr('Premiere Pro conectado'), detalle)
     if est.get('abierto'):
         return (tr('{n} abierto · conectando… (si no conecta, reinícialo una vez)', n=n), 'aviso',
@@ -564,6 +633,14 @@ def colocar(pedido, cancelado=None, aviso=None, espera_abrir_s=ESPERA_ABRIR_S, e
                                'GO · Premiere Pro')
             except Exception:
                 pass
+    if panel_vivo() and panel_viejo():
+        try:
+            import registro
+            from i18n import tr
+            registro.aviso(tr('Premiere Pro corre el panel de CineCaptions de antes (se actualizó con Premiere abierto): GO funciona, pero las '
+                              'animaciones de los textos llegan al reiniciar Premiere una vez.'), 'GO · Premiere Pro')
+        except Exception:
+            pass
     pedido['proyectos_cc'] = list(_CREADOS)          # (el panel guarda al terminar los proyectos que escribió CineCaptions, no los del usuario)
     id_pedido = enviar(pedido)
     if not panel_vivo():
@@ -576,7 +653,25 @@ def colocar(pedido, cancelado=None, aviso=None, espera_abrir_s=ESPERA_ABRIR_S, e
     tomado = False
     visto_vivo = False
     ultimo_avance = None
+    # v5.87: Premiere abierto en su PANTALLA DE INICIO (sin proyecto el panel no carga ni late): GO le pasa el proyecto junto al video, como
+    # un doble clic (Windows lo entrega al Premiere abierto; Mac, `open -a`). Antes se esperaban 4 min y GO fallaba con «Premiere no contestó».
+    sin_inicio_hasta = time.time() + ESPERA_INICIO_S if (estaba_abierto and not panel_vivo() and not inst.get('instalado')
+                                                          and exe is not None and pedido.get('proyecto_nuevo')) else None
+    mirar_proceso, sin_proceso = time.time() + MIRAR_PROCESO_S, 0
     while True:
+        if sin_inicio_hasta and time.time() > sin_inicio_hasta:
+            sin_inicio_hasta = None
+            if not panel_vivo() and (carpeta_cola() / 'pedido.json').exists():
+                proyecto = crear_proyecto(pedido['proyecto_nuevo'])     # (la misma ruta del pedido, aún libre: el panel lo reconoce como
+                if proyecto is not None:                                  # suyo —CC.propio— y lo guarda al terminar; el pedido no se reescribe)
+                    _CREADOS.append(str(proyecto))
+                    del _CREADOS[:-10]
+                    try:
+                        from i18n import tr
+                        decir(tr('Premiere Pro está en su pantalla de inicio: le abro el proyecto…'))
+                    except Exception:
+                        pass
+                    abrir(exe, proyecto)
         if cancelado and cancelado():
             retirar()
             return {'ok': False, 'cancelado': True}
@@ -589,6 +684,12 @@ def colocar(pedido, cancelado=None, aviso=None, espera_abrir_s=ESPERA_ABRIR_S, e
             tomado = True                            # el panel lo tomó: colocando (mientras coloca no late: ExtendScript es de un hilo)
             limite = time.time() + espera_colocar_s
             decir('Colocando en Premiere Pro…')
+        if tomado and time.time() >= mirar_proceso:  # v5.87: Premiere se cerró (o se cayó) mientras colocaba: decirlo ya, no a los 5 min
+            mirar_proceso = time.time() + MIRAR_PROCESO_S
+            sin_proceso = 0 if abierto() else sin_proceso + 1
+            if sin_proceso >= 2 and resultado(id_pedido) is None:
+                return {'ok': False, 'causa': 'premiere_cerrado',
+                        'error': 'Premiere Pro se cerró mientras colocaba (lo que ya estaba puesto quedó en el proyecto recuperado). Ábrelo y pulsa GO otra vez.'}
         if tomado:                                   # v5.85: el avance de los textos e imágenes: mientras siga, se sigue esperando
             pr = progreso(id_pedido)
             if pr and pr != ultimo_avance:

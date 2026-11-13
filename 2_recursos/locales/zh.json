@@ -4651,6 +4651,21 @@
     "Qwen3-ASR necesita una Mac con Apple Silicon: se usa Whisper.": "Qwen3-ASR 需要搭载 Apple 芯片的 Mac：将使用 Whisper。",
     "El motor ya se está instalando.": "引擎已在安装中。",
     "Mac: «Captions detrás de ti», la persona delante de los gráficos de la Edición PRO y las posiciones PRO ya funcionan también en Mac, como en Windows.": "Mac：“人物身后的字幕”、PRO 剪辑图形前方的人物以及 PRO 位置现在在 Mac 上也能使用，和 Windows 一样。",
-    "Mac con Apple Silicon: el motor de voz Qwen3-ASR y la IA de texto (palabras grandes, ortografía y emojis) se instalan solos en segundo plano la primera vez que abres CineCaptions; el avance se ve en Ajustes › General.": "搭载 Apple 芯片的 Mac：语音引擎 Qwen3-ASR 和文字 AI（大字、拼写和表情）会在你第一次打开 CineCaptions 时在后台自动安装；可在 设置 › 通用 中查看进度。"
+    "Mac con Apple Silicon: el motor de voz Qwen3-ASR y la IA de texto (palabras grandes, ortografía y emojis) se instalan solos en segundo plano la primera vez que abres CineCaptions; el avance se ve en Ajustes › General.": "搭载 Apple 芯片的 Mac：语音引擎 Qwen3-ASR 和文字 AI（大字、拼写和表情）会在你第一次打开 CineCaptions 时在后台自动安装；可在 设置 › 通用 中查看进度。",
+    "CineCaptions se actualiza a la {v}: escribe la contraseña de tu Mac para instalarla.": "CineCaptions 正在更新到 {v}：请输入你的 Mac 密码进行安装。",
+    "{n} conectado · reinícialo una vez para estrenar el panel nuevo": "{n} 已连接 · 重启一次即可使用新面板",
+    "Reinícialo una vez: panel nuevo": "重启一次：新面板",
+    "Premiere Pro corre el panel de CineCaptions de antes (se actualizó con Premiere abierto): GO funciona, pero las animaciones de los textos llegan al reiniciar Premiere una vez.": "Premiere Pro 正在运行旧版 CineCaptions 面板（在 Premiere 打开时更新的）：GO 可以使用，但文字动画需要重启一次 Premiere 才会生效。",
+    "Premiere Pro está en su pantalla de inicio: le abro el proyecto…": "Premiere Pro 在主页屏幕：正在为它打开项目…",
+    "Premiere Pro se cerró mientras colocaba (lo que ya estaba puesto quedó en el proyecto recuperado). Ábrelo y pulsa GO otra vez.": "Premiere Pro 在放置时关闭了（已放好的内容保留在恢复的项目中）。打开它并再次按 GO。",
+    "Premiere Pro aún no ve estas letras (las instaladas mientras estaba abierto o que faltan en su lista de letras): {f}. Esta vez van con Arial del mismo ancho; reinicia Premiere y saldrán con la suya.": "Premiere Pro 还看不到这些字体（在它打开时安装的，或不在它的字体列表中）：{f}。这次使用同宽度的 Arial；重启 Premiere 后会显示原本的字体。",
+    "Arrastra tu video aquí, o en Ajustes › General elige «Usar con DaVinci Resolve» para usar tu timeline": "把视频拖到这里，或在 设置 › 通用 中选择“与 DaVinci Resolve 一起使用”来使用你的时间线",
+    "Hay una versión nueva de CineCaptions ({v}): se está instalando sola.": "CineCaptions 有新版本（{v}）：正在自动安装。",
+    "CineCaptions se actualizó a la {v}.": "CineCaptions 已更新到 {v}。",
+    "Actualizaciones automáticas: aunque CineCaptions esté cerrado, busca las versiones nuevas, te avisa y las instala solo (en Mac sin pedir contraseña); con el programa abierto, la descarga sola y la instala al cerrarlo.": "自动更新：即使 CineCaptions 已关闭，也会查找新版本、通知你并自动安装（Mac 上无需密码）；程序打开时会自动下载更新，并在关闭时安装。",
+    "Mac: los estilos vuelven a verse en la página Estilo (en algunos equipos solo salía «No hay plantillas de básicos»).": "Mac：样式页面重新显示样式（部分电脑上之前只显示“没有基础模板”）。",
+    "Mac: al actualizar, CineCaptions se cierra y se vuelve a abrir solo, y el instalador tiene una ventana nueva con los dos pasos.": "Mac：更新时 CineCaptions 会自动关闭并重新打开，安装程序也换成了显示两个步骤的新窗口。",
+    "Premiere Pro: cada caption llega con su animación, ya no se pierde ninguna palabra y GO abre tu proyecto aunque Premiere esté en su pantalla de inicio.": "Premiere Pro：每条字幕都带着动画送达，不再丢字；即使 Premiere 停在主屏幕，GO 也会打开你的项目。",
+    "Más resistente: con «Video sin editores» y Resolve abierto, Inicio te dice cómo volver a tu timeline; lo descargado de una actualización ya no ocupa espacio y la IA de la Mac no se instala si falta sitio en el disco.": "更稳定：在“无编辑器视频”模式下且 Resolve 已打开时，首页会告诉你如何回到时间线；更新下载的文件不再占用空间；磁盘空间不足时不会安装 Mac 的 AI。"
   }
 }

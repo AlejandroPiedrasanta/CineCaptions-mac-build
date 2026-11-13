@@ -13790,5 +13790,170 @@
   "ko": "Apple Silicon Mac: 음성 엔진 Qwen3-ASR과 텍스트 AI(큰 단어, 맞춤법, 이모지)가 CineCaptions를 처음 열 때 백그라운드에서 자동으로 설치됩니다. 진행 상황은 설정 › 일반에서 볼 수 있습니다.",
   "zh": "搭载 Apple 芯片的 Mac：语音引擎 Qwen3-ASR 和文字 AI（大字、拼写和表情）会在你第一次打开 CineCaptions 时在后台自动安装；可在 设置 › 通用 中查看进度。",
   "ru": "Mac с Apple Silicon: голосовой движок Qwen3-ASR и текстовый ИИ (крупные слова, орфография и эмодзи) устанавливаются сами в фоне при первом запуске CineCaptions; ход установки виден в Настройки › Общие."
+ },
+ "CineCaptions se actualiza a la {v}: escribe la contraseña de tu Mac para instalarla.": {
+  "en": "CineCaptions is updating to {v}: enter your Mac password to install it.",
+  "pt": "O CineCaptions está sendo atualizado para a {v}: digite a senha do seu Mac para instalá-la.",
+  "fr": "CineCaptions se met à jour vers la {v} : saisis le mot de passe de ton Mac pour l’installer.",
+  "de": "CineCaptions wird auf {v} aktualisiert: Gib das Passwort deines Macs ein, um sie zu installieren.",
+  "it": "CineCaptions si aggiorna alla {v}: inserisci la password del tuo Mac per installarla.",
+  "ja": "CineCaptions を {v} にアップデートします。インストールするには Mac のパスワードを入力してください。",
+  "ko": "CineCaptions를 {v}(으)로 업데이트합니다. 설치하려면 Mac 암호를 입력하세요.",
+  "zh": "CineCaptions 正在更新到 {v}：请输入你的 Mac 密码进行安装。",
+  "ru": "CineCaptions обновляется до {v}: введите пароль от Mac, чтобы установить её."
+ },
+ "{n} conectado · reinícialo una vez para estrenar el panel nuevo": {
+  "en": "{n} connected · restart it once to use the new panel",
+  "pt": "{n} conectado · reinicie-o uma vez para usar o painel novo",
+  "fr": "{n} connecté · redémarrez-le une fois pour utiliser le nouveau panneau",
+  "de": "{n} verbunden · einmal neu starten für das neue Panel",
+  "it": "{n} connesso · riavvialo una volta per usare il pannello nuovo",
+  "ja": "{n} 接続済み · 新しいパネルを使うには一度再起動してください",
+  "ko": "{n} 연결됨 · 새 패널을 쓰려면 한 번 다시 시작하세요",
+  "zh": "{n} 已连接 · 重启一次即可使用新面板",
+  "ru": "{n} подключён · перезапустите его один раз ради новой панели"
+ },
+ "Reinícialo una vez: panel nuevo": {
+  "en": "Restart it once: new panel",
+  "pt": "Reinicie uma vez: painel novo",
+  "fr": "Redémarrez-le une fois : nouveau panneau",
+  "de": "Einmal neu starten: neues Panel",
+  "it": "Riavvialo una volta: pannello nuovo",
+  "ja": "一度再起動：新しいパネル",
+  "ko": "한 번 다시 시작: 새 패널",
+  "zh": "重启一次：新面板",
+  "ru": "Перезапустите один раз: новая панель"
+ },
+ "Premiere Pro corre el panel de CineCaptions de antes (se actualizó con Premiere abierto): GO funciona, pero las animaciones de los textos llegan al reiniciar Premiere una vez.": {
+  "en": "Premiere Pro is running the previous CineCaptions panel (it was updated while Premiere was open): GO works, but the text animations arrive once you restart Premiere.",
+  "pt": "O Premiere Pro está com o painel anterior do CineCaptions (foi atualizado com o Premiere aberto): o GO funciona, mas as animações dos textos chegam ao reiniciar o Premiere uma vez.",
+  "fr": "Premiere Pro utilise l'ancien panneau de CineCaptions (mis à jour pendant que Premiere était ouvert) : GO fonctionne, mais les animations des textes arrivent après un redémarrage de Premiere.",
+  "de": "Premiere Pro läuft mit dem vorherigen CineCaptions-Panel (es wurde bei geöffnetem Premiere aktualisiert): GO funktioniert, aber die Textanimationen kommen erst nach einem Neustart von Premiere.",
+  "it": "Premiere Pro usa il pannello precedente di CineCaptions (aggiornato con Premiere aperto): GO funziona, ma le animazioni dei testi arrivano dopo aver riavviato Premiere una volta.",
+  "ja": "Premiere Pro は以前の CineCaptions パネルで動いています（Premiere を開いたまま更新されました）。GO は動きますが、テキストのアニメーションは Premiere を一度再起動すると反映されます。",
+  "ko": "Premiere Pro가 이전 CineCaptions 패널로 실행 중입니다(Premiere가 열린 상태에서 업데이트됨). GO는 작동하지만 텍스트 애니메이션은 Premiere를 한 번 다시 시작하면 적용됩니다.",
+  "zh": "Premiere Pro 正在运行旧版 CineCaptions 面板（在 Premiere 打开时更新的）：GO 可以使用，但文字动画需要重启一次 Premiere 才会生效。",
+  "ru": "Premiere Pro работает со старой панелью CineCaptions (обновление прошло при открытом Premiere): GO работает, но анимация текстов появится после одного перезапуска Premiere."
+ },
+ "Premiere Pro está en su pantalla de inicio: le abro el proyecto…": {
+  "en": "Premiere Pro is on its home screen: opening the project for it…",
+  "pt": "O Premiere Pro está na tela inicial: abrindo o projeto nele…",
+  "fr": "Premiere Pro est sur son écran d'accueil : j'y ouvre le projet…",
+  "de": "Premiere Pro ist auf seinem Startbildschirm: Ich öffne das Projekt…",
+  "it": "Premiere Pro è nella schermata iniziale: gli apro il progetto…",
+  "ja": "Premiere Pro がホーム画面です：プロジェクトを開いています…",
+  "ko": "Premiere Pro가 홈 화면에 있습니다: 프로젝트를 여는 중…",
+  "zh": "Premiere Pro 在主页屏幕：正在为它打开项目…",
+  "ru": "Premiere Pro на начальном экране: открываю в нём проект…"
+ },
+ "Premiere Pro se cerró mientras colocaba (lo que ya estaba puesto quedó en el proyecto recuperado). Ábrelo y pulsa GO otra vez.": {
+  "en": "Premiere Pro closed while placing (what was already placed stayed in the recovered project). Open it and press GO again.",
+  "pt": "O Premiere Pro fechou enquanto colocava (o que já estava colocado ficou no projeto recuperado). Abra-o e pressione GO de novo.",
+  "fr": "Premiere Pro s'est fermé pendant le placement (ce qui était déjà placé est resté dans le projet récupéré). Ouvrez-le et appuyez de nouveau sur GO.",
+  "de": "Premiere Pro wurde beim Platzieren geschlossen (was schon platziert war, blieb im wiederhergestellten Projekt). Öffne es und drücke erneut GO.",
+  "it": "Premiere Pro si è chiuso mentre posizionava (quanto già posizionato è rimasto nel progetto recuperato). Aprilo e premi di nuovo GO.",
+  "ja": "配置中に Premiere Pro が閉じました（配置済みのものは復元されたプロジェクトに残っています）。開いてもう一度 GO を押してください。",
+  "ko": "배치하는 중에 Premiere Pro가 닫혔습니다(이미 배치된 것은 복구된 프로젝트에 남아 있습니다). 다시 열고 GO를 누르세요.",
+  "zh": "Premiere Pro 在放置时关闭了（已放好的内容保留在恢复的项目中）。打开它并再次按 GO。",
+  "ru": "Premiere Pro закрылся во время размещения (то, что уже было размещено, осталось в восстановленном проекте). Откройте его и снова нажмите GO."
+ },
+ "Premiere Pro aún no ve estas letras (las instaladas mientras estaba abierto o que faltan en su lista de letras): {f}. Esta vez van con Arial del mismo ancho; reinicia Premiere y saldrán con la suya.": {
+  "en": "Premiere Pro can't see these fonts yet (installed while it was open, or missing from its font list): {f}. This time they use Arial at the same width; restart Premiere and they will show with their own font.",
+  "pt": "O Premiere Pro ainda não vê estas fontes (instaladas com ele aberto ou que faltam na sua lista de fontes): {f}. Desta vez vão com Arial da mesma largura; reinicie o Premiere e sairão com a sua.",
+  "fr": "Premiere Pro ne voit pas encore ces polices (installées pendant qu'il était ouvert ou absentes de sa liste de polices) : {f}. Cette fois elles passent en Arial de même largeur ; redémarrez Premiere et elles s'afficheront avec la leur.",
+  "de": "Premiere Pro sieht diese Schriften noch nicht (bei geöffnetem Premiere installiert oder nicht in seiner Schriftliste): {f}. Diesmal mit Arial in gleicher Breite; starte Premiere neu, dann erscheinen sie in ihrer eigenen Schrift.",
+  "it": "Premiere Pro non vede ancora questi caratteri (installati mentre era aperto o assenti dal suo elenco di caratteri): {f}. Questa volta vanno in Arial della stessa larghezza; riavvia Premiere e usciranno con il loro.",
+  "ja": "Premiere Pro はまだこれらのフォントを認識していません（開いている間にインストールされたか、フォント一覧にありません）：{f}。今回は同じ幅の Arial になります。Premiere を再起動すると本来のフォントで表示されます。",
+  "ko": "Premiere Pro가 아직 이 글꼴을 보지 못합니다(열려 있는 동안 설치되었거나 글꼴 목록에 없음): {f}. 이번에는 같은 너비의 Arial로 들어갑니다. Premiere를 다시 시작하면 원래 글꼴로 나옵니다.",
+  "zh": "Premiere Pro 还看不到这些字体（在它打开时安装的，或不在它的字体列表中）：{f}。这次使用同宽度的 Arial；重启 Premiere 后会显示原本的字体。",
+  "ru": "Premiere Pro пока не видит эти шрифты (установлены при открытом Premiere или отсутствуют в его списке шрифтов): {f}. В этот раз они идут шрифтом Arial той же ширины; перезапустите Premiere, и они будут своим шрифтом."
+ },
+ "Arrastra tu video aquí, o en Ajustes › General elige «Usar con DaVinci Resolve» para usar tu timeline": {
+  "en": "Drag your video here, or in Settings › General choose “Use with DaVinci Resolve” to use your timeline",
+  "pt": "Arraste seu vídeo para cá, ou em Ajustes › Geral escolha «Usar com o DaVinci Resolve» para usar sua timeline",
+  "fr": "Glisse ta vidéo ici, ou dans Réglages › Général choisis « Utiliser avec DaVinci Resolve » pour utiliser ta timeline",
+  "de": "Zieh dein Video hierher oder wähle unter Einstellungen › Allgemein „Mit DaVinci Resolve verwenden“, um deine Timeline zu nutzen",
+  "it": "Trascina qui il tuo video, oppure in Impostazioni › Generale scegli «Usa con DaVinci Resolve» per usare la tua timeline",
+  "ja": "ここに動画をドラッグするか、設定 › 一般 で「DaVinci Resolve で使う」を選んでタイムラインを使ってください",
+  "ko": "여기에 동영상을 끌어다 놓거나, 설정 › 일반에서 «DaVinci Resolve와 함께 사용»을 선택해 타임라인을 사용하세요",
+  "zh": "把视频拖到这里，或在 设置 › 通用 中选择“与 DaVinci Resolve 一起使用”来使用你的时间线",
+  "ru": "Перетащите видео сюда или в Настройки › Общие выберите «Использовать с DaVinci Resolve», чтобы работать с таймлайном"
+ },
+ "Hay una versión nueva de CineCaptions ({v}): se está instalando sola.": {
+  "en": "There is a new version of CineCaptions ({v}): it is installing itself.",
+  "pt": "Há uma nova versão do CineCaptions ({v}): ela está se instalando sozinha.",
+  "fr": "Une nouvelle version de CineCaptions ({v}) est disponible : elle s’installe toute seule.",
+  "de": "Es gibt eine neue Version von CineCaptions ({v}): Sie installiert sich gerade von selbst.",
+  "it": "C’è una nuova versione di CineCaptions ({v}): si sta installando da sola.",
+  "ja": "CineCaptions の新しいバージョン（{v}）があります。自動でインストールしています。",
+  "ko": "CineCaptions 새 버전({v})이 있습니다. 자동으로 설치하고 있습니다.",
+  "zh": "CineCaptions 有新版本（{v}）：正在自动安装。",
+  "ru": "Вышла новая версия CineCaptions ({v}): она устанавливается сама."
+ },
+ "CineCaptions se actualizó a la {v}.": {
+  "en": "CineCaptions was updated to {v}.",
+  "pt": "O CineCaptions foi atualizado para a {v}.",
+  "fr": "CineCaptions a été mis à jour vers la {v}.",
+  "de": "CineCaptions wurde auf {v} aktualisiert.",
+  "it": "CineCaptions è stato aggiornato alla {v}.",
+  "ja": "CineCaptions を {v} にアップデートしました。",
+  "ko": "CineCaptions가 {v}(으)로 업데이트되었습니다.",
+  "zh": "CineCaptions 已更新到 {v}。",
+  "ru": "CineCaptions обновлён до {v}."
+ },
+ "Actualizaciones automáticas: aunque CineCaptions esté cerrado, busca las versiones nuevas, te avisa y las instala solo (en Mac sin pedir contraseña); con el programa abierto, la descarga sola y la instala al cerrarlo.": {
+  "en": "Automatic updates: even when CineCaptions is closed, it looks for new versions, lets you know and installs them by itself (on Mac without asking for a password); with the app open, it downloads the update by itself and installs it when you close it.",
+  "pt": "Atualizações automáticas: mesmo com o CineCaptions fechado, ele procura versões novas, avisa você e as instala sozinho (no Mac sem pedir senha); com o programa aberto, baixa a atualização sozinho e a instala ao fechá-lo.",
+  "fr": "Mises à jour automatiques : même fermé, CineCaptions cherche les nouvelles versions, te prévient et les installe tout seul (sur Mac sans demander de mot de passe) ; avec l’app ouverte, il télécharge la mise à jour tout seul et l’installe à la fermeture.",
+  "de": "Automatische Updates: Auch wenn CineCaptions geschlossen ist, sucht es nach neuen Versionen, sagt dir Bescheid und installiert sie selbst (auf dem Mac ohne Passwort); bei geöffnetem Programm lädt es das Update selbst herunter und installiert es beim Schließen.",
+  "it": "Aggiornamenti automatici: anche con CineCaptions chiuso, cerca le nuove versioni, ti avvisa e le installa da solo (su Mac senza chiedere la password); con il programma aperto, scarica l’aggiornamento da solo e lo installa quando lo chiudi.",
+  "ja": "自動アップデート：CineCaptions を閉じていても新しいバージョンを探し、お知らせして自動でインストールします（Mac ではパスワード不要）。開いているときは自動でダウンロードし、閉じるときにインストールします。",
+  "ko": "자동 업데이트: CineCaptions가 닫혀 있어도 새 버전을 찾아 알려 주고 직접 설치합니다(Mac에서는 암호 없이). 프로그램이 열려 있으면 업데이트를 알아서 내려받고 닫을 때 설치합니다.",
+  "zh": "自动更新：即使 CineCaptions 已关闭，也会查找新版本、通知你并自动安装（Mac 上无需密码）；程序打开时会自动下载更新，并在关闭时安装。",
+  "ru": "Автообновления: даже когда CineCaptions закрыт, он ищет новые версии, сообщает о них и устанавливает сам (на Mac без пароля); когда программа открыта, обновление скачивается само и устанавливается при закрытии."
+ },
+ "Mac: los estilos vuelven a verse en la página Estilo (en algunos equipos solo salía «No hay plantillas de básicos»).": {
+  "en": "Mac: the styles show up again on the Style page (on some computers only “No basic templates” appeared).",
+  "pt": "Mac: os estilos voltam a aparecer na página Estilo (em alguns computadores só aparecia «Não há modelos básicos»).",
+  "fr": "Mac : les styles réapparaissent dans la page Style (sur certains ordinateurs, seul « Aucun modèle de base » s’affichait).",
+  "de": "Mac: Die Stile sind auf der Seite Stil wieder zu sehen (auf manchen Computern stand nur „Keine Basisvorlagen“).",
+  "it": "Mac: gli stili tornano visibili nella pagina Stile (su alcuni computer compariva solo «Nessun modello di base»).",
+  "ja": "Mac：スタイルページにスタイルが再び表示されるようになりました（一部の環境では「基本テンプレートがありません」としか出ませんでした）。",
+  "ko": "Mac: 스타일 페이지에 스타일이 다시 보입니다(일부 컴퓨터에서는 «기본 템플릿이 없습니다»만 나왔습니다).",
+  "zh": "Mac：样式页面重新显示样式（部分电脑上之前只显示“没有基础模板”）。",
+  "ru": "Mac: стили снова видны на странице «Стиль» (на некоторых компьютерах было только «Нет базовых шаблонов»)."
+ },
+ "Mac: al actualizar, CineCaptions se cierra y se vuelve a abrir solo, y el instalador tiene una ventana nueva con los dos pasos.": {
+  "en": "Mac: when updating, CineCaptions closes and reopens by itself, and the installer has a new window with the two steps.",
+  "pt": "Mac: ao atualizar, o CineCaptions fecha e volta a abrir sozinho, e o instalador tem uma janela nova com os dois passos.",
+  "fr": "Mac : lors d’une mise à jour, CineCaptions se ferme et se rouvre tout seul, et l’installateur a une nouvelle fenêtre avec les deux étapes.",
+  "de": "Mac: Beim Aktualisieren schließt sich CineCaptions und öffnet sich wieder von selbst, und das Installationsprogramm hat ein neues Fenster mit den zwei Schritten.",
+  "it": "Mac: durante l’aggiornamento CineCaptions si chiude e si riapre da solo, e il programma di installazione ha una nuova finestra con i due passaggi.",
+  "ja": "Mac：アップデート時に CineCaptions が自動で閉じて再び開くようになり、インストーラーは 2 つの手順を示す新しいウィンドウになりました。",
+  "ko": "Mac: 업데이트할 때 CineCaptions가 알아서 닫혔다가 다시 열리며, 설치 프로그램은 두 단계가 보이는 새 창으로 바뀌었습니다.",
+  "zh": "Mac：更新时 CineCaptions 会自动关闭并重新打开，安装程序也换成了显示两个步骤的新窗口。",
+  "ru": "Mac: при обновлении CineCaptions сам закрывается и снова открывается, а у установщика новое окно с двумя шагами."
+ },
+ "Premiere Pro: cada caption llega con su animación, ya no se pierde ninguna palabra y GO abre tu proyecto aunque Premiere esté en su pantalla de inicio.": {
+  "en": "Premiere Pro: every caption arrives with its animation, no word gets lost anymore and GO opens your project even when Premiere is on its home screen.",
+  "pt": "Premiere Pro: cada legenda chega com sua animação, nenhuma palavra se perde e o GO abre seu projeto mesmo com o Premiere na tela inicial.",
+  "fr": "Premiere Pro : chaque sous-titre arrive avec son animation, plus aucun mot ne se perd et GO ouvre ton projet même quand Premiere est sur son écran d’accueil.",
+  "de": "Premiere Pro: Jede Caption kommt mit ihrer Animation an, kein Wort geht mehr verloren und GO öffnet dein Projekt, auch wenn Premiere auf dem Startbildschirm ist.",
+  "it": "Premiere Pro: ogni caption arriva con la sua animazione, nessuna parola va più persa e GO apre il tuo progetto anche se Premiere è nella schermata iniziale.",
+  "ja": "Premiere Pro：各キャプションがアニメーション付きで届き、単語の抜けもなくなりました。Premiere がホーム画面のときでも GO がプロジェクトを開きます。",
+  "ko": "Premiere Pro: 모든 캡션이 애니메이션과 함께 들어가고 더 이상 단어가 빠지지 않으며, Premiere가 홈 화면에 있어도 GO가 프로젝트를 엽니다.",
+  "zh": "Premiere Pro：每条字幕都带着动画送达，不再丢字；即使 Premiere 停在主屏幕，GO 也会打开你的项目。",
+  "ru": "Premiere Pro: каждый субтитр приходит со своей анимацией, слова больше не теряются, а GO открывает проект, даже когда Premiere на стартовом экране."
+ },
+ "Más resistente: con «Video sin editores» y Resolve abierto, Inicio te dice cómo volver a tu timeline; lo descargado de una actualización ya no ocupa espacio y la IA de la Mac no se instala si falta sitio en el disco.": {
+  "en": "More robust: with “Video without editors” and Resolve open, Home tells you how to go back to your timeline; update downloads no longer take up space, and the Mac AI isn’t installed when the disk is short on space.",
+  "pt": "Mais resistente: com «Vídeo sem editores» e o Resolve aberto, o Início diz como voltar à sua timeline; o que é baixado numa atualização já não ocupa espaço e a IA do Mac não é instalada se faltar espaço no disco.",
+  "fr": "Plus robuste : avec « Vidéo sans éditeurs » et Resolve ouvert, l’Accueil te dit comment revenir à ta timeline ; les téléchargements de mise à jour ne prennent plus de place et l’IA du Mac ne s’installe pas s’il manque de place sur le disque.",
+  "de": "Robuster: Mit „Video ohne Editoren“ und geöffnetem Resolve zeigt dir Start, wie du zu deiner Timeline zurückkommst; Update-Downloads belegen keinen Platz mehr, und die KI auf dem Mac wird nicht installiert, wenn auf der Festplatte Platz fehlt.",
+  "it": "Più robusto: con «Video senza editor» e Resolve aperto, Home ti dice come tornare alla tua timeline; i download degli aggiornamenti non occupano più spazio e l’IA del Mac non si installa se manca spazio sul disco.",
+  "ja": "より安定：「エディターなしの動画」で Resolve が開いているとき、ホームでタイムラインに戻る方法を案内します。アップデートのダウンロードは容量を占めなくなり、ディスクの空きが足りないときは Mac の AI をインストールしません。",
+  "ko": "더 안정적으로: «편집기 없는 동영상»에서 Resolve가 열려 있으면 홈에서 타임라인으로 돌아가는 방법을 알려 줍니다. 업데이트 다운로드는 더 이상 공간을 차지하지 않으며, 디스크 공간이 부족하면 Mac의 AI를 설치하지 않습니다.",
+  "zh": "更稳定：在“无编辑器视频”模式下且 Resolve 已打开时，首页会告诉你如何回到时间线；更新下载的文件不再占用空间；磁盘空间不足时不会安装 Mac 的 AI。",
+  "ru": "Надёжнее: в режиме «Видео без редакторов» при открытом Resolve «Главная» подскажет, как вернуться к таймлайну; загрузки обновлений больше не занимают место, а ИИ на Mac не устанавливается, если на диске мало места."
  }
 }
