@@ -54,13 +54,13 @@ done
 CONFIG=$(mktemp -d)
 printf 'clave-de-prueba\n' > "$CONFIG/clave.txt"
 CC_VENTAS_CONFIG="$CONFIG" "$BIN" --importar-clave "$CONFIG/clave.txt"
-grep -q '"llavero"' "$CONFIG/config.json" || falla "la .app no dejó la clave en el Llavero"
+grep -q '"llavero:' "$CONFIG/config.json" || falla "la .app no dejó la clave en el Llavero"
 rm -rf build/capturas_mac
 CC_VENTAS_CONFIG="$CONFIG" QT_QPA_PLATFORM=offscreen "$BIN" --api http://127.0.0.1:8799 --captura build/capturas_mac || true
 N=$(find build/capturas_mac -name '*.png' 2>/dev/null | wc -l | tr -d ' ')   # (se juzga por las capturas, como arriba)
 [ "$N" -ge 5 ] || falla "la .app armada solo guardó $N capturas"
 echo "    OK: la .app abre en macOS, lee la clave del Llavero y guardó $N capturas"
-security delete-generic-password -s "$CC_VENTAS_LLAVERO" > /dev/null 2>&1 || true
+while security delete-generic-password -s "$CC_VENTAS_LLAVERO" > /dev/null 2>&1; do :; done   # (todas las de prueba)
 
 paso "Imagen de disco"
 DMG="build/CineCaptions_Ventas_Mac_${ARQ}_${VERSION}.dmg"

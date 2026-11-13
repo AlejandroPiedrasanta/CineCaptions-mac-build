@@ -523,8 +523,9 @@ def prueba_importar():
         revisar('clave-de-prueba' not in json.dumps(config) and v.descifrar_clave(config['clave']) == 'clave-de-prueba-larga-123',
                 'la clave queda cifrada con DPAPI')
     else:
-        revisar(config.get('clave') == v.EN_LLAVERO and 'clave-de-prueba' not in json.dumps(config)
-                and v._llavero().get_password(v.servicio_llavero(), 'administrador') == 'clave-de-prueba-larga-123',
+        guardada = str(config.get('clave') or '')
+        revisar(guardada.startswith(v.EN_LLAVERO + ':') and 'clave-de-prueba' not in json.dumps(config)
+                and v._llavero().get_password(v.servicio_llavero(), guardada.split(':', 1)[1]) == 'clave-de-prueba-larga-123',
                 'la clave queda en el Llavero (no en config.json)')
     r = subprocess.run([sys.executable, str(AQUI / 'ventas.py'), '--importar-clave', str(TEMPORAL / 'no-existe.txt')],
                        capture_output=True, text=True, encoding='utf-8', env=entorno, timeout=60)

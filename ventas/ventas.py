@@ -54,6 +54,7 @@ import json
 import math
 import os
 import re
+import secrets
 import socket
 import ssl
 import sys
@@ -718,14 +719,24 @@ class Configuracion:
             self.datos['api'] = url
         self.guardar()
 
+    def _cuenta_llavero(self):
+        """La entrada del Llavero donde está la clave («llavero:administrador-1a2b3c4d» en config.json), o None."""
+        guardada = self.datos.get('clave')
+        if guardada == EN_LLAVERO:
+            return 'administrador'
+        if isinstance(guardada, str) and guardada.startswith(EN_LLAVERO + ':'):
+            return guardada.split(':', 1)[1] or None
+        return None
+
     def leer_clave(self):
         guardada = self.datos.get('clave')
         if not guardada or not isinstance(guardada, str):
             return None
-        if guardada == EN_LLAVERO:
+        cuenta = self._cuenta_llavero()
+        if cuenta:
             llavero = _llavero()
             try:
-                return (llavero.get_password(servicio_llavero(), 'administrador') or None) if llavero else None
+                return (llavero.get_password(servicio_llavero(), cuenta) or None) if llavero else None
             except Exception:   # Llavero bloqueado o sin permiso: se vuelve a pedir
                 return None
         try:
@@ -740,11 +751,20 @@ class Configuracion:
             llavero = _llavero()
             if llavero is None:
                 raise OSError('falta el módulo keyring para usar el Llavero')
+            # Cada vez una entrada NUEVA: macOS no deja que una app cambie la entrada que creó otra (error -25244), y
+            # para el Llavero cada versión nueva de la app es «otra app» (no está firmada por Apple).
+            anterior = self._cuenta_llavero()
+            cuenta = 'administrador-' + secrets.token_hex(4)
             try:
-                llavero.set_password(servicio_llavero(), 'administrador', clave)
+                llavero.set_password(servicio_llavero(), cuenta, clave)
             except Exception as e:
                 raise OSError(str(e)) from e
-            self.datos['clave'] = EN_LLAVERO
+            if anterior:
+                try:
+                    llavero.delete_password(servicio_llavero(), anterior)
+                except Exception:   # (la dejó otra versión: macOS no deja borrarla; queda sin usar)
+                    pass
+            self.datos['clave'] = f'{EN_LLAVERO}:{cuenta}'
         self.guardar()
 
 
