@@ -1,0 +1,36 @@
+# CineCaptions Ventas · By Cinema Productions
+# Compila «CineCaptions Ventas» (la app de ventas del dueño) para Mac, Apple Silicon e Intel, y la prueba en esa Mac:
+# las pruebas de la app, la clave en el Llavero y capturas de cada página contra el servidor de prueba.
+# Lo lanza WEB CINECAPTIONS/programa/mac/Compilar_Ventas_Mac.ps1, que copia la app a ventas/ en el espejo de compilación.
+name: Ventas Mac
+on:
+  workflow_dispatch:
+jobs:
+  ventas:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - nombre: AppleSilicon
+            runner: macos-15
+          - nombre: Intel
+            runner: macos-15-intel
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+      - name: Compilar y probar
+        env:
+          PYTHON: python3
+        run: bash ventas/mac/construir_ventas_mac.sh
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Ventas-Mac-${{ matrix.nombre }}
+          path: |
+            ventas/build/CineCaptions_Ventas_Mac_*.dmg
+            ventas/build/capturas_mac/*.png
+          if-no-files-found: error
+          retention-days: 1
