@@ -3,8 +3,9 @@
 # programa/mac/construir_ventas_mac.sh — arma «CineCaptions Ventas.app» y su .dmg en una Mac (la de GitHub Actions:
 # .github/workflows/ventas_mac.yml) y la PRUEBA ahí mismo antes de entregarla:
 #   1) prueba_acciones.py (todas las pruebas de la app) con el código, en macOS;
-#   2) la .app ya armada: --importar-clave (la clave al Llavero de verdad, en una entrada de pruebas) y --captura de
-#      cada página contra servidor_prueba.py, sin pantalla. Si algo falla, no sale el .dmg.
+#   2) la .app ya armada: --comprobar-https (HTTPS real sin los certificados de esta Mac), --importar-clave (la clave al
+#      Llavero de verdad, en una entrada de pruebas) y --captura de cada página contra servidor_prueba.py, sin pantalla;
+#   3) el .dmg con su ventana «Arrástralo a Aplicaciones» (mac/dmg/), abierto y revisado. Si algo falla, no sale el .dmg.
 # Salida: build/CineCaptions_Ventas_Mac_<AppleSilicon|Intel>_<versión>.dmg y build/capturas_mac/*.png
 set -euo pipefail
 AQUI="$(cd "$(dirname "$0")" && pwd)"
@@ -72,17 +73,39 @@ N=$(find build/capturas_mac -name '*.png' 2>/dev/null | wc -l | tr -d ' ')   # (
 echo "    OK: la .app abre en macOS, lee la clave del Llavero y guardó $N capturas"
 while security delete-generic-password -s "$CC_VENTAS_LLAVERO" > /dev/null 2>&1; do :; done   # (todas las de prueba)
 
-paso "Imagen de disco"
+paso "Imagen de disco («Arrástralo a Aplicaciones», con fondo: mac/dmg/)"
+# 2.10 (el dueño, con la captura del de CineCaptions 5.90: «así hazlo»): la ventana con su fondo, el icono de la app a la izquierda,
+# la flecha y Aplicaciones a la derecha. Lo arma dmgbuild (mac/dmg/ajustes_dmg.py) escribiendo el .DS_Store él mismo.
+$PY -m pip install -q 'dmgbuild==1.6.7' || falla "no pude instalar dmgbuild (la ventana del .dmg)"
 DMG="build/CineCaptions_Ventas_Mac_${ARQ}_${VERSION}.dmg"
-STAGE=build/dmg
-rm -rf "$STAGE" "$DMG"
-mkdir -p "$STAGE"
-cp -R "$APP" "$STAGE/"
-ln -s /Applications "$STAGE/Aplicaciones"
+FONDO=build/fondo_dmg.tiff
+rm -f "$DMG" "$FONDO"
+tiffutil -cathidpicheck mac/dmg/fondo.png mac/dmg/fondo@2x.png -out "$FONDO" > /dev/null || falla "no pude preparar el fondo del .dmg"
+VMS=${VERSION%.0}   # (el volumen dice «2.10», como la versión que se muestra)
 for intento in 1 2 3 4 5; do     # (en las Mac de GitHub hdiutil a veces dice «Resource busy»)
-    hdiutil create -volname "CineCaptions Ventas $VERSION" -srcfolder "$STAGE" -ov -format UDZO "$DMG" > /dev/null && break
-    [ "$intento" = 5 ] && falla "hdiutil no pudo crear la imagen"
-    sleep 15
+    $PY -m dmgbuild -s mac/dmg/ajustes_dmg.py -D app="$APP" -D fondo="$FONDO" -D icono=build/ventas.icns \
+        "CineCaptions Ventas $VMS" "$DMG" > /dev/null && break
+    [ "$intento" = 5 ] && falla "dmgbuild no pudo crear la imagen de disco"
+    rm -f "$DMG"; sleep 15
 done
+# Que el .dmg traiga lo que se ve: la app, el acceso a Aplicaciones y el fondo; y que la app de dentro abra
+MONTE=$(mktemp -d)
+hdiutil attach -nobrowse -readonly -mountpoint "$MONTE" "$DMG" > /dev/null || falla "no pude abrir el .dmg recién hecho"
+[ -x "$MONTE/CineCaptions Ventas.app/Contents/MacOS/CineCaptions Ventas" ] || falla "el .dmg no trae la app"
+[ "$(readlink "$MONTE/Aplicaciones")" = /Applications ] || falla "el .dmg no trae el acceso a Aplicaciones"
+[ -f "$MONTE/.DS_Store" ] && ls -a "$MONTE" | grep -q '^\.background' || falla "el .dmg no trae la ventana con fondo"
+SSL_CERT_FILE=/nada/cert.pem SSL_CERT_DIR=/nada "$MONTE/CineCaptions Ventas.app/Contents/MacOS/CineCaptions Ventas" \
+    --comprobar-https https://cinecaptions.shop/ || falla "la app del .dmg no se conecta a cinecaptions.shop"
+hdiutil detach "$MONTE" -quiet || hdiutil detach "$MONTE" -force -quiet || true
+echo "    OK: el .dmg trae la app, Aplicaciones y el fondo; la app de dentro se conecta"
+# Solo para mirarla: la pantalla de esta Mac con el .dmg abierto en el Finder (sin AppleScript). Si la Mac de GitHub no deja, nada.
+(
+    hdiutil attach "$DMG" > /dev/null 2>&1 || exit 0
+    VOL="/Volumes/CineCaptions Ventas $VMS"
+    open "$VOL" 2> /dev/null || true
+    sleep 6
+    screencapture -x build/capturas_mac/00_dmg_ventana.png 2> /dev/null && echo "    (captura de la ventana del .dmg guardada)"
+    hdiutil detach "$VOL" -force -quiet 2> /dev/null || true
+) || true
 echo
 echo "Listo: $DMG ($(du -h "$DMG" | cut -f1))"

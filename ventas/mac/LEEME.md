@@ -23,6 +23,11 @@ PyInstaller no compila para Mac desde Windows: se arma en una Mac de GitHub.
 
 `-SoloDescargar` baja lo de la última compilación buena sin volver a compilar.
 
+La ventana del `.dmg` («Arrástralo a Aplicaciones», como la de CineCaptions) es `mac/dmg/`: el fondo sale de
+`fondo_dmg.html` (a `fondo.png` y `fondo@2x.png` con el Chrome sin pantalla; el comando está en el propio HTML) y
+`ajustes_dmg.py` dice dónde va cada icono. La app usa los certificados de `certifi` para el HTTPS: sin ellos, en una
+Mac que no es la de GitHub no se conectaba (la compilación lo prueba con `--comprobar-https`).
+
 ## Pruebas
 `prueba_acciones.py` corre igual en Windows y en Mac: usa `CC_VENTAS_CONFIG` (carpeta de configuración aparte) y
 `CC_VENTAS_LLAVERO` (otra entrada del Llavero), así nunca toca la configuración ni la clave reales.

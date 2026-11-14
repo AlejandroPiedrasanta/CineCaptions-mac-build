@@ -1,0 +1,37 @@
+<!-- CineCaptions Ventas · By Cinema Productions
+     programa/mac/dmg/fondo_dmg.html — el fondo de la ventana del .dmg de Mac (2.10), 600 × 360 puntos: «Arrástralo a Aplicaciones», como el de
+     CineCaptions 5.90. Para rehacerlo (desde esta carpeta, con el Chrome sin pantalla de CineCaptions):
+       ..\..\..\..\2_recursos\edicion_pro\remotion\runtime\chrome\chrome-headless-shell-win64\chrome-headless-shell.exe --headless --hide-scrollbars
+         --allow-file-access-from-files --force-device-scale-factor=1 --window-size=600,360 --screenshot=fondo.png fondo_dmg.html
+       (y con --force-device-scale-factor=2 → fondo@2x.png). Los iconos los pone el Finder: ajustes_dmg.py (centros, en puntos).
+     ZONA SEGURA: todo lo que importa termina antes de y = 334; lo de abajo (334-360) es de reserva (en macOS 26 la barra de título es más
+     alta y el Finder enseña menos: se corta sin perder nada). El fondo es CLARO: con imagen de fondo el Finder escribe los nombres en negro. -->
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face { font-family: M; src: url('../../../../2_recursos/fonts/Montserrat-ExtraBold.ttf'); font-weight: 800; }
+@font-face { font-family: I; src: url('../../../../2_recursos/fonts/Inter_18pt-Regular.ttf'); font-weight: 400; }
+@font-face { font-family: I; src: url('../../../../2_recursos/fonts/Inter_18pt-Medium.ttf'); font-weight: 500; }
+@font-face { font-family: IB; src: url('../../../../2_recursos/fonts/Inter_24pt-Bold.ttf'); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 600px; height: 360px; overflow: hidden; }
+body { position: relative; background: #F6F8FB; font-family: I, sans-serif; color: #0B1324; }
+.tit { position: absolute; left: 0; right: 0; top: 24px; text-align: center; font-family: M; font-weight: 800; font-size: 22px;
+       letter-spacing: -.2px; line-height: 1.2; }
+.tit span { color: #12A874; }
+.en { position: absolute; left: 0; right: 0; top: 56px; text-align: center; font-size: 12px; font-weight: 500; color: #667085; }
+.flecha { position: absolute; left: 258px; top: 158px; width: 86px; height: 20px; }
+.pie { position: absolute; left: 0; right: 0; top: 278px; bottom: 0; background: #FFFFFF; border-top: 1px solid #E3E8F0; }
+.k { position: absolute; left: 0; right: 0; text-align: center; }
+.k1 { top: 299px; font-family: IB, sans-serif; font-size: 12px; color: #1C2536; }
+.k2 { top: 317px; font-size: 12px; color: #5F6B80; }
+</style></head>
+<body>
+<div class="tit">Arrástralo a <span>Aplicaciones</span></div>
+<div class="en">Drag CineCaptions Ventas to Applications</div>
+<svg class="flecha" viewBox="0 0 86 20"><path d="M2 10 H82 M73 2 L83 10 L73 18" fill="none" stroke="#14B07A" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round"/></svg>
+<div class="pie"></div>
+<div class="k k1">¿macOS no lo abre la primera vez?</div>
+<div class="k k2">Ajustes del Sistema › Privacidad y seguridad › Abrir igualmente</div>
+</body></html>
