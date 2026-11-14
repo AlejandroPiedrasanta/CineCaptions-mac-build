@@ -4673,6 +4673,22 @@
     "El nombre del video es demasiado largo para este Windows ({n} letras). Ponle un nombre más corto (menos de {m} letras) y pulsa GO otra vez.": "このWindowsでは動画の名前が長すぎます（{n}文字）。短い名前（{m}文字未満）に変えて、もう一度GOを押してください。",
     "Más equipos sin sorpresas: videos con nombres muy largos o en carpetas profundas en Windows, videos con tildes o ñ en Resolve Free, y en Mac ya no pide permiso para el Escritorio ni Descargas.": "より多くの環境で安定：Windows での非常に長い名前や深いフォルダーの動画、Resolve Free でのアクセント付きの名前の動画に対応し、Mac ではデスクトップやダウンロードへのアクセス許可を求めなくなりました。",
     "Mac con chip de Apple que tenía la versión Intel: al actualizar pasa sola a la de Apple Silicon (más rápida y con la IA local).": "Apple チップの Mac に Intel 版が入っていた場合：アップデートで自動的に Apple Silicon 版に切り替わります（より速く、ローカル AI も使えます）。",
-    "Actualizar: la ventana enseña cómo avanza la descarga desde el primer momento, y si cierras CineCaptions antes de que termine, en Mac se instala igual sola.": "アップデート：最初からダウンロードの進み具合が表示され、完了前に CineCaptions を閉じても、Mac ではそのまま自動でインストールされます。"
+    "Actualizar: la ventana enseña cómo avanza la descarga desde el primer momento, y si cierras CineCaptions antes de que termine, en Mac se instala igual sola.": "アップデート：最初からダウンロードの進み具合が表示され、完了前に CineCaptions を閉じても、Mac ではそのまま自動でインストールされます。",
+    "Nueva versión de CineCaptions": "CineCaptions の新しいバージョン",
+    "CineCaptions se actualizó": "CineCaptions を更新しました",
+    "Actualizando CineCaptions…": "CineCaptions を更新中…",
+    "Abrir CineCaptions": "CineCaptions を開く",
+    "Se instala sola en {t} si no eliges nada.": "何も選ばなければ {t} 後に自動でインストールされます。",
+    "No hace falta tu contraseña. Tus proyectos y ajustes no se tocan.": "パスワードは不要です。プロジェクトと設定はそのままです。",
+    "Ya tienes la {v}. Al abrir CineCaptions verás sus novedades.": "{v} になりました。CineCaptions を開くと新機能が表示されます。",
+    "Lo vuelve a intentar solo más tarde. También puedes descargarla e instalarla tú.": "後で自動的に再試行します。自分でダウンロードしてインストールすることもできます。",
+    "En esta Mac falta el servicio que instala las versiones nuevas con CineCaptions cerrado. Instala una vez la versión de cinecaptions.shop y quedará al día solo.": "この Mac には、CineCaptions を閉じている間に新しいバージョンをインストールするサービスがありません。cinecaptions.shop の版を一度インストールすれば、以後は自動で最新になります。",
+    "La descarga llegó dañada.": "ダウンロードが破損していました。",
+    "Se cortó la descarga (revisa internet).": "ダウンロードが途切れました（インターネットを確認してください）。",
+    "No hay espacio libre suficiente en el disco.": "ディスクの空き容量が足りません。",
+    "El instalador de macOS no pudo terminar.": "macOS のインストーラが完了できませんでした。",
+    "Algo falló al instalarla.": "インストール中に問題が起きました。",
+    "Mac: cuando sale una versión nueva aparece un aviso de CineCaptions arriba a la derecha, aunque el programa esté cerrado: eliges «Actualizar ahora» o «Más tarde», ves cómo se instala y te dice cuándo terminó.": "Mac：新しいバージョンが出ると、プログラムを閉じていても右上に CineCaptions のお知らせが表示されます。「今すぐ更新」か「後で」を選べ、インストールの様子と完了がわかります。",
+    "Con una versión nueva, el icono de CineCaptions rebota en el Dock (en Windows parpadea en la barra de tareas) para que no se te pase.": "新しいバージョンがあると、CineCaptions のアイコンが Dock で跳ねます（Windows ではタスクバーで点滅）。見逃しません。"
   }
 }

@@ -19,6 +19,13 @@ antes de REINTENTO_S (un pedido del programa, sí). Lo que pasa queda en carpeta
 
 Seguridad del servicio de root (Mac): solo instala lo que dice el manifiesto firmado; de un pedido solo usa «reabrir», el PID que esperar
 (nunca lo mata) y, como mucho, un .dmg ya descargado que COPIA a su carpeta y comprueba con el SHA-256 firmado antes de usarlo.
+
+v5.90 (el usuario: «en Mac sigue sin recibir actualizaciones… que cuando salga una actualización de verdad notifique en la Mac, que tenga
+más permiso y control»). MEDIDO en Macs de GitHub (macOS 15 y 26) con la 5.88 publicada: el servicio sí la instalaba (21-52 s), pero la
+notificación de `osascript` NO salía en pantalla (va a nombre del «Editor de Scripts», sin permiso): nadie se enteraba de nada. Ahora, con
+alguien frente a la Mac, el aviso es una tarjeta del propio CineCaptions (aviso_mac, abierta en su sesión): ya descargada la versión nueva
+pregunta «Más tarde» / «Actualizar ahora» (sin respuesta en ESPERA_RESPUESTA_S se instala sola), enseña la instalación y el final.
+«Más tarde» la aplaza POSPONER_S. El servicio mira cada CADA_H_MAC horas.
 """
 import json
 import os
@@ -34,8 +41,12 @@ PLIST_MAC = Path('/Library/LaunchDaemons') / (ETIQUETA_MAC + '.plist')
 PEDIDOS_MAC = Path('/Users/Shared/CineCaptions/pedidos')
 APP_MAC = '/Applications/CineCaptions.app'
 CADA_H = 4
+CADA_H_MAC = 1                             # v5.90 (StartInterval del plist que escribe el postinstall: vale tras reiniciar si ya estaba cargado)
 REINTENTO_S = 6 * 3600
 ESPERA_CIERRE_S = 90                       # lo que se espera a que se cierre el programa que hizo el pedido
+ESPERA_RESPUESTA_S = 120                   # v5.90: lo que la tarjeta espera a que elijas antes de instalarse sola
+MARGEN_RESPUESTA_S = 30                    # v5.90: lo que el servicio espera de más (la tarjeta tarda en abrirse)
+POSPONER_S = 4 * 3600                      # v5.90: «Más tarde»
 SIN_VENTANA = 0x08000000 if sys.platform.startswith('win') else 0
 
 
@@ -101,7 +112,9 @@ def _leer_estado():
 def _guardar_estado(datos):
     try:
         import archivos_seguros
-        archivos_seguros.escribir_json(carpeta_estado() / 'estado.json', datos)
+        ruta = archivos_seguros.escribir_json(carpeta_estado() / 'estado.json', datos)
+        if sys.platform == 'darwin' and es_root():
+            os.chmod(ruta, 0o644)                       # v5.90: la tarjeta (del usuario) lo lee para saber cuándo terminó la instalación
     except Exception:
         pass
 
@@ -255,6 +268,8 @@ def _tomar_pedidos():
     for p in sorted(PEDIDOS_MAC.iterdir()):
         try:
             s = os.lstat(p)
+            if p.name.startswith('.') and st.S_ISREG(s.st_mode) and time.time() - s.st_mtime < 30:
+                continue                                    # v5.90: a medio escribir (se renombra al momento): no se borra debajo de quien escribe
             if st.S_ISREG(s.st_mode) and p.suffix == '.json' and s.st_size <= 4096:
                 d = json.loads(p.read_text(encoding='utf-8'))
                 if isinstance(d, dict):
@@ -339,6 +354,67 @@ def _abrir_como_usuario():
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------------
+# v5.90 · Mac: la tarjeta de CineCaptions (aviso_mac) en la sesión de quien está frente a la Mac, en vez de la notificación invisible
+# ---------------------------------------------------------------------------------------------------------------------------------------
+def archivo_aviso():
+    return carpeta_estado() / 'aviso.json'
+
+
+def tarjeta_mac(modo, r, vieja='', **extra):
+    """Abre la tarjeta (`open -n … --args --tarea aviso_mac /dev/null <aviso.json>`, como el usuario). Devuelve su id o None (nadie frente a
+    la Mac, no es la Mac o no se pudo abrir). Una tarjeta anterior se cierra sola al ver otro id en aviso.json."""
+    if sys.platform != 'darwin' or not es_root():
+        return None
+    u = usuario_de_la_mac()
+    if not u or not Path(APP_MAC).is_dir():
+        return None
+    ident = f'{int(time.time() * 1000)}-{os.getpid()}'
+    datos = {'id': ident, 'modo': modo, 'version': str(r.get('version') or ''), 'vieja': str(vieja or ''), 'notas': str(r.get('notas') or ''),
+             'url': str(r.get('url') or ''), 'espera_s': ESPERA_RESPUESTA_S}
+    datos.update(extra)
+    try:
+        import archivos_seguros
+        ruta = archivos_seguros.escribir_json(archivo_aviso(), datos)
+        os.chmod(ruta, 0o644)                                       # (la lee el usuario)
+        res = subprocess.run(['/bin/launchctl', 'asuser', str(u[1]), '/usr/bin/sudo', '-u', u[0], '-H', '/usr/bin/open', '-n', '-a', APP_MAC,
+                              '--args', '--tarea', 'aviso_mac', '/dev/null', str(ruta)], capture_output=True, text=True, timeout=60)
+        if res.returncode != 0:
+            _log(f'tarjeta {modo}: open falló ({(res.stderr or res.stdout).strip()[:200]})')
+            return None
+        _log(f'tarjeta {modo} ({datos["version"]}) para {u[0]}')
+        return ident
+    except Exception as e:
+        _log(f'tarjeta {modo}: {type(e).__name__}: {e}')
+        return None
+
+
+def cerrar_tarjeta_mac():
+    """Cualquier tarjeta abierta se cierra sola al ver que cambió el id de aviso.json."""
+    try:
+        import archivos_seguros
+        ruta = archivos_seguros.escribir_json(archivo_aviso(), {'id': f'cerrada-{int(time.time() * 1000)}', 'modo': 'cerrada'})
+        os.chmod(ruta, 0o644)
+    except Exception:
+        pass
+
+
+def _esperar_respuesta(ident, tope_s=None):
+    """'instalar' | 'luego' | 'abierto' (alguien abrió CineCaptions mientras: decide el programa). Sin respuesta en el plazo: 'instalar'
+    (la tarjeta también se instala sola al acabar su cuenta atrás)."""
+    limite = time.time() + (tope_s if tope_s is not None else ESPERA_RESPUESTA_S + MARGEN_RESPUESTA_S)
+    while time.time() < limite:
+        if programa_abierto():
+            return 'abierto'
+        for d in _tomar_pedidos():
+            if d.get('accion') in ('instalar', 'luego') and str(d.get('id')) == str(ident):
+                return d['accion']
+            if not d.get('accion'):                                 # un pedido del programa («Actualizar» o al cerrarlo): instalar ya
+                return 'instalar'
+        time.sleep(1)
+    return 'instalar'
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------
 # la tarea
 # ---------------------------------------------------------------------------------------------------------------------------------------
 class _Candado:
@@ -378,6 +454,9 @@ def correr(info=None):
             return 'ocupado'
         import actualizaciones
         pedidos = _tomar_pedidos()
+        # v5.90: las respuestas de la tarjeta que llegan tarde (el servicio ya no esperaba): «Actualizar ahora» cuenta como pedido; «Más tarde»
+        # no pide nada (y nunca se espera a su PID: es el de la tarjeta)
+        pedidos = [{k: v for k, v in d.items() if k != 'pid'} if d.get('accion') else d for d in pedidos if d.get('accion') in (None, 'instalar')]
         estado = _leer_estado()
         if not pedidos and time.time() - float(estado.get('fallo_ts') or 0) < REINTENTO_S:
             return 'espera'
@@ -388,6 +467,10 @@ def correr(info=None):
             info(f"sin versión nueva ({r.get('estado')})")
             return 'al_dia' if r.get('estado') == 'al_dia' else 'sin_red'
         version = r['version']
+        pospuesta = estado.get('pospuesta') if isinstance(estado.get('pospuesta'), dict) else {}
+        if not pedidos and pospuesta.get('version') == version and time.time() < float(pospuesta.get('hasta') or 0):
+            info(f'{version}: aplazada con «Más tarde»')
+            return 'pospuesta'
         for d in pedidos:
             _esperar_cierre(d.get('pid'))
         if programa_abierto():
@@ -395,32 +478,74 @@ def correr(info=None):
             return 'abierto'
         tr = _textos()
         reabrir = any(d.get('reabrir') for d in pedidos)
-        if not pedidos:
+        vieja = version_instalada()
+        con_tarjeta = sys.platform == 'darwin' and es_root() and usuario_de_la_mac() is not None
+        if not pedidos and not con_tarjeta:
             notificar(tr('Hay una versión nueva de CineCaptions ({v}): se está instalando sola.', v=version))
+        tarjeta = None
+        if con_tarjeta and pedidos:
+            tarjeta = tarjeta_mac('instalando', r, vieja)                  # «Actualizar ahora» o al cerrar el programa: que se vea, desde ya
         try:
             ruta = _dmg_del_pedido(pedidos, r['archivo']) if sys.platform == 'darwin' else None
             if ruta is None:
-                ruta = actualizaciones.descargar(r['archivo'], version_instalada())
+                ruta = actualizaciones.descargar(r['archivo'], vieja)
             _log(f'{version}: descargada y comprobada ({ruta})')
             if sys.platform.startswith('win'):
                 _instalar_windows(ruta)
                 _guardar_estado({'instalando': version, 'ts': time.time()})
                 info(f'{version}: instalador en marcha')
                 return 'instalando'
+            if con_tarjeta and not pedidos:
+                # v5.90: ya descargada, se PREGUNTA (antes se instalaba a escondidas con una notificación que no se veía)
+                tarjeta = tarjeta_mac('preguntar', r, vieja)
+                if tarjeta:
+                    respuesta = _esperar_respuesta(tarjeta)
+                    _log(f'{version}: respuesta de la tarjeta: {respuesta}')
+                    if respuesta == 'abierto':
+                        cerrar_tarjeta_mac()
+                        info(f'{version}: CineCaptions se abrió mientras preguntaba; se instala al cerrarlo')
+                        return 'abierto'
+                    if respuesta == 'luego':
+                        cerrar_tarjeta_mac()                                # (si la respuesta no vino de ella, que no siga contando)
+                        _guardar_estado({'pospuesta': {'version': version, 'hasta': time.time() + POSPONER_S}})
+                        info(f'{version}: «Más tarde» (se vuelve a ofrecer en {POSPONER_S // 3600} h)')
+                        return 'pospuesta'
+                else:
+                    notificar(tr('Hay una versión nueva de CineCaptions ({v}): se está instalando sola.', v=version))
+            _guardar_estado({'instalando': version, 'ts': time.time()})
             if not _instalar_mac(ruta):
                 raise RuntimeError('installer no terminó bien')
             _guardar_estado({'instalada': version, 'ts': time.time()})
             _log(f'{version}: instalada')
-            notificar(tr('CineCaptions se actualizó a la {v}.', v=version))
             if reabrir:
-                _abrir_como_usuario()
+                _abrir_como_usuario()                                       # (al abrirse enseña sus novedades: eso es el aviso)
+            elif not (con_tarjeta and tarjeta_mac('hecha', r, vieja)):
+                notificar(tr('CineCaptions se actualizó a la {v}.', v=version))
             return 'instalada'
         except Exception as e:
-            _guardar_estado({'fallo_ts': time.time(), 'motivo': f'{type(e).__name__}: {e}'[:300], 'version': version})
-            _log(f'{version}: fallo {type(e).__name__}: {e}')
+            motivo = f'{type(e).__name__}: {e}'[:300]
+            _guardar_estado({'fallo_ts': time.time(), 'motivo': motivo, 'version': version})
+            _log(f'{version}: fallo {motivo}')
             if reabrir:
                 _abrir_como_usuario()
+            if con_tarjeta:
+                time.sleep(1.5)                                             # (la tarjeta de «instalando» ve el fallo y se cierra)
+                tarjeta_mac('fallo', r, vieja, motivo=tr(_motivo_claro(motivo)))
             return 'fallo'
+
+
+def _motivo_claro(motivo):
+    """El fallo en palabras del usuario (el técnico queda en el registro)."""
+    bajo = str(motivo).lower()
+    if 'huella' in bajo or 'sha' in bajo:
+        return 'La descarga llegó dañada.'
+    if any(t in bajo for t in ('a medias', 'timed out', 'urlopen', 'connection', 'conexi', 'network', 'nodename', 'resolve host')):
+        return 'Se cortó la descarga (revisa internet).'
+    if 'no space' in bajo or 'espacio' in bajo:
+        return 'No hay espacio libre suficiente en el disco.'
+    if 'installer' in bajo or 'hdiutil' in bajo or '.pkg' in bajo:
+        return 'El instalador de macOS no pudo terminar.'
+    return 'Algo falló al instalarla.'
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------------

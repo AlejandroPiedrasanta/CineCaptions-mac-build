@@ -26,7 +26,8 @@ limpiar_huerfanos
 # cuando el programa deja un pedido en /Users/Shared/CineCaptions/pedidos («Actualizar» o al cerrarlo). Solo instala lo que trae el manifiesto
 # FIRMADO. Las carpetas son de root (un usuario no puede cambiarlas por un enlace a otra parte); la de pedidos, escribible por todos con
 # sticky bit. Si el servicio ya estaba cargado NO se recarga: podría ser él quien está instalando esta versión (recargarlo lo cortaría a
-# medias); el plist nuevo vale desde el próximo arranque.
+# medias); el plist nuevo vale desde el próximo arranque. v5.90: cada hora (antes 4 h); con alguien frente a la Mac pregunta con la tarjeta
+# de CineCaptions (aviso_mac): la notificación de osascript no salía en pantalla.
 ETIQUETA="com.cinemaproductions.cinecaptions.actualizar"
 PLIST="/Library/LaunchDaemons/$ETIQUETA.plist"
 SERVICIO="/Library/Application Support/CineCaptions/actualizar"
@@ -44,7 +45,7 @@ cat > "$PLIST.nuevo" <<PLIST
     <key>ProgramArguments</key>
     <array><string>$BIN</string><string>--tarea</string><string>actualizar_fondo</string></array>
     <key>RunAtLoad</key><true/>
-    <key>StartInterval</key><integer>14400</integer>
+    <key>StartInterval</key><integer>3600</integer>
     <key>QueueDirectories</key><array><string>$COMPARTIDA/pedidos</string></array>
     <key>EnvironmentVariables</key>
     <dict>

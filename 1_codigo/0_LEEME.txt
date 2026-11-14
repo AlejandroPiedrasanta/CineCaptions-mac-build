@@ -30,6 +30,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         que nada deje el programa sin abrir: hijos de librerías que no reabren la app y copias atascadas que se quitan.
     audio_compatible.py
         v5.4.52 (auditoría de los renders: el video quedaba MUDO): los videos bajados de Pinterest / Instagram / TikTok
+    aviso_mac.py
+        v5.90 (el usuario: «en Mac sigue sin recibir actualizaciones… que cuando salga una actualización DE VERDAD
     avisos_sistema.py
     banco_pruebas.py
         banco de pruebas: timeline temporal con fondo liso + audio, render en Resolve y comparación cuadro a cuadro con un video de referencia.

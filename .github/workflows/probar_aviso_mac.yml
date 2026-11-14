@@ -1,0 +1,129 @@
+# CineCaptions · prueba REAL del aviso de la Mac (v5.90, aviso_mac): compila el programa con la versión BAJADA a 5.80 (así la publicada
+# cuenta como nueva), lo instala con su servicio y mira en pantalla la tarjeta «preguntar», «Más tarde» (aplaza), y sin respuesta que se
+# instale sola con la tarjeta «instalando» a la vista; también las tarjetas «hecha» y «fallo». Rama «probar-aviso-…» del espejo. No publica nada.
+# Usado para la v5.90 (rondas 43554292239 y 43555427298: macOS 15 y 26 bien, sin informes de macOS).
+name: Probar aviso Mac
+on:
+  workflow_dispatch:
+  push:
+    branches: ['probar-aviso-*']
+jobs:
+  probar:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - nombre: macOS15
+            runner: macos-15
+          - nombre: macOS26
+            runner: macos-26
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    env:
+      ETQ: com.cinemaproductions.cinecaptions.actualizar
+      SERV: /Library/Application Support/CineCaptions/actualizar
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.13.0'
+      - name: Versión publicada (la «nueva» de la prueba)
+        run: |
+          NUEVA=$(curl -fsSL https://github.com/AlejandroPiedrasanta/CineCaptions-releases/releases/latest/download/version.json | python3 -c "import json,sys; v=json.load(sys.stdin)['estable']['version'].split('.'); print('.'.join(v[:2]))")
+          echo "NUEVA=$NUEVA" >> "$GITHUB_ENV"; echo "publicada: $NUEVA"
+      - name: Compilar con la versión bajada a 5.80
+        env:
+          CINECAPTIONS_PYTHON: python3
+          CINECAPTIONS_SIN_PANTALLA: '1'
+        run: |
+          sed -i '' "s/^APP_VERSION = '[0-9.]*'/APP_VERSION = '5.80'/" 1_codigo/version.py
+          grep -n "^APP_VERSION" 1_codigo/version.py
+          bash 7_mac/Construir_Instalador_Mac.sh
+      - name: Instalar (el servicio no actúa todavía)
+        run: |
+          mkdir -p ~/act/capturas ~/act/registros
+          sudo mkdir -p "$SERV"
+          echo "{\"fallo_ts\": $(date +%s)}" | sudo tee "$SERV/estado.json" >/dev/null
+          DMG=$(ls INSTALADORES/Mac/CineCaptions_Mac_*.dmg | head -1)
+          hdiutil attach -nobrowse -readonly -mountpoint /tmp/ccdmg "$DMG" >/dev/null
+          cp -R /tmp/ccdmg/*.pkg ~/act/v.pkg
+          hdiutil detach /tmp/ccdmg -quiet
+          sudo installer -pkg ~/act/v.pkg -target / 2>&1 | tail -2
+          echo "instalada: $(defaults read /Applications/CineCaptions.app/Contents/Info CFBundleShortVersionString)"
+          pkill -f 'CineCaptions.app/Contents/MacOS' || true
+          sudo launchctl print system/$ETQ | grep -E 'state|run interval'
+          screencapture -x ~/act/capturas/00_antes.png
+      - name: Tarjetas «hecha» y «fallo» (abiertas como lo hace el servicio)
+        run: |
+          U=$(stat -f%Su /dev/console); UIDU=$(id -u "$U")
+          for MODO in hecha fallo; do
+            echo "{\"id\": \"p-$MODO\", \"modo\": \"$MODO\", \"version\": \"$NUEVA\", \"vieja\": \"5.80\", \"notas\": \"\", \"url\": \"https://github.com\", \"motivo\": \"Se cortó la descarga (revisa internet).\"}" > /tmp/aviso_$MODO.json
+            chmod 644 /tmp/aviso_$MODO.json
+            sudo /bin/launchctl asuser "$UIDU" /usr/bin/sudo -u "$U" -H /usr/bin/open -n -a /Applications/CineCaptions.app --args --tarea aviso_mac /dev/null /tmp/aviso_$MODO.json
+            for i in $(seq 1 30); do pgrep -f "aviso_$MODO" >/dev/null && break; sleep 1; done
+            sleep 6
+            screencapture -x ~/act/capturas/05_$MODO.png
+            pkill -f "aviso_$MODO" || true
+            sleep 1
+          done
+      - name: Tarjeta «preguntar» y «Más tarde»
+        run: |
+          sudo rm -f "$SERV/estado.json" "$SERV/aviso.json"
+          sudo launchctl kickstart -k system/$ETQ
+          for i in $(seq 1 90); do sudo test -f "$SERV/aviso.json" && break; sleep 2; done
+          for i in 1 2 3 4; do sleep 3; screencapture -x ~/act/capturas/1${i}_preguntar.png; done
+          pgrep -fl 'aviso_mac' || echo "(NO hay proceso de la tarjeta)"
+          sudo cat "$SERV/aviso.json"; echo
+          ID=$(sudo python3 -c "import json;print(json.load(open('$SERV/aviso.json'))['id'])")
+          echo "{\"accion\": \"luego\", \"id\": \"$ID\", \"ts\": $(date +%s)}" > /Users/Shared/CineCaptions/pedidos/respuesta_prueba.json
+          for i in $(seq 1 30); do sudo grep -q 'respuesta de la tarjeta' "$SERV/actualizar_fondo.log" 2>/dev/null && break; sleep 2; done
+          sleep 5
+          screencapture -x ~/act/capturas/19_tras_mas_tarde.png
+          pgrep -fl 'aviso_mac' && echo "LA TARJETA SIGUE ABIERTA" || echo "tarjeta cerrada"
+          sudo cat "$SERV/actualizar_fondo.log"; sudo cat "$SERV/estado.json"; echo
+          sudo tail -4 /Library/Logs/CineCaptions_actualizar.log
+      - name: Otra pasada sigue aplazada
+        run: |
+          sudo launchctl kickstart -k system/$ETQ
+          for i in $(seq 1 30); do sudo tail -1 /Library/Logs/CineCaptions_actualizar.log | grep -q 'pospuesta' && break; sleep 2; done
+          sudo tail -3 /Library/Logs/CineCaptions_actualizar.log
+      - name: Sin respuesta se instala sola (tarjeta «instalando» a la vista)
+        run: |
+          sudo rm -f "$SERV/estado.json"
+          sudo launchctl kickstart -k system/$ETQ
+          T0=$(date +%s)
+          for i in $(seq 1 100); do
+            V=$(defaults read /Applications/CineCaptions.app/Contents/Info CFBundleShortVersionString 2>/dev/null)
+            [ $((i % 3)) = 1 ] && screencapture -x ~/act/capturas/2$(printf %03d $i).png
+            [ "$V" = "$NUEVA" ] && break
+            sleep 5
+          done
+          echo "instalada: $V en $(( $(date +%s) - T0 )) s"
+          for i in $(seq 1 60); do sudo grep -q "$NUEVA: instalada" "$SERV/actualizar_fondo.log" 2>/dev/null && break; sleep 2; done
+          sleep 6
+          screencapture -x ~/act/capturas/90_final.png
+          pgrep -fl 'aviso_mac' && echo "LA TARJETA «instalando» SIGUE ABIERTA" || echo "tarjeta «instalando» cerrada al terminar"
+          pgrep -fl 'CineCaptions' || true
+      - name: Registros
+        if: always()
+        run: |
+          echo "== actualizar_fondo.log"; sudo cat "$SERV/actualizar_fondo.log" 2>/dev/null
+          echo "== estado.json"; sudo cat "$SERV/estado.json" 2>/dev/null; echo
+          echo "== servicio"; sudo tail -40 /Library/Logs/CineCaptions_actualizar.log 2>/dev/null
+          echo "== informes de cierre"; ls ~/Library/Logs/DiagnosticReports /Library/Logs/DiagnosticReports 2>/dev/null | grep -i cine || echo "(ninguno)"
+          for f in ~/Library/Logs/DiagnosticReports/*ine*aption* /Library/Logs/DiagnosticReports/*ine*aption*; do [ -f "$f" ] && sudo cp "$f" ~/act/registros/ && echo "-- $f" && sudo head -40 "$f"; done 2>/dev/null || true
+          sudo cp "$SERV/actualizar_fondo.log" /Library/Logs/CineCaptions_actualizar.log ~/act/registros/ 2>/dev/null || true
+          cp ~/DaVinciSubtitles/*.log ~/act/registros/ 2>/dev/null || true
+          sudo chmod -R a+r ~/act/registros || true
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: Aviso-${{ matrix.nombre }}
+          path: |
+            ~/act/capturas/
+            ~/act/registros/
+          retention-days: 3
+          if-no-files-found: warn

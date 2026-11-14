@@ -4745,6 +4745,22 @@
     "El nombre del video es demasiado largo para este Windows ({n} letras). Ponle un nombre más corto (menos de {m} letras) y pulsa GO otra vez.": "Der Videoname ist für dieses Windows zu lang ({n} Zeichen). Gib ihm einen kürzeren Namen (unter {m} Zeichen) und drücke erneut GO.",
     "Más equipos sin sorpresas: videos con nombres muy largos o en carpetas profundas en Windows, videos con tildes o ñ en Resolve Free, y en Mac ya no pide permiso para el Escritorio ni Descargas.": "Weniger Überraschungen auf mehr Computern: Videos mit sehr langen Namen oder in tiefen Ordnern unter Windows, Videos mit Akzenten im Namen in Resolve Free, und auf dem Mac fragt es nicht mehr nach Zugriff auf Schreibtisch oder Downloads.",
     "Mac con chip de Apple que tenía la versión Intel: al actualizar pasa sola a la de Apple Silicon (más rápida y con la IA local).": "Macs mit Apple-Chip, auf denen die Intel-Version lief: Beim Update wechseln sie von selbst zur Apple-Silicon-Version (schneller und mit der lokalen KI).",
-    "Actualizar: la ventana enseña cómo avanza la descarga desde el primer momento, y si cierras CineCaptions antes de que termine, en Mac se instala igual sola.": "Aktualisieren: Das Fenster zeigt den Download-Fortschritt von Anfang an, und wenn du CineCaptions vorher schließt, installiert es sich auf dem Mac trotzdem von selbst."
+    "Actualizar: la ventana enseña cómo avanza la descarga desde el primer momento, y si cierras CineCaptions antes de que termine, en Mac se instala igual sola.": "Aktualisieren: Das Fenster zeigt den Download-Fortschritt von Anfang an, und wenn du CineCaptions vorher schließt, installiert es sich auf dem Mac trotzdem von selbst.",
+    "Nueva versión de CineCaptions": "Neue CineCaptions-Version",
+    "CineCaptions se actualizó": "CineCaptions wurde aktualisiert",
+    "Actualizando CineCaptions…": "CineCaptions wird aktualisiert…",
+    "Abrir CineCaptions": "CineCaptions öffnen",
+    "Se instala sola en {t} si no eliges nada.": "Sie installiert sich in {t} von selbst, wenn du nichts wählst.",
+    "No hace falta tu contraseña. Tus proyectos y ajustes no se tocan.": "Kein Passwort nötig. Deine Projekte und Einstellungen bleiben unverändert.",
+    "Ya tienes la {v}. Al abrir CineCaptions verás sus novedades.": "Du hast jetzt {v}. Öffne CineCaptions, um die Neuerungen zu sehen.",
+    "Lo vuelve a intentar solo más tarde. También puedes descargarla e instalarla tú.": "Es versucht es später von selbst erneut. Du kannst sie auch selbst herunterladen und installieren.",
+    "En esta Mac falta el servicio que instala las versiones nuevas con CineCaptions cerrado. Instala una vez la versión de cinecaptions.shop y quedará al día solo.": "Auf diesem Mac fehlt der Dienst, der neue Versionen bei geschlossenem CineCaptions installiert. Installiere einmal die Version von cinecaptions.shop, dann bleibt es von selbst aktuell.",
+    "La descarga llegó dañada.": "Der Download kam beschädigt an.",
+    "Se cortó la descarga (revisa internet).": "Der Download wurde unterbrochen (prüfe das Internet).",
+    "No hay espacio libre suficiente en el disco.": "Auf dem Datenträger ist nicht genug Platz frei.",
+    "El instalador de macOS no pudo terminar.": "Das macOS-Installationsprogramm konnte nicht abschließen.",
+    "Algo falló al instalarla.": "Beim Installieren ist etwas schiefgegangen.",
+    "Mac: cuando sale una versión nueva aparece un aviso de CineCaptions arriba a la derecha, aunque el programa esté cerrado: eliges «Actualizar ahora» o «Más tarde», ves cómo se instala y te dice cuándo terminó.": "Mac: Erscheint eine neue Version, zeigt CineCaptions oben rechts einen Hinweis, auch wenn das Programm geschlossen ist: wähle „Jetzt aktualisieren“ oder „Später“, sieh die Installation und erfahre, wann sie fertig ist.",
+    "Con una versión nueva, el icono de CineCaptions rebota en el Dock (en Windows parpadea en la barra de tareas) para que no se te pase.": "Bei einer neuen Version hüpft das CineCaptions-Symbol im Dock (unter Windows blinkt es in der Taskleiste), damit du sie nicht verpasst."
   }
 }

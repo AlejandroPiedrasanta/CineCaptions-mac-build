@@ -8291,6 +8291,12 @@ class SubtitleApp(QWidget):
             ui_toast.mostrar(self, tr('Hay una versión nueva de CineCaptions: {v}', v=r['version']), duracion_ms=6000)
         except Exception:
             pass
+        try:
+            # v5.90 (el usuario: «que cuando salga una actualización notifique de verdad en la Mac»): con CineCaptions detrás de Resolve el
+            # aviso salía sobre su ventana y nadie lo veía. El icono del Dock rebota (en Windows parpadea en la barra) hasta que se mira.
+            QApplication.alert(self, 0)
+        except Exception:
+            pass
         self._dlg_act_abierto = True
         try:
             import ajustes_ui

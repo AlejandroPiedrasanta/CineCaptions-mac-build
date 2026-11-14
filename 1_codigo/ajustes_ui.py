@@ -592,6 +592,10 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.90', [
+        'Mac: cuando sale una versión nueva aparece un aviso de CineCaptions arriba a la derecha, aunque el programa esté cerrado: eliges «Actualizar ahora» o «Más tarde», ves cómo se instala y te dice cuándo terminó.',
+        'Con una versión nueva, el icono de CineCaptions rebota en el Dock (en Windows parpadea en la barra de tareas) para que no se te pase.',
+    ]),
     ('5.89', [
         'Actualizar: la ventana enseña cómo avanza la descarga desde el primer momento, y si cierras CineCaptions antes de que termine, en Mac se instala igual sola.',
     ]),
@@ -1645,6 +1649,15 @@ class ControlActualizacion(QWidget):
         c.addWidget(self.buscar)
         self.actualizar = Boton('', self._actualizar, tipo='primario', alto=46, tam=15, negrita=True)
         c.addWidget(self.actualizar)
+        # v5.90 (Mac): sin el servicio del sistema (lo pone el .pkg) la versión nueva no se instala sola con el programa cerrado; se dice
+        # aquí, una vez, en vez de fallar en silencio
+        self._sin_servicio = False
+        if sys.platform == 'darwin':
+            try:
+                import actualizar_fondo
+                self._sin_servicio = not actualizar_fondo.servicio_mac_instalado()
+            except Exception:
+                pass
         self._reloj = QTimer(self)
         self._reloj.setInterval(1500)
         self._reloj.timeout.connect(self.refrescar)
@@ -1665,6 +1678,9 @@ class ControlActualizacion(QWidget):
         elif getattr(self, '_estado_auto', False):        # la versión nueva ya no está (se instaló): se apaga el aviso
             self.estado.configure(text='')
             self._estado_auto = False
+        elif self._sin_servicio and not self.estado.text():
+            self.estado.configure(text=tr('En esta Mac falta el servicio que instala las versiones nuevas con CineCaptions cerrado. '
+                                          'Instala una vez la versión de cinecaptions.shop y quedará al día solo.'))
         # al día = nada que decir: sin «tienes la última versión» ni «Leer notas»; el estado solo se ve al buscar a mano o cuando hay una versión nueva
         self.estado.setVisible(bool(self.estado.text()))
         self.leer.setVisible(bool(r))

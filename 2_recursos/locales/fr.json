@@ -4745,6 +4745,22 @@
     "El nombre del video es demasiado largo para este Windows ({n} letras). Ponle un nombre más corto (menos de {m} letras) y pulsa GO otra vez.": "Le nom de la vidéo est trop long pour ce Windows ({n} caractères). Donnez-lui un nom plus court (moins de {m} caractères) et appuyez à nouveau sur GO.",
     "Más equipos sin sorpresas: videos con nombres muy largos o en carpetas profundas en Windows, videos con tildes o ñ en Resolve Free, y en Mac ya no pide permiso para el Escritorio ni Descargas.": "Moins de surprises sur plus d’ordinateurs : vidéos aux noms très longs ou dans des dossiers profonds sous Windows, vidéos avec des accents dans le nom sur Resolve Free, et sur Mac il ne demande plus l’accès au Bureau ni aux Téléchargements.",
     "Mac con chip de Apple que tenía la versión Intel: al actualizar pasa sola a la de Apple Silicon (más rápida y con la IA local).": "Mac avec puce Apple qui avaient la version Intel : la mise à jour passe d’elle-même à la version Apple Silicon (plus rapide et avec l’IA locale).",
-    "Actualizar: la ventana enseña cómo avanza la descarga desde el primer momento, y si cierras CineCaptions antes de que termine, en Mac se instala igual sola.": "Mettre à jour : la fenêtre montre la progression du téléchargement dès le début, et si vous fermez CineCaptions avant la fin, sur Mac il s’installe quand même tout seul."
+    "Actualizar: la ventana enseña cómo avanza la descarga desde el primer momento, y si cierras CineCaptions antes de que termine, en Mac se instala igual sola.": "Mettre à jour : la fenêtre montre la progression du téléchargement dès le début, et si vous fermez CineCaptions avant la fin, sur Mac il s’installe quand même tout seul.",
+    "Nueva versión de CineCaptions": "Nouvelle version de CineCaptions",
+    "CineCaptions se actualizó": "CineCaptions a été mis à jour",
+    "Actualizando CineCaptions…": "Mise à jour de CineCaptions…",
+    "Abrir CineCaptions": "Ouvrir CineCaptions",
+    "Se instala sola en {t} si no eliges nada.": "Elle s'installe toute seule dans {t} si tu ne choisis rien.",
+    "No hace falta tu contraseña. Tus proyectos y ajustes no se tocan.": "Pas besoin de ton mot de passe. Tes projets et réglages ne sont pas modifiés.",
+    "Ya tienes la {v}. Al abrir CineCaptions verás sus novedades.": "Tu as maintenant la {v}. Ouvre CineCaptions pour voir les nouveautés.",
+    "Lo vuelve a intentar solo más tarde. También puedes descargarla e instalarla tú.": "Il réessaiera tout seul plus tard. Tu peux aussi la télécharger et l'installer toi-même.",
+    "En esta Mac falta el servicio que instala las versiones nuevas con CineCaptions cerrado. Instala una vez la versión de cinecaptions.shop y quedará al día solo.": "Il manque sur ce Mac le service qui installe les nouvelles versions quand CineCaptions est fermé. Installe une fois la version de cinecaptions.shop et il restera à jour tout seul.",
+    "La descarga llegó dañada.": "Le téléchargement est arrivé endommagé.",
+    "Se cortó la descarga (revisa internet).": "Le téléchargement a été coupé (vérifie internet).",
+    "No hay espacio libre suficiente en el disco.": "Il n'y a pas assez d'espace libre sur le disque.",
+    "El instalador de macOS no pudo terminar.": "L'installateur de macOS n'a pas pu terminer.",
+    "Algo falló al instalarla.": "Quelque chose a échoué pendant l'installation.",
+    "Mac: cuando sale una versión nueva aparece un aviso de CineCaptions arriba a la derecha, aunque el programa esté cerrado: eliges «Actualizar ahora» o «Más tarde», ves cómo se instala y te dice cuándo terminó.": "Mac : quand une nouvelle version sort, un avis de CineCaptions apparaît en haut à droite, même programme fermé : choisis « Mettre à jour » ou « Plus tard », suis l'installation et il te prévient quand c'est fini.",
+    "Con una versión nueva, el icono de CineCaptions rebota en el Dock (en Windows parpadea en la barra de tareas) para que no se te pase.": "Avec une nouvelle version, l'icône de CineCaptions rebondit dans le Dock (sous Windows elle clignote dans la barre des tâches) pour que tu ne la manques pas."
   }
 }

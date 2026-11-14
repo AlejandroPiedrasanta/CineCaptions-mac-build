@@ -14041,5 +14041,181 @@
   "ko": "업데이트: 창에 처음부터 다운로드 진행 상황이 표시되며, 끝나기 전에 CineCaptions를 닫아도 Mac에서는 알아서 설치됩니다.",
   "zh": "更新：窗口从一开始就显示下载进度；即使在完成前关闭 CineCaptions，在 Mac 上也会自动完成安装。",
   "ru": "Обновление: окно с самого начала показывает ход загрузки, а если закрыть CineCaptions раньше, на Mac обновление всё равно установится само."
+ },
+ "Nueva versión de CineCaptions": {
+  "en": "New CineCaptions version",
+  "pt": "Nova versão do CineCaptions",
+  "fr": "Nouvelle version de CineCaptions",
+  "de": "Neue CineCaptions-Version",
+  "it": "Nuova versione di CineCaptions",
+  "ja": "CineCaptions の新しいバージョン",
+  "ko": "CineCaptions 새 버전",
+  "zh": "CineCaptions 新版本",
+  "ru": "Новая версия CineCaptions"
+ },
+ "CineCaptions se actualizó": {
+  "en": "CineCaptions was updated",
+  "pt": "O CineCaptions foi atualizado",
+  "fr": "CineCaptions a été mis à jour",
+  "de": "CineCaptions wurde aktualisiert",
+  "it": "CineCaptions è stato aggiornato",
+  "ja": "CineCaptions を更新しました",
+  "ko": "CineCaptions가 업데이트되었습니다",
+  "zh": "CineCaptions 已更新",
+  "ru": "CineCaptions обновлён"
+ },
+ "Actualizando CineCaptions…": {
+  "en": "Updating CineCaptions…",
+  "pt": "Atualizando o CineCaptions…",
+  "fr": "Mise à jour de CineCaptions…",
+  "de": "CineCaptions wird aktualisiert…",
+  "it": "Aggiornamento di CineCaptions…",
+  "ja": "CineCaptions を更新中…",
+  "ko": "CineCaptions 업데이트 중…",
+  "zh": "正在更新 CineCaptions…",
+  "ru": "Обновление CineCaptions…"
+ },
+ "Abrir CineCaptions": {
+  "en": "Open CineCaptions",
+  "pt": "Abrir o CineCaptions",
+  "fr": "Ouvrir CineCaptions",
+  "de": "CineCaptions öffnen",
+  "it": "Apri CineCaptions",
+  "ja": "CineCaptions を開く",
+  "ko": "CineCaptions 열기",
+  "zh": "打开 CineCaptions",
+  "ru": "Открыть CineCaptions"
+ },
+ "Se instala sola en {t} si no eliges nada.": {
+  "en": "It installs by itself in {t} if you don't choose.",
+  "pt": "Instala-se sozinha em {t} se você não escolher nada.",
+  "fr": "Elle s'installe toute seule dans {t} si tu ne choisis rien.",
+  "de": "Sie installiert sich in {t} von selbst, wenn du nichts wählst.",
+  "it": "Si installa da sola tra {t} se non scegli nulla.",
+  "ja": "何も選ばなければ {t} 後に自動でインストールされます。",
+  "ko": "아무것도 고르지 않으면 {t} 후 자동으로 설치됩니다.",
+  "zh": "如果不做选择，将在 {t} 后自动安装。",
+  "ru": "Если ничего не выбрать, она установится сама через {t}."
+ },
+ "No hace falta tu contraseña. Tus proyectos y ajustes no se tocan.": {
+  "en": "No password needed. Your projects and settings are not touched.",
+  "pt": "Não precisa da sua senha. Seus projetos e ajustes não são alterados.",
+  "fr": "Pas besoin de ton mot de passe. Tes projets et réglages ne sont pas modifiés.",
+  "de": "Kein Passwort nötig. Deine Projekte und Einstellungen bleiben unverändert.",
+  "it": "Non serve la tua password. I tuoi progetti e impostazioni non vengono toccati.",
+  "ja": "パスワードは不要です。プロジェクトと設定はそのままです。",
+  "ko": "암호가 필요 없습니다. 프로젝트와 설정은 그대로입니다.",
+  "zh": "无需密码。你的项目和设置不会改动。",
+  "ru": "Пароль не нужен. Ваши проекты и настройки не меняются."
+ },
+ "Ya tienes la {v}. Al abrir CineCaptions verás sus novedades.": {
+  "en": "You now have {v}. Open CineCaptions to see what's new.",
+  "pt": "Agora você tem a {v}. Ao abrir o CineCaptions verá as novidades.",
+  "fr": "Tu as maintenant la {v}. Ouvre CineCaptions pour voir les nouveautés.",
+  "de": "Du hast jetzt {v}. Öffne CineCaptions, um die Neuerungen zu sehen.",
+  "it": "Ora hai la {v}. Apri CineCaptions per vedere le novità.",
+  "ja": "{v} になりました。CineCaptions を開くと新機能が表示されます。",
+  "ko": "이제 {v} 입니다. CineCaptions를 열면 새로운 기능을 볼 수 있습니다.",
+  "zh": "你已更新到 {v}。打开 CineCaptions 即可查看新功能。",
+  "ru": "Теперь у вас {v}. Откройте CineCaptions, чтобы увидеть новое."
+ },
+ "Lo vuelve a intentar solo más tarde. También puedes descargarla e instalarla tú.": {
+  "en": "It will try again by itself later. You can also download and install it yourself.",
+  "pt": "Ele tenta de novo sozinho mais tarde. Você também pode baixá-la e instalá-la.",
+  "fr": "Il réessaiera tout seul plus tard. Tu peux aussi la télécharger et l'installer toi-même.",
+  "de": "Es versucht es später von selbst erneut. Du kannst sie auch selbst herunterladen und installieren.",
+  "it": "Riproverà da solo più tardi. Puoi anche scaricarla e installarla tu.",
+  "ja": "後で自動的に再試行します。自分でダウンロードしてインストールすることもできます。",
+  "ko": "나중에 자동으로 다시 시도합니다. 직접 내려받아 설치할 수도 있습니다.",
+  "zh": "稍后会自动重试。你也可以自己下载并安装。",
+  "ru": "Позже попробует снова сам. Можно также скачать и установить её вручную."
+ },
+ "En esta Mac falta el servicio que instala las versiones nuevas con CineCaptions cerrado. Instala una vez la versión de cinecaptions.shop y quedará al día solo.": {
+  "en": "This Mac is missing the service that installs new versions while CineCaptions is closed. Install the version from cinecaptions.shop once and it will stay up to date by itself.",
+  "pt": "Neste Mac falta o serviço que instala as versões novas com o CineCaptions fechado. Instale uma vez a versão de cinecaptions.shop e ele ficará em dia sozinho.",
+  "fr": "Il manque sur ce Mac le service qui installe les nouvelles versions quand CineCaptions est fermé. Installe une fois la version de cinecaptions.shop et il restera à jour tout seul.",
+  "de": "Auf diesem Mac fehlt der Dienst, der neue Versionen bei geschlossenem CineCaptions installiert. Installiere einmal die Version von cinecaptions.shop, dann bleibt es von selbst aktuell.",
+  "it": "Su questo Mac manca il servizio che installa le nuove versioni con CineCaptions chiuso. Installa una volta la versione di cinecaptions.shop e resterà aggiornato da solo.",
+  "ja": "この Mac には、CineCaptions を閉じている間に新しいバージョンをインストールするサービスがありません。cinecaptions.shop の版を一度インストールすれば、以後は自動で最新になります。",
+  "ko": "이 Mac에는 CineCaptions가 닫혀 있을 때 새 버전을 설치하는 서비스가 없습니다. cinecaptions.shop의 버전을 한 번 설치하면 이후 자동으로 최신 상태가 됩니다.",
+  "zh": "这台 Mac 缺少在 CineCaptions 关闭时安装新版本的服务。从 cinecaptions.shop 安装一次后，它就会自动保持最新。",
+  "ru": "На этом Mac нет службы, которая ставит новые версии, пока CineCaptions закрыт. Установите один раз версию с cinecaptions.shop, и дальше он будет обновляться сам."
+ },
+ "La descarga llegó dañada.": {
+  "en": "The download arrived damaged.",
+  "pt": "O download chegou danificado.",
+  "fr": "Le téléchargement est arrivé endommagé.",
+  "de": "Der Download kam beschädigt an.",
+  "it": "Il download è arrivato danneggiato.",
+  "ja": "ダウンロードが破損していました。",
+  "ko": "다운로드한 파일이 손상되었습니다.",
+  "zh": "下载的文件已损坏。",
+  "ru": "Загрузка пришла повреждённой."
+ },
+ "Se cortó la descarga (revisa internet).": {
+  "en": "The download was cut off (check the internet).",
+  "pt": "O download foi interrompido (verifique a internet).",
+  "fr": "Le téléchargement a été coupé (vérifie internet).",
+  "de": "Der Download wurde unterbrochen (prüfe das Internet).",
+  "it": "Il download si è interrotto (controlla internet).",
+  "ja": "ダウンロードが途切れました（インターネットを確認してください）。",
+  "ko": "다운로드가 끊겼습니다(인터넷을 확인하세요).",
+  "zh": "下载中断了（请检查网络）。",
+  "ru": "Загрузка прервалась (проверьте интернет)."
+ },
+ "No hay espacio libre suficiente en el disco.": {
+  "en": "There is not enough free disk space.",
+  "pt": "Não há espaço livre suficiente no disco.",
+  "fr": "Il n'y a pas assez d'espace libre sur le disque.",
+  "de": "Auf dem Datenträger ist nicht genug Platz frei.",
+  "it": "Non c'è abbastanza spazio libero sul disco.",
+  "ja": "ディスクの空き容量が足りません。",
+  "ko": "디스크 여유 공간이 부족합니다.",
+  "zh": "磁盘可用空间不足。",
+  "ru": "Недостаточно свободного места на диске."
+ },
+ "El instalador de macOS no pudo terminar.": {
+  "en": "The macOS installer could not finish.",
+  "pt": "O instalador do macOS não conseguiu terminar.",
+  "fr": "L'installateur de macOS n'a pas pu terminer.",
+  "de": "Das macOS-Installationsprogramm konnte nicht abschließen.",
+  "it": "Il programma di installazione di macOS non è riuscito a terminare.",
+  "ja": "macOS のインストーラが完了できませんでした。",
+  "ko": "macOS 설치 프로그램이 끝나지 못했습니다.",
+  "zh": "macOS 安装程序未能完成。",
+  "ru": "Установщик macOS не смог завершить работу."
+ },
+ "Algo falló al instalarla.": {
+  "en": "Something failed while installing it.",
+  "pt": "Algo falhou ao instalá-la.",
+  "fr": "Quelque chose a échoué pendant l'installation.",
+  "de": "Beim Installieren ist etwas schiefgegangen.",
+  "it": "Qualcosa è andato storto durante l'installazione.",
+  "ja": "インストール中に問題が起きました。",
+  "ko": "설치 중 문제가 발생했습니다.",
+  "zh": "安装时出了点问题。",
+  "ru": "Что-то пошло не так при установке."
+ },
+ "Mac: cuando sale una versión nueva aparece un aviso de CineCaptions arriba a la derecha, aunque el programa esté cerrado: eliges «Actualizar ahora» o «Más tarde», ves cómo se instala y te dice cuándo terminó.": {
+  "en": "Mac: when a new version comes out, a CineCaptions notice appears at the top right, even with the program closed: choose \"Update now\" or \"Later\", watch it install and it tells you when it is done.",
+  "pt": "Mac: quando sai uma versão nova, aparece um aviso do CineCaptions no canto superior direito, mesmo com o programa fechado: escolha «Atualizar agora» ou «Mais tarde», veja a instalação e ele avisa quando terminar.",
+  "fr": "Mac : quand une nouvelle version sort, un avis de CineCaptions apparaît en haut à droite, même programme fermé : choisis « Mettre à jour » ou « Plus tard », suis l'installation et il te prévient quand c'est fini.",
+  "de": "Mac: Erscheint eine neue Version, zeigt CineCaptions oben rechts einen Hinweis, auch wenn das Programm geschlossen ist: wähle „Jetzt aktualisieren“ oder „Später“, sieh die Installation und erfahre, wann sie fertig ist.",
+  "it": "Mac: quando esce una nuova versione compare un avviso di CineCaptions in alto a destra, anche a programma chiuso: scegli «Aggiorna ora» o «Più tardi», vedi l'installazione e ti avvisa quando ha finito.",
+  "ja": "Mac：新しいバージョンが出ると、プログラムを閉じていても右上に CineCaptions のお知らせが表示されます。「今すぐ更新」か「後で」を選べ、インストールの様子と完了がわかります。",
+  "ko": "Mac: 새 버전이 나오면 프로그램이 닫혀 있어도 오른쪽 위에 CineCaptions 알림이 나타납니다. \"지금 업데이트\" 또는 \"나중에\"를 고르고, 설치 과정과 완료를 확인할 수 있습니다.",
+  "zh": "Mac：有新版本时，即使程序已关闭，右上角也会出现 CineCaptions 提示：可选择“立即更新”或“稍后”，能看到安装过程，完成时会告诉你。",
+  "ru": "Mac: когда выходит новая версия, справа вверху появляется уведомление CineCaptions, даже если программа закрыта: выберите «Обновить сейчас» или «Позже», следите за установкой и узнайте, когда она закончится."
+ },
+ "Con una versión nueva, el icono de CineCaptions rebota en el Dock (en Windows parpadea en la barra de tareas) para que no se te pase.": {
+  "en": "When there is a new version, the CineCaptions icon bounces in the Dock (on Windows it flashes in the taskbar) so you don't miss it.",
+  "pt": "Com uma versão nova, o ícone do CineCaptions pula no Dock (no Windows pisca na barra de tarefas) para você não perder.",
+  "fr": "Avec une nouvelle version, l'icône de CineCaptions rebondit dans le Dock (sous Windows elle clignote dans la barre des tâches) pour que tu ne la manques pas.",
+  "de": "Bei einer neuen Version hüpft das CineCaptions-Symbol im Dock (unter Windows blinkt es in der Taskleiste), damit du sie nicht verpasst.",
+  "it": "Con una nuova versione l'icona di CineCaptions rimbalza nel Dock (su Windows lampeggia nella barra delle applicazioni) così non ti sfugge.",
+  "ja": "新しいバージョンがあると、CineCaptions のアイコンが Dock で跳ねます（Windows ではタスクバーで点滅）。見逃しません。",
+  "ko": "새 버전이 있으면 Dock의 CineCaptions 아이콘이 튀어 오릅니다(Windows에서는 작업 표시줄에서 깜박임). 놓치지 않습니다.",
+  "zh": "有新版本时，CineCaptions 图标会在程序坞中跳动（Windows 上在任务栏闪烁），不会错过。",
+  "ru": "Когда есть новая версия, значок CineCaptions подпрыгивает в Dock (в Windows мигает на панели задач), чтобы вы её не пропустили."
  }
 }

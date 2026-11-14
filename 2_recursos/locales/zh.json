@@ -4673,6 +4673,22 @@
     "El nombre del video es demasiado largo para este Windows ({n} letras). Ponle un nombre más corto (menos de {m} letras) y pulsa GO otra vez.": "视频名称对此 Windows 来说太长了（{n} 个字符）。请改成更短的名称（少于 {m} 个字符），然后再按一次 GO。",
     "Más equipos sin sorpresas: videos con nombres muy largos o en carpetas profundas en Windows, videos con tildes o ñ en Resolve Free, y en Mac ya no pide permiso para el Escritorio ni Descargas.": "更多电脑上更稳定：支持 Windows 上名称很长或位于深层文件夹的视频、Resolve Free 中名称带重音符号的视频；在 Mac 上不再请求访问桌面或下载文件夹。",
     "Mac con chip de Apple que tenía la versión Intel: al actualizar pasa sola a la de Apple Silicon (más rápida y con la IA local).": "装着 Intel 版本的 Apple 芯片 Mac：更新时会自动切换到 Apple Silicon 版本（更快，并可使用本地 AI）。",
-    "Actualizar: la ventana enseña cómo avanza la descarga desde el primer momento, y si cierras CineCaptions antes de que termine, en Mac se instala igual sola.": "更新：窗口从一开始就显示下载进度；即使在完成前关闭 CineCaptions，在 Mac 上也会自动完成安装。"
+    "Actualizar: la ventana enseña cómo avanza la descarga desde el primer momento, y si cierras CineCaptions antes de que termine, en Mac se instala igual sola.": "更新：窗口从一开始就显示下载进度；即使在完成前关闭 CineCaptions，在 Mac 上也会自动完成安装。",
+    "Nueva versión de CineCaptions": "CineCaptions 新版本",
+    "CineCaptions se actualizó": "CineCaptions 已更新",
+    "Actualizando CineCaptions…": "正在更新 CineCaptions…",
+    "Abrir CineCaptions": "打开 CineCaptions",
+    "Se instala sola en {t} si no eliges nada.": "如果不做选择，将在 {t} 后自动安装。",
+    "No hace falta tu contraseña. Tus proyectos y ajustes no se tocan.": "无需密码。你的项目和设置不会改动。",
+    "Ya tienes la {v}. Al abrir CineCaptions verás sus novedades.": "你已更新到 {v}。打开 CineCaptions 即可查看新功能。",
+    "Lo vuelve a intentar solo más tarde. También puedes descargarla e instalarla tú.": "稍后会自动重试。你也可以自己下载并安装。",
+    "En esta Mac falta el servicio que instala las versiones nuevas con CineCaptions cerrado. Instala una vez la versión de cinecaptions.shop y quedará al día solo.": "这台 Mac 缺少在 CineCaptions 关闭时安装新版本的服务。从 cinecaptions.shop 安装一次后，它就会自动保持最新。",
+    "La descarga llegó dañada.": "下载的文件已损坏。",
+    "Se cortó la descarga (revisa internet).": "下载中断了（请检查网络）。",
+    "No hay espacio libre suficiente en el disco.": "磁盘可用空间不足。",
+    "El instalador de macOS no pudo terminar.": "macOS 安装程序未能完成。",
+    "Algo falló al instalarla.": "安装时出了点问题。",
+    "Mac: cuando sale una versión nueva aparece un aviso de CineCaptions arriba a la derecha, aunque el programa esté cerrado: eliges «Actualizar ahora» o «Más tarde», ves cómo se instala y te dice cuándo terminó.": "Mac：有新版本时，即使程序已关闭，右上角也会出现 CineCaptions 提示：可选择“立即更新”或“稍后”，能看到安装过程，完成时会告诉你。",
+    "Con una versión nueva, el icono de CineCaptions rebota en el Dock (en Windows parpadea en la barra de tareas) para que no se te pase.": "有新版本时，CineCaptions 图标会在程序坞中跳动（Windows 上在任务栏闪烁），不会错过。"
   }
 }

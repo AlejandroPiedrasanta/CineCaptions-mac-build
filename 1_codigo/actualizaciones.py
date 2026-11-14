@@ -332,13 +332,22 @@ def _descargar_una_vez(archivo, version_local='', progreso=None, cancelado=None,
     nombre = os.path.basename(url.split('?')[0]) or 'CineCaptions_actualizacion.bin'
     destino = carpeta_descargas() / nombre
     parcial = destino.with_name(destino.name + '.%d.%d.parte' % (os.getpid(), int(time.time() * 1000)))          # (propio de ESTE intento: nunca se comparte)
-    for p in carpeta_descargas().glob('*'):                 # lo descargado de otras veces se limpia (también un instalador igual: se vuelve a comprobar)
+    esperado = str(archivo.get('sha256') or '').lower()
+    total = int(archivo.get('tam') or 0)
+    # v5.90: la misma versión ya bajada y comprobada se reutiliza (el servicio de la Mac la volvía a bajar en cada pasada: 711 MB cada hora
+    # tras un «Más tarde», y macOS dejaba un informe por escribir más de 1 GB en minutos). Se vuelve a comprobar su SHA-256 firmado.
+    try:
+        if esperado and destino.is_file() and (not total or destino.stat().st_size == total) and sha256_de(destino) == esperado:
+            if progreso:
+                progreso(destino.stat().st_size, destino.stat().st_size)
+            return destino
+    except OSError:
+        pass
+    for p in carpeta_descargas().glob('*'):                 # lo descargado de otras veces se limpia (un instalador igual que no cuadra, también)
         try:
             p.unlink()
         except OSError:
             pass
-    esperado = str(archivo.get('sha256') or '').lower()
-    total = int(archivo.get('tam') or 0)
     hecho = 0
     try:
         with _abrir(url, version_local, timeout) as r, open(parcial, 'wb') as f:

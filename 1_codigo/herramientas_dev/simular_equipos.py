@@ -13,6 +13,7 @@ nombre lo contenga. Añade aquí un caso por cada error que reporte un cliente: 
 """
 import builtins
 import contextlib
+import hashlib
 import importlib.util
 import io
 import json
@@ -2585,11 +2586,21 @@ def actualizar_en_mac_se_instala_y_vuelve_a_abrir():
 # v5.87 (pedido: «que notifiquen si sale una versión nueva aunque esté cerrado, que auto lo descargue y se instalen, Mac y Windows»)
 # ---------------------------------------------------------------------------------------------------------------------------------------
 @contextlib.contextmanager
-def _fondo_falso(estado_comprobar, abierto=False, plataforma='win32', fallar=False, root=False):
-    """actualizar_fondo con red, descarga, instalador y notificaciones de mentira; devuelve lo que pasó."""
+def _fondo_falso(estado_comprobar, abierto=False, plataforma='win32', fallar=False, root=False, usuario=False, respuesta=None):
+    """actualizar_fondo con red, descarga, instalador y notificaciones de mentira; devuelve lo que pasó. v5.90: `usuario` = alguien frente
+    a la Mac (se abre la tarjeta de aviso_mac, de mentira: queda en hecho['tarjetas']); `respuesta` = lo que elige en ella; `abierto` puede
+    ser una función (el programa se abre a mitad)."""
     import actualizaciones
     import actualizar_fondo as F
-    hecho = {'notificaciones': [], 'descargas': 0, 'instalaciones': [], 'abiertos': 0}
+    hecho = {'notificaciones': [], 'descargas': 0, 'instalaciones': [], 'abiertos': 0, 'tarjetas': [], 'motivos': [], 'cerradas': 0, 'pedidos': []}
+
+    def tarjeta(modo, r, vieja='', **extra):
+        hecho['tarjetas'].append(modo)
+        hecho['motivos'].append(extra.get('motivo'))
+        ident = f'id{len(hecho["tarjetas"])}'
+        if modo == 'preguntar' and respuesta:
+            hecho['pedidos'] = hecho['pedidos'] + [{'accion': respuesta, 'id': ident, 'pid': 4242}]
+        return ident
     carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_fondo_'))
     archivo = {'url': 'https://x/CineCaptions_9.99.exe', 'sha256': 'ab' * 32, 'tam': 10}
 
@@ -2606,11 +2617,15 @@ def _fondo_falso(estado_comprobar, abierto=False, plataforma='win32', fallar=Fal
         with parches((actualizaciones, 'comprobar', lambda v, canal_beta=False, timeout=12: (
                          {'estado': estado_comprobar, 'version': '9.99', 'archivo': archivo} if estado_comprobar == 'nueva' else {'estado': estado_comprobar})),
                      (actualizaciones, 'descargar', descargar), (F, 'carpeta_estado', lambda: carpeta), (F, 'version_instalada', lambda: '5.87'),
-                     (F, 'programa_abierto', lambda casa=None: abierto), (F, 'notificar', lambda t, titulo='CineCaptions': hecho['notificaciones'].append(t)),
+                     (F, 'programa_abierto', lambda casa=None: abierto() if callable(abierto) else abierto),
+                     (F, 'notificar', lambda t, titulo='CineCaptions': hecho['notificaciones'].append(t)),
+                     (F, 'usuario_de_la_mac', lambda: ('ana', 501, carpeta) if usuario else None), (F, 'tarjeta_mac', tarjeta),
+                     (F, 'cerrar_tarjeta_mac', lambda: hecho.__setitem__('cerradas', hecho['cerradas'] + 1)),
                      (F, '_instalar_windows', lambda ruta: hecho['instalaciones'].append(('win', str(ruta))) or True),
                      (F, '_instalar_mac', lambda ruta: hecho['instalaciones'].append(('mac', str(ruta))) or True),
                      (F, '_abrir_como_usuario', lambda: hecho.__setitem__('abiertos', hecho['abiertos'] + 1)),
                      (F, 'es_root', lambda: root), (F, '_tomar_pedidos', lambda: hecho.get('pedidos', [])),
+                     (F, 'ESPERA_RESPUESTA_S', 0), (F, 'MARGEN_RESPUESTA_S', 1.5),
                      (F, '_textos', lambda: (lambda t, **k: t.format(**k)))):
             yield F, hecho, carpeta
     finally:
@@ -2715,7 +2730,7 @@ def mac_servicio_de_root_seguro_y_sin_contrasena():
     si ya corre (podría ser él quien instala); carpetas de root (la de pedidos con sticky bit). El servicio solo lee pedidos de archivos
     normales; el desinstalador lo quita. «Actualizar» en la Mac va por el servicio (sin contraseña) si está."""
     texto = open(os.path.join(RAIZ, '7_mac', 'pkg', 'scripts', 'postinstall'), encoding='utf-8').read()
-    for pieza in ('<key>QueueDirectories</key>', '<key>StartInterval</key><integer>14400</integer>', '<key>RunAtLoad</key><true/>',
+    for pieza in ('<key>QueueDirectories</key>', '<key>StartInterval</key><integer>3600</integer>', '<key>RunAtLoad</key><true/>',
                   'launchctl print "system/$ETIQUETA" >/dev/null 2>&1 || launchctl bootstrap system "$PLIST"', 'chmod 1777 "$COMPARTIDA/pedidos"',
                   'chown root:wheel "$PLIST"', '[ -L "$COMPARTIDA" ]', '<string>actualizar_fondo</string>'):
         esperar(pieza in texto, f'al postinstall le falta: {pieza}')
@@ -2740,6 +2755,127 @@ def mac_servicio_de_root_seguro_y_sin_contrasena():
     finally:
         import shutil
         shutil.rmtree(carpeta.parent, ignore_errors=True)
+
+
+@caso('Actualizaciones con el programa cerrado')
+def mac_avisa_con_la_tarjeta_de_cinecaptions_y_deja_elegir():
+    """v5.90 (el usuario: «en Mac sigue sin recibir actualizaciones… que notifique de verdad, con más permiso y control»; MEDIDO en Macs de
+    GitHub: la notificación de osascript no salía en pantalla). Con alguien frente a la Mac el servicio descarga y PREGUNTA con la tarjeta de
+    CineCaptions (sin notificaciones invisibles): «Actualizar ahora» instala y abre la tarjeta del final; «Más tarde» la aplaza (la pasada
+    siguiente no vuelve a preguntar ni a descargar); sin respuesta se instala sola; si se abre el programa mientras pregunta, se cierra la
+    tarjeta y no instala; «Actualizar» desde el programa enseña «instalando» y lo vuelve a abrir; un fallo lo dice en palabras claras."""
+    with _fondo_falso('nueva', plataforma='darwin', root=True, usuario=True, respuesta='instalar') as (F, hecho, _c):
+        r = F.correr()
+    esperar(r == 'instalada' and hecho['tarjetas'] == ['preguntar', 'hecha'] and hecho['instalaciones'] and not hecho['notificaciones'],
+            f'«Actualizar ahora»: {r} {hecho}')
+    with _fondo_falso('nueva', plataforma='darwin', root=True, usuario=True, respuesta='luego') as (F, hecho, _c):
+        r1 = F.correr()
+        r2 = F.correr()
+        pospuesta = F._leer_estado().get('pospuesta') or {}
+    esperar((r1, r2) == ('pospuesta', 'pospuesta') and hecho['tarjetas'] == ['preguntar'] and hecho['descargas'] == 1 and not hecho['instalaciones']
+            and pospuesta.get('version') == '9.99' and float(pospuesta.get('hasta') or 0) > time.time() + 3 * 3600, f'«Más tarde»: {(r1, r2)} {hecho} {pospuesta}')
+    t0 = time.time()
+    with _fondo_falso('nueva', plataforma='darwin', root=True, usuario=True) as (F, hecho, _c):
+        r = F.correr()
+    esperar(r == 'instalada' and hecho['tarjetas'] == ['preguntar', 'hecha'] and time.time() - t0 < 15, f'sin respuesta: {r} {hecho}')
+    vistas = []
+    with _fondo_falso('nueva', plataforma='darwin', root=True, usuario=True, abierto=lambda: vistas.append(1) or len(vistas) > 1) as (F, hecho, _c):
+        r = F.correr()
+    esperar(r == 'abierto' and hecho['cerradas'] == 1 and not hecho['instalaciones'], f'se abrió mientras preguntaba: {r} {hecho}')
+    with _fondo_falso('nueva', plataforma='darwin', root=True, usuario=True) as (F, hecho, _c):
+        hecho['pedidos'] = [{'reabrir': True, 'pid': 1}]
+        r = F.correr()
+    esperar(r == 'instalada' and hecho['tarjetas'] == ['instalando'] and hecho['abiertos'] == 1, f'«Actualizar» desde el programa: {r} {hecho}')
+    with _fondo_falso('nueva', plataforma='darwin', root=True, usuario=True, fallar=True) as (F, hecho, _c):
+        hecho['pedidos'] = [{'reabrir': False, 'pid': 1}]
+        r = F.correr()
+    esperar(r == 'fallo' and hecho['tarjetas'] == ['instalando', 'fallo'] and hecho['motivos'][-1] == 'Se cortó la descarga (revisa internet).',
+            f'fallo: {r} {hecho}')
+    with _fondo_falso('nueva', plataforma='darwin', root=True, usuario=True) as (F, hecho, _c):
+        hecho['pedidos'] = [{'accion': 'luego', 'id': 'viejo', 'pid': 99999}]                     # una respuesta que llegó tarde no instala
+        r = F.correr()
+    esperar(r == 'instalada' and hecho['tarjetas'][0] == 'preguntar', f'respuesta tardía tratada como pedido: {r} {hecho}')
+
+
+@caso('Actualizaciones con el programa cerrado')
+def la_misma_version_ya_bajada_no_se_vuelve_a_bajar():
+    """v5.90 (medido en Macs de GitHub: el servicio bajaba los 711 MB en CADA pasada y macOS dejaba un informe por escribir más de 1 GB en
+    minutos): la versión ya descargada y comprobada se reutiliza; si el archivo que hay no cuadra con el SHA-256 firmado, se baja otra vez."""
+    import actualizaciones as A
+    datos = b'instalador de prueba ' * 5000
+    archivo = {'url': 'https://x/CineCaptions_Mac_AppleSilicon_9.99.dmg', 'sha256': hashlib.sha256(datos).hexdigest(), 'tam': len(datos)}
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_reusa_'))
+    bajadas = []
+
+    class Resp(io.BytesIO):
+        headers = {'Content-Length': str(len(datos))}
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+    try:
+        with parches((A, 'carpeta_descargas', lambda: carpeta), (A, '_abrir', lambda url, v, t: bajadas.append(url) or Resp(datos))):
+            r1 = A.descargar(archivo, '9.98')
+            r2 = A.descargar(archivo, '9.98')
+            pathlib.Path(r2).write_bytes(b'roto')
+            r3 = A.descargar(archivo, '9.98')
+        esperar(len(bajadas) == 2 and r1 == r2 == r3 and pathlib.Path(r3).read_bytes() == datos, f'bajadas {len(bajadas)} (se esperaban 2)')
+    finally:
+        import shutil
+        shutil.rmtree(carpeta, ignore_errors=True)
+
+
+@caso('Actualizaciones con el programa cerrado')
+def tarjeta_de_la_mac_se_ve_responde_y_se_cierra_sola():
+    """v5.90: la tarjeta (aviso_mac) se pinta en sus cuatro momentos; su respuesta llega al servicio como pedido (la lee _tomar_pedidos);
+    solo cuenta el resultado de ESTA instalación (un fallo viejo no la cierra); es una tarea del programa; el servicio la abre con
+    `open -n` como el usuario y la tarjeta del aviso anterior se cierra al cambiar el id."""
+    import actualizar_fondo as F
+    import aviso_mac as AV
+    import tareas_instalador
+    from PySide6.QtCore import QTimer
+    esperar('aviso_mac' in tareas_instalador.TAREAS, 'falta la tarea aviso_mac')
+    esperar(AV.resultado({'instalada': '9.99'}, '9.99', 100) == 'hecha' and AV.resultado({'version': '9.99', 'fallo_ts': 200}, '9.99', 100) == 'fallo'
+            and AV.resultado({'version': '9.99', 'fallo_ts': 50}, '9.99', 100) is None and AV.resultado({'instalada': '9.98'}, '9.99', 0) is None,
+            'resultado() mal')
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_aviso_'))
+    pedidos = carpeta / 'pedidos'
+    pedidos.mkdir()
+    try:
+        with parches((F, 'PEDIDOS_MAC', pedidos), (sys, 'platform', 'darwin'), (F, 'es_root', lambda: False)):
+            esperar(AV.responder('luego', 'abc'), 'responder() no dejó la respuesta')
+            leidos = F._tomar_pedidos()
+        esperar(len(leidos) == 1 and leidos[0].get('accion') == 'luego' and leidos[0].get('id') == 'abc', f'respuesta mal leída: {leidos}')
+        _qapp()
+        tamanos = {}
+        for modo in ('preguntar', 'instalando', 'hecha', 'fallo'):
+            ruta = carpeta / f'aviso_{modo}.json'
+            ruta.write_text(json.dumps({'id': 'x', 'modo': modo, 'version': '9.99', 'vieja': '9.98', 'notas': 'Uno. Dos más largo que el primero. Tres.',
+                                        'url': 'https://x', 'espera_s': 120, 'motivo': 'Se cortó la descarga (revisa internet).'}), encoding='utf-8')
+
+            def mirar(modo=modo, ruta=ruta):
+                from PySide6.QtWidgets import QApplication
+                for w in QApplication.topLevelWidgets():
+                    if w.isVisible() and type(w).__name__ == 'Tarjeta':
+                        w.grab()
+                        tamanos[modo] = (w.width(), w.height())
+                        if modo == 'instalando':                         # el servicio abrió otra tarjeta: esta se cierra sola
+                            ruta.write_text(json.dumps({'id': 'otra', 'modo': 'cerrada'}), encoding='utf-8')
+                        else:
+                            w.close()
+            QTimer.singleShot(400, mirar)
+            with parches((F, 'PEDIDOS_MAC', pedidos)):
+                AV.mostrar(str(ruta))
+        esperar(set(tamanos) == {'preguntar', 'instalando', 'hecha', 'fallo'} and all(w == AV.ANCHO and 120 < h < 400 for w, h in tamanos.values()),
+                f'tarjetas: {tamanos}')
+    finally:
+        import shutil
+        shutil.rmtree(carpeta, ignore_errors=True)
+    fuente = open(os.path.join(CODIGO, 'actualizar_fondo.py'), encoding='utf-8').read()
+    esperar("'/usr/bin/open', '-n', '-a', APP_MAC" in fuente and "'--tarea', 'aviso_mac', '/dev/null'" in fuente and "'asuser'" in fuente,
+            'el servicio no abre la tarjeta como el usuario')
 
 
 @caso('Actualizaciones con el programa cerrado')
@@ -3001,7 +3137,9 @@ def instalador_dice_que_equipos_de_windows_no_sirven():
              (19045, True, 0xAA64, 'ARM'), (22631, True, 0xAA64, None), (19045, True, 0x8664, None), (26100, True, 0x8664, None),
              (0, True, 0, None)]
     llamadas = '\n'.join(f'        Console.WriteLine(Programa.Compatibilidad({b}, {str(x).lower()}, {n}) ?? "OK");' for b, x, n, _ in casos)
-    prueba = ('using System;\nstatic class Programa\n{\n' + m.group(1) + '}\nstatic class P\n{\n    static void Main()\n    {\n' + llamadas +
+    # (salida en UTF-8: con la página de códigos de la consola, las tildes llegaban rotas según desde dónde se corriera el banco)
+    prueba = ('using System;\nstatic class Programa\n{\n' + m.group(1) + '}\nstatic class P\n{\n    static void Main()\n    {\n'
+              + '        Console.OutputEncoding = new System.Text.UTF8Encoding(false);\n' + llamadas +
               '\n    }\n}\n')
     tmp = pathlib.Path(tempfile.mkdtemp(prefix='cc_cs_'))
     try:

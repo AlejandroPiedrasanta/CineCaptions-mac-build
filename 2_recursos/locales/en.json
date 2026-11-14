@@ -4906,6 +4906,22 @@
     "El nombre del video es demasiado largo para este Windows ({n} letras). Ponle un nombre más corto (menos de {m} letras) y pulsa GO otra vez.": "The video name is too long for this Windows ({n} characters). Give it a shorter name (under {m} characters) and press GO again.",
     "Más equipos sin sorpresas: videos con nombres muy largos o en carpetas profundas en Windows, videos con tildes o ñ en Resolve Free, y en Mac ya no pide permiso para el Escritorio ni Descargas.": "Fewer surprises on more computers: videos with very long names or in deep folders on Windows, videos with accents in the name on Resolve Free, and on Mac it no longer asks for access to Desktop or Downloads.",
     "Mac con chip de Apple que tenía la versión Intel: al actualizar pasa sola a la de Apple Silicon (más rápida y con la IA local).": "Macs with an Apple chip that had the Intel version: updating now switches them to the Apple Silicon one (faster and with the local AI).",
-    "Actualizar: la ventana enseña cómo avanza la descarga desde el primer momento, y si cierras CineCaptions antes de que termine, en Mac se instala igual sola.": "Update: the window shows the download progress right from the start, and if you close CineCaptions before it finishes, on Mac it still installs by itself."
+    "Actualizar: la ventana enseña cómo avanza la descarga desde el primer momento, y si cierras CineCaptions antes de que termine, en Mac se instala igual sola.": "Update: the window shows the download progress right from the start, and if you close CineCaptions before it finishes, on Mac it still installs by itself.",
+    "Nueva versión de CineCaptions": "New CineCaptions version",
+    "CineCaptions se actualizó": "CineCaptions was updated",
+    "Actualizando CineCaptions…": "Updating CineCaptions…",
+    "Abrir CineCaptions": "Open CineCaptions",
+    "Se instala sola en {t} si no eliges nada.": "It installs by itself in {t} if you don't choose.",
+    "No hace falta tu contraseña. Tus proyectos y ajustes no se tocan.": "No password needed. Your projects and settings are not touched.",
+    "Ya tienes la {v}. Al abrir CineCaptions verás sus novedades.": "You now have {v}. Open CineCaptions to see what's new.",
+    "Lo vuelve a intentar solo más tarde. También puedes descargarla e instalarla tú.": "It will try again by itself later. You can also download and install it yourself.",
+    "En esta Mac falta el servicio que instala las versiones nuevas con CineCaptions cerrado. Instala una vez la versión de cinecaptions.shop y quedará al día solo.": "This Mac is missing the service that installs new versions while CineCaptions is closed. Install the version from cinecaptions.shop once and it will stay up to date by itself.",
+    "La descarga llegó dañada.": "The download arrived damaged.",
+    "Se cortó la descarga (revisa internet).": "The download was cut off (check the internet).",
+    "No hay espacio libre suficiente en el disco.": "There is not enough free disk space.",
+    "El instalador de macOS no pudo terminar.": "The macOS installer could not finish.",
+    "Algo falló al instalarla.": "Something failed while installing it.",
+    "Mac: cuando sale una versión nueva aparece un aviso de CineCaptions arriba a la derecha, aunque el programa esté cerrado: eliges «Actualizar ahora» o «Más tarde», ves cómo se instala y te dice cuándo terminó.": "Mac: when a new version comes out, a CineCaptions notice appears at the top right, even with the program closed: choose \"Update now\" or \"Later\", watch it install and it tells you when it is done.",
+    "Con una versión nueva, el icono de CineCaptions rebota en el Dock (en Windows parpadea en la barra de tareas) para que no se te pase.": "When there is a new version, the CineCaptions icon bounces in the Dock (on Windows it flashes in the taskbar) so you don't miss it."
   }
 }

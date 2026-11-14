@@ -51,7 +51,7 @@ import traceback
 from pathlib import Path
 
 TAREAS = ('verificar', 'scripts', 'quitar_scripts', 'fuentes', 'modelo', 'motor_ia', 'motor_compat', 'transcribir', 'sonda_resolve',
-          'equipo', 'equipo_admin', 'actualizar_fondo')
+          'equipo', 'equipo_admin', 'actualizar_fondo', 'aviso_mac')
 # v5.1: Whisper queda de respaldo (el motor principal es Qwen3-ASR, motor_ia)
 MODELO_WHISPER = 'large-v3-turbo'
 MODELO_BYTES_APROX = 1_620_000_000
@@ -117,6 +117,12 @@ def ejecutar(argv):
 def _tarea_actualizar_fondo(estado, *_resto):
     import actualizar_fondo
     estado.ok(actualizar_fondo.correr(info=estado.info))
+
+
+def _tarea_aviso_mac(estado, ruta_aviso='', *_resto):
+    """v5.90: la tarjeta de la versión nueva en la Mac (la abre el servicio de root como el usuario: `--tarea aviso_mac /dev/null <aviso.json>`)."""
+    import aviso_mac
+    estado.ok(aviso_mac.mostrar(ruta_aviso))
 
 
 # ---------------------------------------------------------------------------
