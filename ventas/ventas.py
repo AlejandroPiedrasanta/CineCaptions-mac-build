@@ -92,7 +92,7 @@ API_POR_DEFECTO = 'https://cinecaptions.shop/pagos/admin.php'
 SITIO = 'https://cinecaptions.shop'   # (2.8: el enlace de un cupón, si el servidor no manda el suyo)
 DESCARGA = 'https://github.com/AlejandroPiedrasanta/CineCaptions-releases/releases/latest'
 NOTA_CLAVE = ('Está en CineCaptions_claves\\admin_ventas.txt' if os.name == 'nt' else
-              'Está en CineCaptions_claves/admin_ventas.txt de tu PC (cópialo a esta Mac)')
+              'Está en tu PC: CineCaptions_claves/admin_ventas.txt')   # (más largo, en Mac se cortaba)
 ESTE_EQUIPO = 'esta PC' if os.name == 'nt' else 'esta Mac'   # (en los textos: en Mac nunca «PC» ni «Windows»)
 CTRL = '⌘' if sys.platform == 'darwin' else 'Ctrl+'          # cómo se escribe el atajo (en Mac, Qt pasa «Ctrl+» a ⌘)
 AUTO_MS = 2 * 60 * 1000          # actualización automática: cada 2 minutos

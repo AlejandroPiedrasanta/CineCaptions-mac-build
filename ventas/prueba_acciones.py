@@ -3536,6 +3536,15 @@ def prueba_clave_estreno():
         nota_bien = ('/' in v.NOTA_CLAVE and '\\' not in v.NOTA_CLAVE and v.ESTE_EQUIPO == 'esta Mac' and v.CTRL == '⌘'
                      if en_mac else '\\' in v.NOTA_CLAVE and v.ESTE_EQUIPO == 'esta PC' and v.CTRL == 'Ctrl+')
         revisar(nota_bien, 'la ruta del archivo, «esta PC/esta Mac» y los atajos (Ctrl+/⌘) van con lo de este sistema')
+        d = v.DialogoClave(None, primera_vez=True)
+        d.setAttribute(v.Qt.WidgetAttribute.WA_DontShowOnScreen, True)
+        d.show()
+        for _ in range(3):
+            aplicacion().processEvents()
+        revisar(d.nota.width() >= d.nota.sizeHint().width() and d.nota.geometry().right() < d.width(),
+                f'el cuadro de la clave muestra entera la nota del archivo ({d.nota.width()} de {d.nota.sizeHint().width()} px)')
+        d.close()
+        d.deleteLater()
     finally:
         os.environ['CC_VENTAS_CONFIG'] = original
         srv.shutdown()
