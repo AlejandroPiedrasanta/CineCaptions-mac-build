@@ -75,23 +75,26 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient, QDesktopSe
                            QFontMetrics, QGuiApplication, QIcon, QImage, QIntValidator, QKeySequence, QLinearGradient,
                            QMouseEvent,
                            QPainter, QPainterPath, QPalette, QPen, QPixmap, QShortcut, QSyntaxHighlighter,
-                           QTextCharFormat, QTextOption)
+                           QTextCharFormat, QTextCursor, QTextFrameFormat, QTextOption, QTextTable)
 from PySide6.QtWidgets import (QAbstractButton, QAbstractItemView, QApplication, QBoxLayout, QButtonGroup, QCheckBox,
                                QComboBox, QDateEdit, QDialog, QFileDialog, QFrame, QGraphicsOpacityEffect, QGridLayout,
                                QHBoxLayout,
                                QHeaderView, QLabel, QLineEdit, QMainWindow, QMenu, QPlainTextEdit, QProgressBar,
                                QPushButton, QScrollArea, QSizePolicy, QSplitter, QStackedWidget, QStyle,
-                               QStyledItemDelegate, QStyleOptionViewItem, QSystemTrayIcon, QTableView, QVBoxLayout,
-                               QWidget)
+                               QStyledItemDelegate, QStyleOptionViewItem, QSystemTrayIcon, QTableView, QTextBrowser,
+                               QVBoxLayout, QWidget)
 
 from logo_ventas import icono_app, pixmap_logo   # ícono verde propio: no se confunde con el de CineCaptions
 
 APP = 'CineCaptions Ventas'
-VERSION = '2.9.0'   # (2.9: también en Mac —la clave en el Llavero, carpetas de macOS— con su .dmg Apple Silicon e Intel; 2.8: la página Cupones —crear, pausar y borrar cupones de descuento— y el cupón de cada venta; 2.7:el menú es la isla flotante de arriba, sin la barra lateral; 2.6: «Copiar resumen» de los errores; 2.5: las dos capturas del error, pantalla y ventana, de CineCaptions 5.73; 2.4: la ficha del equipo)
+VERSION = '2.10.0'   # (2.10: en Errores, «Informe completo» —todos los errores con su informe técnico en un solo archivo— y «Borrar todo»; la interfaz, más pareja; en Mac, sin textos de Windows: el cuadro de la clave habla del Llavero, «esta Mac» y ⌘ en los atajos; 2.9: también en Mac —la clave en el Llavero, carpetas de macOS— con su .dmg Apple Silicon e Intel; 2.8: la página Cupones —crear, pausar y borrar cupones de descuento— y el cupón de cada venta; 2.7:el menú es la isla flotante de arriba, sin la barra lateral; 2.6: «Copiar resumen» de los errores; 2.5: las dos capturas del error, pantalla y ventana, de CineCaptions 5.73; 2.4: la ficha del equipo)
 API_POR_DEFECTO = 'https://cinecaptions.shop/pagos/admin.php'
 SITIO = 'https://cinecaptions.shop'   # (2.8: el enlace de un cupón, si el servidor no manda el suyo)
 DESCARGA = 'https://github.com/AlejandroPiedrasanta/CineCaptions-releases/releases/latest'
-NOTA_CLAVE = 'Está en CineCaptions_claves\\admin_ventas.txt'
+NOTA_CLAVE = ('Está en CineCaptions_claves\\admin_ventas.txt' if os.name == 'nt' else
+              'Está en CineCaptions_claves/admin_ventas.txt de tu PC (cópialo a esta Mac)')
+ESTE_EQUIPO = 'esta PC' if os.name == 'nt' else 'esta Mac'   # (en los textos: en Mac nunca «PC» ni «Windows»)
+CTRL = '⌘' if sys.platform == 'darwin' else 'Ctrl+'          # cómo se escribe el atajo (en Mac, Qt pasa «Ctrl+» a ⌘)
 AUTO_MS = 2 * 60 * 1000          # actualización automática: cada 2 minutos
 LIMITE_LISTA = 1000              # filas por pedido (el máximo que acepta admin.php)
 DIAS_GRAFICA = 30                # la gráfica de ventas del Resumen
@@ -103,7 +106,7 @@ LIMITE_EQUIPOS = (1, 10)         # cuántas computadoras puede tener una licenci
 # Acciones que cambian algo en el servidor (o mandan correos): --captura nunca las llama
 ACCIONES_QUE_CAMBIAN = frozenset({'licencia_estado', 'liberar_equipo', 'reenviar_correo', 'marcar_reembolsado',
                                   'avisar_actualizacion', 'nota', 'limite', 'editar_cliente', 'error_visto',
-                                  'eliminar_venta', 'cupon_crear', 'cupon_editar', 'cupon_borrar'})
+                                  'eliminar_venta', 'cupon_crear', 'cupon_editar', 'cupon_borrar', 'errores_borrar'})
 # 2.8: los cupones de descuento (pagos/cupones.php). Un código: de 2 a 32 letras, números, guiones o guiones bajos (como
 # codigo_cupon() de cupones.php). Un cupón del 100 % regala la licencia (cupon_gratis.php, sin pasar por Recurrente).
 CODIGO_CUPON = re.compile(r'[A-Z0-9][A-Z0-9_-]{1,31}')
@@ -768,6 +771,17 @@ class Configuracion:
         self.guardar()
 
 
+def aviso_sin_clave(config):
+    """Al abrir sin una clave legible: '' si nunca se guardó (la primera vez en este equipo) o por qué no se pudo leer."""
+    if not config.datos.get('clave'):
+        return ''
+    if os.name == 'nt':   # se cifró con otro usuario de Windows o en otra PC
+        return ('La clave guardada no se puede abrir con este usuario de Windows (se guardó en otra PC o con otro '
+                'usuario). Pégala de nuevo.')
+    # (se borró del Llavero, se negó el permiso o la guardó una versión anterior de la app)
+    return 'No se pudo leer la clave del Llavero de esta Mac. Pégala de nuevo.'
+
+
 # ---------------------------------------------------------------- CSV para Excel
 
 def separadores_excel():
@@ -894,7 +908,7 @@ def _mensaje_red(motivo):
         return 'El servidor tardó demasiado en responder. Revisa tu conexión e intenta de nuevo.'
     if isinstance(motivo, ssl.SSLError):
         return ('No se pudo comprobar la conexión segura con el servidor (certificado). '
-                'Revisa que la fecha y la hora de esta PC estén bien.')
+                f'Revisa que la fecha y la hora de {ESTE_EQUIPO} estén bien.')
     if isinstance(motivo, socket.gaierror):
         return 'No se encontró el servidor. Revisa tu conexión a internet.'
     if isinstance(motivo, ConnectionRefusedError):
@@ -1136,7 +1150,7 @@ class ClienteApi:
         cuerpo = json.dumps({'accion': accion, **datos}).encode('utf-8')
         pedido = urllib.request.Request(self.url, data=cuerpo, method='POST', headers={
             'X-Admin-Clave': self.clave, 'Content-Type': 'application/json', 'Accept': 'application/json',
-            'User-Agent': f'CineCaptionsVentas/{VERSION} (Windows)'})
+            'User-Agent': f'CineCaptionsVentas/{VERSION} ({"Windows" if os.name == "nt" else "Mac"})'})
         try:
             with self._abridor.open(pedido, timeout=self.tiempo) as r:
                 codigo, crudo, cabeceras = r.status, r.read(), r.headers
@@ -1278,6 +1292,12 @@ class ClienteApi:
             datos['visto'] = False
         r = self.llamar('error_visto', **datos)
         return {'cambiados': entero(r.get('cambiados')), 'resumen': normalizar_resumen_errores(r.get('resumen'))}
+
+    def errores_borrar(self, ids=None, todos=False):
+        """2.10: borra PARA SIEMPRE esos errores (o todos, con todos=True), con sus capturas. Un admin.php de antes da
+        .desconocida (no borra nada)."""
+        r = self.llamar('errores_borrar', **({'todos': True} if todos else {'ids': [entero(i) for i in ids or []]}))
+        return {'borrados': entero(r.get('borrados')), 'resumen': normalizar_resumen_errores(r.get('resumen'))}
 
     def version_actual(self, refrescar=False):
         r = self.llamar('version_actual', **({'refrescar': True} if refrescar else {}))
@@ -1920,6 +1940,9 @@ QPlainTextEdit { background: @FONDO; border: 1px solid @BORDE; border-radius: @R
 QPlainTextEdit:hover { border-color: @BORDE_FUERTE; }
 QPlainTextEdit:focus { border-color: @VIOLETA; }
 QPlainTextEdit:disabled { color: @TEXTO_TENUE; }
+QTextBrowser#informeVista { background: @FONDO; border: 1px solid @BORDE; border-radius: @RADIO_CONTROL; color: @TEXTO;
+                            selection-background-color: @VIOLETA; selection-color: #ffffff; }
+QTextBrowser#informeVista:focus { border-color: @VIOLETA; }
 
 QProgressBar { background: @SUPERFICIE_2; border: 0; border-radius: 4px; min-height: 8px; max-height: 8px; color: transparent; }
 QProgressBar::chunk { border-radius: 4px;
@@ -2118,10 +2141,14 @@ class Recortada(QLabel):
         self.setSizePolicy(QSizePolicy.Policy.Preferred if ajustada else QSizePolicy.Policy.Ignored,
                            QSizePolicy.Policy.Preferred)
         self._completo = ''
+        self._cortos = ()
         self.poner(texto)
 
-    def poner(self, texto):
+    def poner(self, texto, *cortos):
+        """cortos (2.10): versiones más cortas del mismo texto, de la más larga a la más corta; se muestra la primera que
+        cabe entera (y solo si ninguna cabe, la última con «…»; con '' al final, nada). El texto entero, en el tooltip."""
         self._completo = texto or ''
+        self._cortos = tuple(c for c in cortos if c is not None)
         self._recortar()
         if self._ajustada:
             self.updateGeometry()
@@ -2138,7 +2165,11 @@ class Recortada(QLabel):
 
     def _recortar(self):
         ancho = max(10, self.contentsRect().width())
-        corto = self.fontMetrics().elidedText(self._completo, Qt.TextElideMode.ElideRight, ancho)
+        fm = self.fontMetrics()
+        textos = (self._completo, *self._cortos)
+        corto = next((t for t in textos if fm.horizontalAdvance(t) <= ancho), None)
+        if corto is None:
+            corto = fm.elidedText(textos[-1], Qt.TextElideMode.ElideRight, ancho)
         super().setText(corto)
         self.setToolTip(self._completo if corto != self._completo else '')
 
@@ -5350,6 +5381,111 @@ def resumen_de_errores(errores, ultima=None, filtro=None, busqueda='', ahora=Non
     return texto if len(texto) <= 30000 else texto[:29900] + '\n… (cortado: hay más; filtra por cliente o error)'
 
 
+def _celda(texto):
+    """Una celda de tabla Markdown: en una línea y sin «|» (cortaría la columna)."""
+    return una_linea(texto).replace('|', '/') or '—'
+
+
+def _repartidos(casos, campo):
+    """«5.54 (2 equipos) · 5.53 (1 equipo)»: los valores de ese campo en los casos de un fallo, el más común primero."""
+    cuenta = {}
+    for e in casos:
+        valor = campo(e)
+        if valor:
+            cuenta[valor] = cuenta.get(valor, 0) + 1
+    return ' · '.join(f"{valor} ({plural(n, 'equipo', 'equipos')})"
+                      for valor, n in sorted(cuenta.items(), key=lambda x: (-x[1], x[0])))
+
+
+def informe_completo_de_errores(errores, ultima=None, ahora=None):
+    """2.10 (pedido del dueño: «obtener todos los informes y darme uno solo con todos los errores»): TODOS los errores, cada uno
+    con su informe técnico, en UN documento Markdown (se lee igual como texto). Junta el mismo fallo de varios equipos
+    (clave_de_fallo, el orden de «Copiar resumen»): una tabla con todos los fallos y, por fallo, cuántas veces pasó, a cuántos
+    clientes y equipos, en qué versiones y sistemas, cuándo (primera y última vez), cada caso y su informe técnico completo
+    (el mismo informe en dos casos va una sola vez). Sin correos ni claves de licencia: se puede pasar a otra persona."""
+    grupos = {}
+    for e in errores:
+        grupos.setdefault(clave_de_fallo(e), []).append(e)
+    orden = sorted(grupos.values(), key=lambda fs: max((f.get('ultima') or '') for f in fs), reverse=True)
+    orden.sort(key=lambda fs: (len({f.get('licencia_id') for f in fs}), sum(entero(f.get('veces')) for f in fs)), reverse=True)
+
+    def version(e):
+        return texto_version(e.get('version')) or e.get('version')
+
+    def sistema(e):
+        return texto_so(e.get('so')) if e.get('so') else None
+
+    def nivel(e):
+        return NIVELES_ERROR.get(e.get('nivel'), NIVELES_ERROR['error'])[0]
+
+    def cuando(fecha):
+        return fecha_larga(fecha) if fecha else '—'
+
+    veces = sum(entero(e.get('veces')) for e in errores)
+    sin_ver = sum(1 for e in errores if not e.get('visto'))
+    lineas = ['# Informe de errores de CineCaptions', '',
+              f"{(ahora or dt.datetime.now()).strftime('%d/%m/%Y %H:%M')} · {plural(len(errores), 'error', 'errores')} "
+              f"({sin_ver} sin ver) de {plural(len({e.get('licencia_id') for e in errores}), 'cliente', 'clientes')} en "
+              f"{plural(len({(e.get('licencia_id'), e.get('equipo')) for e in errores}), 'equipo', 'equipos')} · "
+              f"{plural(veces, 'vez', 'veces')} en total · {plural(len(orden), 'fallo distinto', 'fallos distintos')}"
+              + (f' · última versión publicada: {ultima}' if ultima else ''), '',
+              'Cada fallo junta el mismo error de varios equipos y trae el informe técnico completo de cada caso. '
+              'Sin correos ni claves de licencia.']
+    if not errores:
+        return '\n'.join(lineas + ['', 'Ningún cliente tiene errores guardados.']) + '\n'
+    lineas += ['', '## Resumen', '', '| # | Fallo | Tipo | Clientes | Equipos | Veces | Versiones | Sistemas | Primera vez | Última vez |',
+               '|---:|---|---|---:|---:|---:|---|---|---|---|']
+    for n, casos in enumerate(orden, 1):
+        ultimo = max(casos, key=lambda f: f.get('ultima') or '')
+        lineas.append(f"| {n} | {_celda(ultimo.get('titulo') or ultimo.get('mensaje'))[:90]} | {nivel(ultimo)} "
+                      f"| {len({f.get('licencia_id') for f in casos})} | {len(casos)} | {sum(entero(f.get('veces')) for f in casos)} "
+                      f"| {_celda(', '.join(sorted({version(f) for f in casos if version(f)})))} "
+                      f"| {_celda(', '.join(sorted({sistema(f) for f in casos if sistema(f)})))} "
+                      f"| {cuando(min((f.get('primera') or f.get('ultima') or '') for f in casos))} | {cuando(ultimo.get('ultima'))} |")
+    for n, casos in enumerate(orden, 1):
+        casos = sorted(casos, key=lambda f: f.get('ultima') or '', reverse=True)
+        ultimo = casos[0]
+        titulo, mensaje = una_linea(ultimo.get('titulo') or ''), una_linea(ultimo.get('mensaje') or '')
+        total = sum(entero(f.get('veces')) for f in casos)
+        lineas += ['', '---', '', f'## {n}. {nivel(ultimo)} · {titulo or mensaje or "Sin título"}', '']
+        if mensaje and mensaje != titulo:
+            lineas += [f'> {mensaje}', '']
+        sin_ver_aqui = sum(1 for f in casos if not f.get('visto'))
+        lineas.append(f"- **Pasó:** {plural(total, 'vez', 'veces')} · "
+                      f"{plural(len({f.get('licencia_id') for f in casos}), 'cliente', 'clientes')} · "
+                      f"{plural(len(casos), 'equipo', 'equipos')}" + (f' · {sin_ver_aqui} sin ver' if sin_ver_aqui else ''))
+        for rotulo, valor in (('Versiones', _repartidos(casos, version)), ('Sistemas', _repartidos(casos, sistema)),
+                              ('Dónde', ', '.join(sorted({f.get('origen') for f in casos if f.get('origen')})))):
+            if valor:
+                lineas.append(f'- **{rotulo}:** {valor}')
+        lineas += [f"- **Primera vez:** {cuando(min((f.get('primera') or f.get('ultima') or '') for f in casos))} · "
+                   f"**Última vez:** {cuando(ultimo.get('ultima'))}", '',
+                   '| Caso | Cliente | Equipo | Versión | Sistema | Veces | Primera vez | Última vez | Estado |',
+                   '|---|---|---|---|---|---:|---|---|---|']
+        for f in casos:
+            lineas.append(f"| #{f.get('id')} | {_celda(_nombre_corto(f))} | {_celda(equipo_de_error(f))} | {_celda(version(f))} "
+                          f"| {_celda(sistema(f))} | {entero(f.get('veces'))} | {cuando(f.get('primera'))} "
+                          f"| {cuando(f.get('ultima'))} | {'visto' if f.get('visto') else 'sin ver'} |")
+        vistos = {}   # informe → el caso que ya lo puso (el mismo informe en dos casos va una sola vez)
+        for f in casos:
+            quien = f"#{f.get('id')} · {_nombre_corto(f)} · {equipo_de_error(f)}"
+            detalle = (f.get('detalle') or '').strip('\n')
+            lineas += ['', f'### Informe técnico de {quien}', '']
+            datos = [(r, v) for r, v in (('Al fallar', f.get('equipo_datos')),
+                                         ('Ficha del equipo', (f.get('ficha_equipo') or {}).get('resumen'))) if v]
+            for r, v in datos:   # (párrafos, no una lista: pegada al bloque de código, setMarkdown la metía adentro)
+                lineas += [f'**{r}:** {una_linea(v)}', '']
+            if not detalle:
+                lineas.append('_Sin informe técnico (CineCaptions no lo mandó o ya no está en el servidor)._')
+            elif detalle.strip() in vistos:
+                lineas.append(f'_El mismo informe que {vistos[detalle.strip()]}._')
+            else:
+                vistos[detalle.strip()] = f"#{f.get('id')}"
+                cerca = '~~~~' if '```' in detalle else '```'
+                lineas += [cerca + 'text', detalle, cerca]
+    return '\n'.join(lineas) + '\n'
+
+
 def agrupar_errores(errores):
     """Los errores de cada cliente (cada licencia), para la vista «Por usuario»: cuántos equipos, cuántos sin ver, cuántas
     veces en total y el último. Cada cliente lleva sus errores en «filas» (los mismos diccionarios de la tabla)."""
@@ -5634,8 +5770,9 @@ class DialogoClave(QDialog):
         lay = QVBoxLayout(self)
         margenes_dialogo(lay)
         cabeza_dialogo(lay, 'llave', 'Pega tu clave de administrador' if primera_vez else 'Cambiar la clave de administrador')
-        texto = etiqueta('Con esta clave la app lee tus ventas en cinecaptions.shop. Se guarda cifrada en esta PC: '
-                         'solo tu usuario de Windows puede leerla.', 'suave')
+        donde = ('Se guarda cifrada en esta PC: solo tu usuario de Windows puede leerla.' if os.name == 'nt' else
+                 'Se guarda en el Llavero de esta Mac: solo tu usuario puede leerla.')
+        texto = etiqueta('Con esta clave la app lee tus ventas en cinecaptions.shop. ' + donde, 'suave')
         texto.setWordWrap(True)
         lay.addWidget(texto)
         lay.addSpacing(4)
@@ -5990,8 +6127,9 @@ class DialogoAcerca(QDialog):
         lc.addWidget(self.ficha)
         lay.addWidget(caja)
         if instalada():
-            nota = etiqueta('Para desinstalarla: Configuración de Windows › Aplicaciones › Aplicaciones instaladas.',
-                            'tenue')
+            nota = etiqueta('Para desinstalarla: Configuración de Windows › Aplicaciones › Aplicaciones instaladas.'
+                            if os.name == 'nt' else
+                            'Para desinstalarla: arrastra CineCaptions Ventas de Aplicaciones a la Papelera.', 'tenue')
             nota.setWordWrap(True)
             lay.addWidget(nota)
         lay.addSpacing(8)
@@ -8444,9 +8582,10 @@ class MiniaturaCaptura(QLabel):
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         self.imagen = None
+        self.proporcion = None   # 2.10: alto/ancho del cuadro, igual en las dos capturas lado a lado (None: el de la imagen)
 
-    def poner(self, imagen):
-        self.imagen = imagen
+    def poner(self, imagen, proporcion=None):
+        self.imagen, self.proporcion = imagen, proporcion
         self.updateGeometry()
         self._pintar()
 
@@ -8456,7 +8595,7 @@ class MiniaturaCaptura(QLabel):
     def heightForWidth(self, ancho):
         if self.imagen is None or self.imagen.isNull() or not self.imagen.width():
             return 120
-        return max(60, min(420, round(ancho * self.imagen.height() / self.imagen.width())))
+        return max(60, min(420, round(ancho * (self.proporcion or self.imagen.height() / self.imagen.width()))))
 
     def sizeHint(self):
         return QSize(320, self.heightForWidth(320))
@@ -8553,6 +8692,103 @@ class VisorCaptura(QDialog):
                                                'Imagen PNG (*.png);;Imagen JPEG (*.jpg)')
         if ruta:
             self.imagen.save(ruta)
+
+
+class DialogoInforme(QDialog):
+    """2.10: el «Informe completo» de los errores (informe_completo_de_errores): cuántos son y el texto entero, que se puede leer y
+    seleccionar, con «Copiar» y «Guardar…» (un .md que también se abre como texto; o .txt). guardado: la ruta del último archivo
+    guardado (None si no se guardó). al_error(titulo, texto): cómo se avisa que no se pudo guardar (la caja de la ventana)."""
+
+    def __init__(self, parent, texto, resumen, archivo, al_copiar=None, al_error=None):
+        super().__init__(parent)
+        self.texto, self.archivo, self.guardado, self._al_copiar = texto, archivo, None, al_copiar
+        self._al_error = al_error or (lambda titulo, explicacion: mensaje(self, titulo, explicacion))
+        self.setWindowTitle(f'{APP} · Informe de errores')
+        self.setModal(True)
+        lay = QVBoxLayout(self)
+        margenes_dialogo(lay)
+        cabeza_dialogo(lay, 'recibo', 'Informe completo de errores')
+        self.sub = etiqueta(resumen, 'suave')
+        self.sub.setWordWrap(True)
+        lay.addWidget(self.sub)
+        # (se ve formateado —títulos, tablas, el informe técnico en letra fija—; se guarda y se copia en Markdown)
+        self.vista = QTextBrowser()
+        self.vista.setObjectName('informeVista')
+        self.vista.setOpenLinks(False)
+        self.vista.setFont(fuente(13))
+        self.vista.document().setDocumentMargin(16)
+        self.vista.setMarkdown(texto)
+        self._dar_estilo(self.vista.document())
+        lay.addWidget(self.vista, 1)
+        self.btn_copiar = boton('Copiar todo', 'copiar')
+        self.btn_copiar.clicked.connect(self._copiar)
+        cerrar = boton('Cerrar')
+        cerrar.clicked.connect(self.accept)
+        self.btn_guardar = boton('Guardar…', 'exportar', tipo='primario')
+        self.btn_guardar.setDefault(True)
+        self.btn_guardar.clicked.connect(self._guardar)
+        lay.addLayout(fila_botones(cerrar, self.btn_guardar, izquierda=(self.btn_copiar,)))
+        pantalla = (parent.screen() if parent is not None else QGuiApplication.primaryScreen()).availableGeometry()
+        self.resize(min(980, round(pantalla.width() * 0.8)), min(760, round(pantalla.height() * 0.85)))
+
+    @staticmethod
+    def _dar_estilo(doc):
+        """Los colores y el aire de la app en lo que armó setMarkdown: tablas con bordes finos y aire en las celdas, espacio
+        antes de cada título y los bloques de código (el informe técnico) en letra fija sobre un fondo apenas más claro."""
+        for tabla in (f for f in doc.rootFrame().childFrames() if isinstance(f, QTextTable)):
+            fmt = tabla.format()
+            fmt.setBorder(1)
+            fmt.setBorderBrush(QBrush(QColor(BORDE_FUERTE)))
+            fmt.setBorderStyle(QTextFrameFormat.BorderStyle.BorderStyle_Solid)
+            fmt.setBorderCollapse(True)
+            fmt.setCellSpacing(0)
+            fmt.setCellPadding(6)
+            fmt.setTopMargin(6)
+            fmt.setBottomMargin(10)
+            tabla.setFormat(fmt)
+        mono = QTextCharFormat()
+        mono.setFontFamilies(MONO)
+        bloque = doc.begin()
+        while bloque.isValid():
+            fb = bloque.blockFormat()
+            cursor = QTextCursor(bloque)   # (sin selección: el formato del bloque va solo a este bloque)
+            if fb.nonBreakableLines():   # (así marca setMarkdown los bloques de código)
+                letra = QTextCursor(bloque)
+                letra.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
+                letra.mergeCharFormat(mono)
+                fb.setBackground(QBrush(QColor(SUPERFICIE)))
+                fb.setLeftMargin(4)
+            elif fb.headingLevel():
+                fb.setTopMargin({1: 0, 2: 22}.get(fb.headingLevel(), 16))
+                fb.setBottomMargin(8)
+            elif bloque.textList() is None and not cursor.currentTable():
+                fb.setBottomMargin(6)
+            cursor.setBlockFormat(fb)
+            bloque = bloque.next()
+
+    def _copiar(self):
+        if self._al_copiar:
+            self._al_copiar(self.texto, 'Informe copiado: pégalo donde quieras.')
+        else:
+            QGuiApplication.clipboard().setText(self.texto)
+
+    def _guardar(self):
+        carpeta = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DocumentsLocation) or str(Path.home())
+        ruta, _f = QFileDialog.getSaveFileName(self, 'Guardar informe de errores', str(Path(carpeta) / self.archivo),
+                                               'Markdown (*.md);;Texto (*.txt)')
+        if ruta:
+            self.guardar_en(ruta)
+
+    def guardar_en(self, ruta):
+        """Escribe el informe en UTF-8. True si se guardó."""
+        try:
+            Path(ruta).write_text(self.texto, encoding='utf-8', newline='\n')
+        except OSError as e:   # (por ejemplo, la carpeta ya no existe o el archivo está abierto en otro programa)
+            self._al_error('No se pudo guardar el informe', str(e))
+            return False
+        self.guardado = ruta
+        self.sub.setText(f'Guardado en {ruta}')
+        return True
 
 
 class PanelError(QFrame):
@@ -8818,13 +9054,17 @@ class PanelError(QFrame):
         self.capturas = dict(capturas)
         self.cap_texto.setText('')
         self.cap_texto.setVisible(False)
+        # 2.10: lado a lado, los dos cuadros del mismo alto (el de la más alta; la otra, centrada en el suyo): así sus líneas
+        # de abajo quedan a la par
+        imagenes = [c['imagen'] for c in capturas.values() if c and not c['imagen'].isNull() and c['imagen'].width()]
+        proporcion = max(i.height() / i.width() for i in imagenes) if dos and len(imagenes) > 1 else None
         for cual, (caja, rotulo, mini, linea) in self.cuadros_cap.items():
             caja.setVisible(cual in cuales)
             cap = capturas.get(cual)
             nombre = nombre_captura(cual, cap, dos)
             rotulo.setText(nombre.upper())
             rotulo.setVisible(dos)
-            mini.poner(cap['imagen'] if cap else None)
+            mini.poner(cap['imagen'] if cap else None, proporcion)
             mini.setVisible(cap is not None)
             if cap:   # (con una sola, su nombre va en la línea, como antes; con dos ya lo dice el rótulo)
                 partes = ([] if dos else [nombre]) + [f"{cap['ancho']}×{cap['alto']}"]
@@ -8918,7 +9158,8 @@ class PanelError(QFrame):
             ('Primera vez', fecha_larga(e.get('primera')) if e.get('primera') and e.get('primera') != e.get('ultima') else None,
              None)])
         datos = [p.strip() for p in (e.get('equipo_datos') or '').split(' · ') if p.strip()]
-        self.hardware.setText('   ·   '.join(datos))   # (debajo de la captura: con qué equipo pasó)
+        # (debajo de la captura: con qué equipo pasó. 2.10: un dato por línea; en una sola, al cortarse, quedaba un «·» colgando)
+        self.hardware.setText('\n'.join(datos))
         self.hardware.setVisible(bool(datos))
         self._botones()
 
@@ -8958,6 +9199,8 @@ FALTA_SERVIDOR_CUPONES = ('Los cupones aparecen cuando subas los archivos nuevos
 HOLGURA_ISLA = 16   # 2.7: lo que la isla deja libre junto al título y a «Exportar CSV» (si no cabe, cierra nombres)
 SERVIDOR_SIN_ELIMINAR = ('Tu servidor todavía no sabe eliminar ventas: falta subir el pagos/admin.php nuevo. La venta '
                          'sigue igual que antes.')
+SERVIDOR_SIN_BORRAR_ERRORES = ('Falta subir el pagos/admin.php nuevo (el de la app 2.10) para poder borrarlos. Los errores '
+                               'siguen igual que antes.')
 SERVIDOR_VIEJO = ('El servidor publicado todavía es el anterior: falta subir el pagos/admin.php nuevo. Mientras tanto ves '
                   'las ventas, los canjes y las licencias como antes; las versiones, los avisos, el historial y las notas '
                   'aparecen cuando lo subas.')
@@ -8992,7 +9235,7 @@ class VentanaPrincipal(QMainWindow):
         self._consulta_v = None          # (filtro, búsqueda) de las ventas que hay en la tabla
         self._num = dict.fromkeys(('ventas', 'canjes', 'detalle', 'historial', 'avisos_licencia', 'versiones', 'avisos',
                                    'estadisticas', 'version', 'errores', 'error_detalle', 'error_captura', 'equipo_ficha',
-                                   'resumen_err', 'cupones'), 0)
+                                   'resumen_err', 'informe_err', 'cupones'), 0)
         self.cupones_info = None         # 2.8: lo último de la acción cupones (precio, moneda, hoy, sitio)
         self.servidor_cupones = None     # 2.8: False = el admin.php publicado todavía no tiene los cupones
         self._cupon_en_camino = set()    # 2.8: cupones con un cambio enviado (otro clic no lo repite)
@@ -9001,6 +9244,9 @@ class VentanaPrincipal(QMainWindow):
         self.errores_resumen = None      # cuántos errores sin ver hay (lo último que dijo el servidor; None: no lo manda)
         self.servidor_errores = None     # False: el admin.php publicado todavía no tiene la página Errores
         self.error_elegido = None        # el id del error que se ve en el panel de la página Errores
+        self._informe_err = None         # 2.10: lo que lleva el «Informe completo» mientras se arma (None: no se está armando)
+        self._borrando_err = False       # 2.10: «Borrar todo» en camino
+        self.dialogo_informe = None      # 2.10: el DialogoInforme abierto
         self._capturas_pedidas = None    # 2.5: (id, cuáles) de las capturas que se pidieron para ese error
         self._licencia_pendiente = None  # (licencia, equipo) que «Abrir licencia» elige cuando lleguen los equipos
         self._bandeja = None             # el ícono en la bandeja de Windows (solo para las notificaciones)
@@ -9097,9 +9343,16 @@ class VentanaPrincipal(QMainWindow):
         col.addWidget(self.lbl_sub)
         enc.addLayout(col, 1)
         self.btn_exportar = boton('Exportar CSV', 'exportar')
-        self.btn_exportar.setToolTip('Guardar esta tabla para Excel (Ctrl+E)')
+        self.btn_exportar.setToolTip(f'Guardar esta tabla para Excel ({CTRL}E)')
         self.btn_exportar.clicked.connect(self.exportar_csv)
         enc.addWidget(self.btn_exportar)
+        # 2.10: en Errores, en el mismo lugar, «Informe completo»: todos los errores con su informe técnico en un solo archivo
+        self.btn_informe_err = boton('Informe completo', 'recibo')
+        self.btn_informe_err.setToolTip('Junta TODOS los errores (con el informe técnico de cada uno) en un solo informe, '
+                                        'agrupados por fallo, para guardarlo o copiarlo')
+        self.btn_informe_err.clicked.connect(self._informe_completo)
+        self.btn_informe_err.setVisible(False)
+        enc.addWidget(self.btn_informe_err)
         cuerpo.addLayout(enc)
 
         self.banda = Banda()
@@ -9192,11 +9445,12 @@ class VentanaPrincipal(QMainWindow):
     def _reservas_isla(self):
         """2.7: lo que la isla no puede tapar a cada lado del encabezado, en el peor caso (no el de la página que se ve:
         así la isla no cambia de forma al cambiar de página): a la izquierda, el título más largo; a la derecha,
-        «Exportar CSV». Con los tamaños, no con la geometría (la del botón escondido no vale)."""
+        «Exportar CSV» o «Informe completo» (2.10, en Errores), el más ancho. Con los tamaños, no con la geometría (la del
+        botón escondido no vale)."""
         margenes = self._cuerpo.contentsMargins()
         fm = QFontMetrics(self.lbl_titulo.font())
         izquierda = margenes.left() + max(fm.horizontalAdvance(TITULOS.get(c, texto)) for c, _i, texto in PAGINAS)
-        derecha = margenes.right() + self.btn_exportar.sizeHint().width()
+        derecha = margenes.right() + max(self.btn_exportar.sizeHint().width(), self.btn_informe_err.sizeHint().width())
         return izquierda + HOLGURA_ISLA, derecha + HOLGURA_ISLA
 
     def _tarjeta(self, titulo, contenido, extra=None):
@@ -9292,16 +9546,30 @@ class VentanaPrincipal(QMainWindow):
         return marco
 
     def _pagina(self, *partes):
+        """Una página con tabla: la barra de arriba, la tabla y el pie (lo último). 2.10: el pie mide lo mismo en todas (el
+        alto de un botón chico, tenga botones o no): la tabla termina a la misma altura en cada página y no se mueve cuando
+        aparece «Cargar más»."""
         w = QWidget()
         lay = QVBoxLayout(w)
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(12)
-        for parte in partes:
+        for n, parte in enumerate(partes):
+            pie = n == len(partes) - 1 and len(partes) > 1
             if isinstance(parte, QWidget):
+                if pie and isinstance(parte, QLabel):
+                    parte.setMinimumHeight(self._alto_pie())
                 lay.addWidget(parte, 1 if isinstance(parte, QFrame) and parte.objectName() == 'marcoTabla' else 0)
             else:
+                if pie and isinstance(parte, QHBoxLayout):
+                    parte.addStrut(self._alto_pie())
                 lay.addLayout(parte)
         return w
+
+    def _alto_pie(self):
+        """El alto del pie de las páginas: el de un botón chico (como «Cargar más» o «Marcar todo como visto»)."""
+        if not getattr(self, '_alto_pie_px', None):
+            self._alto_pie_px = boton('Cargar más', 'abajo', chico=True).sizeHint().height()
+        return self._alto_pie_px
 
     def _armar_ventas(self):
         self.fechas_v = Segmentos(FILTROS_FECHA, 0)
@@ -9318,7 +9586,7 @@ class VentanaPrincipal(QMainWindow):
         self._poner_filtro_eliminadas(None)   # («Eliminadas» se puede elegir cuando se sepa que el servidor las tiene)
         self.buscar_v = self._campo_buscar(('Buscar cliente, correo o clave…', 'Buscar cliente…', 'Buscar…'),
                                            self._timer_buscar_v, self._cargar_ventas)
-        self.buscar_v.setToolTip('Busca por nombre, correo, clave CC- o el ID del pago de Recurrente (Ctrl+F)')
+        self.buscar_v.setToolTip(f'Busca por nombre, correo, clave CC- o el ID del pago de Recurrente ({CTRL}F)')
         self.modelo_v = ModeloVentas(self)
         self.tabla_v = Tabla('recibo', 'Cargando ventas…')
         self.proxy_v = self._preparar_tabla(self.tabla_v, self.modelo_v)
@@ -9343,7 +9611,7 @@ class VentanaPrincipal(QMainWindow):
         self.filtro_ver.setToolTip('Cuentan los clientes con la licencia activa («Todos» también los bloqueados)')
         self.buscar_ver = self._campo_buscar(('Buscar cliente, correo o equipo…', 'Buscar cliente o equipo…', 'Buscar…'),
                                              self._timer_filtro, self._filtrar_locales)
-        self.buscar_ver.setToolTip('Busca por nombre, correo, clave CC-, equipo, versión o sistema (Ctrl+F)')
+        self.buscar_ver.setToolTip(f'Busca por nombre, correo, clave CC-, equipo, versión o sistema ({CTRL}F)')
         self.modelo_ver = ModeloVersiones(self)
         self.tabla_ver = Tabla('capas', 'Cargando clientes…')
         columna = next(i for i, (c, _t, _a) in enumerate(ModeloVersiones.COLUMNAS) if c == 'aviso')
@@ -9421,7 +9689,7 @@ class VentanaPrincipal(QMainWindow):
         self.filtro_err.cambiado.connect(lambda _v: self._filtrar_locales())
         self.buscar_err = self._campo_buscar(('Buscar cliente, equipo o error…', 'Buscar cliente o error…', 'Buscar…'),
                                              self._timer_filtro, self._filtrar_locales)
-        self.buscar_err.setToolTip('Busca por nombre, correo, clave CC-, equipo, versión o el texto del error (Ctrl+F)')
+        self.buscar_err.setToolTip(f'Busca por nombre, correo, clave CC-, equipo, versión o el texto del error ({CTRL}F)')
         self.btn_todo_visto = boton('Marcar todo como visto', 'check', chico=True)
         self.btn_todo_visto.setToolTip('Los errores sin ver dejan de salir en «Sin ver» y en el contador de la barra')
         self.btn_todo_visto.clicked.connect(self._todo_visto)
@@ -9447,7 +9715,14 @@ class VentanaPrincipal(QMainWindow):
         self.pila_err = QStackedWidget()
         self.pila_err.addWidget(self.errores_cliente)
         self.pila_err.addWidget(self._marco(self.tabla_err))
-        self.lbl_pie_err = etiqueta('', 'tenue')
+        # 2.10: «Borrar todo» (con su pregunta: no se puede deshacer). El «Informe completo» va arriba, donde las otras páginas
+        # tienen «Exportar CSV»
+        self.btn_borrar_err = boton('Borrar todo', 'basura', tipo='peligro', chico=True)
+        self.btn_borrar_err.setToolTip('Borra para siempre del servidor todos los errores, con sus informes y capturas')
+        self.btn_borrar_err.clicked.connect(self._borrar_todos_errores)
+        self.btn_borrar_err.setEnabled(False)
+        # (2.10: se recorta con «…» si no cabe: así el pie no ensancha la columna y el panel del error sigue ancho)
+        self.lbl_pie_err = Recortada('', 'tenue')
         # («Marcar todo como visto» va en el pie, junto a cuántos hay sin ver: así la barra de arriba es corta y el panel
         # del error, a la derecha, puede ser ancho)
         pie = QHBoxLayout()
@@ -9455,6 +9730,8 @@ class VentanaPrincipal(QMainWindow):
         pie.addWidget(self.lbl_pie_err, 1)
         pie.addWidget(self.btn_resumen_err)
         pie.addWidget(self.btn_todo_visto)
+        pie.addSpacing(8)   # (el que borra, un poco aparte)
+        pie.addWidget(self.btn_borrar_err)
         pagina = self._pagina(self._barra_tabla(self.filtro_err, self.buscar_err, self.vista_errores), self.pila_err, pie)
         pagina.layout().setStretchFactor(self.pila_err, 1)
         self.tabla_cli.setParent(pagina)
@@ -9544,11 +9821,21 @@ class VentanaPrincipal(QMainWindow):
         self.pagina = pagina
         self.barra.marcar(pagina)
         self.paginas.setCurrentIndex(self._indices[pagina])
+        # 2.10: el ancho mínimo de la columna es el de la página que se ve (la pila tomaba el de la más ancha, Ventas, y en
+        # una ventana angosta el panel del error quedaba más angosto que lo suyo y se cortaba a la derecha)
+        for i in range(self.paginas.count()):
+            p = self.paginas.widget(i)
+            if not hasattr(p, '_politica_h'):
+                p._politica_h = p.sizePolicy().horizontalPolicy()
+            politica = p.sizePolicy()
+            politica.setHorizontalPolicy(p._politica_h if i == self._indices[pagina] else QSizePolicy.Policy.Ignored)
+            p.setSizePolicy(politica)
         self.lbl_titulo.setText(TITULOS.get(pagina) or next(texto for clave, _i, texto in PAGINAS if clave == pagina))
         self.lbl_sub.poner(SUBTITULOS[pagina])
         self.lado.setVisible(pagina not in ('resumen', 'cupones'))   # (2.8: Cupones, sin panel: la tabla a todo lo ancho)
         self.lado.setCurrentWidget(self.panel_error if pagina == 'errores' else self.panel)
         self.btn_exportar.setVisible(pagina in ('ventas', 'versiones', 'canjes'))
+        self.btn_informe_err.setVisible(pagina == 'errores')
         self._tamano_lado(pagina)
         if pagina != 'versiones':
             self._licencia_pendiente = None
@@ -10826,9 +11113,12 @@ class VentanaPrincipal(QMainWindow):
             n, visibles, uno, varios = self.modelo_cli.rowCount(), self.proxy_cli.rowCount(), 'cliente', 'clientes'
         else:
             n, visibles, uno, varios = self.modelo_err.rowCount(), self.proxy_err.rowCount(), 'error', 'errores'
-        self.lbl_pie_err.setText(((plural(n, uno, varios) if visibles == n else f'{visibles:,} de {plural(n, uno, varios)}')
-                                  + f' · {plural(sin_ver, "error sin ver", "errores sin ver")}') if n else '')
+        cuantos = (plural(n, uno, varios) if visibles == n else f'{visibles:,} de {plural(n, uno, varios)}') if n else ''
+        # (2.10: si no cabe todo, primero «3 sin ver», después solo cuántos y, si tampoco, nada: nunca cortado a la mitad)
+        self.lbl_pie_err.poner(f'{cuantos} · {plural(sin_ver, "error sin ver", "errores sin ver")}' if n else '',
+                               f'{cuantos} · {sin_ver:,} sin ver' if n else '', cuantos, '')
         self.btn_resumen_err.setEnabled(bool(self._errores_que_se_ven()))
+        self._poner_botones_errores()
         self._contar_errores()
 
     def _poner_estado(self):
@@ -10847,7 +11137,7 @@ class VentanaPrincipal(QMainWindow):
                                 if self.api_url != API_POR_DEFECTO else '')
         hora = fecha_mysql((self.resumen or {}).get('hora_servidor'))
         self.lbl_estado.setToolTip(f'Hora del servidor (MySQL): {hora.day} {MESES[hora.month - 1]} {hora.year}, '
-                                   f'{hora:%H:%M} ({zona}). Las fechas se muestran en la hora de esta PC.'
+                                   f'{hora:%H:%M} ({zona}). Las fechas se muestran en la hora de {ESTE_EQUIPO}.'
                                    if hora and zona else '')
         self.lbl_solo_lectura.setVisible(self.solo_lectura)
 
@@ -10896,7 +11186,7 @@ class VentanaPrincipal(QMainWindow):
             return detalles
 
         def terminar():
-            self.btn_resumen_err.setText('Copiar resumen')
+            self.btn_resumen_err.setText(' Copiar resumen')   # (con el espacio de boton(): el ícono no queda pegado)
             self.btn_resumen_err.setEnabled(bool(self._errores_que_se_ven()))
 
         def listo(detalles):
@@ -10912,6 +11202,184 @@ class VentanaPrincipal(QMainWindow):
             self._avisar(f'No pude preparar el resumen: {self._texto_fallo(error)}', 'error')
 
         self._pedir('resumen_err', trabajo, listo, fallo)
+
+    # --- 2.10: «Informe completo» y «Borrar todo» de la página Errores
+    def _poner_botones_errores(self):
+        """«Informe completo» y «Borrar todo»: con errores en la lista, el servidor que los tiene y nada de los dos en camino.
+        En --captura (solo lectura) «Borrar todo» nunca se enciende."""
+        hay = self.servidor_errores is True and bool(self.modelo_err.filas)
+        libre = self._informe_err is None and not self._borrando_err
+        self.btn_informe_err.setEnabled(hay and libre)
+        self.btn_borrar_err.setEnabled(hay and libre and not self.solo_lectura)
+
+    def _progreso_informe(self, texto):
+        """Mientras se arma el informe: el botón dice «Preparando…» (sin cambiar de ancho) y la barra de estado, cuántos van.
+        texto = None: listo."""
+        b = self.btn_informe_err
+        if texto:
+            if b.text() != ' Preparando…':
+                b.setMinimumWidth(b.width())
+                b.setText(' Preparando…')
+            self.statusBar().showMessage(texto)
+        else:
+            b.setText(' Informe completo')
+            b.setMinimumWidth(0)
+            self.statusBar().clearMessage()
+
+    def _informe_completo(self):
+        """2.10: «Informe completo»: la lista de TODOS los errores (sin el filtro ni la búsqueda de ahora) y el informe técnico de
+        cada uno, en informe_completo_de_errores; se abre DialogoInforme para guardarlo o copiarlo. Una petición por vez en la
+        cola (la de cada informe, aparte: lo demás de la app sigue cargando entre medio) y la barra de estado dice cuántos van.
+        Si cambia la clave o la API a medio camino, se deja."""
+        if not self.cliente or self._informe_err is not None:
+            return
+        cliente, generacion = self.cliente, self._generacion
+        estado = self._informe_err = {'errores': [], 'i': 0}
+        self._poner_botones_errores()
+        self._progreso_informe('Preparando el informe completo…')
+
+        def terminar():
+            if self._informe_err is estado:
+                self._informe_err = None
+                self._progreso_informe(None)
+                self._poner_botones_errores()
+
+        def sigue():
+            if self._informe_err is not estado:
+                return False
+            if generacion != self._generacion:   # (otra clave u otra API: lo que llegue no es de esta)
+                terminar()
+                return False
+            return True
+
+        def fallo(error):
+            if sigue():
+                terminar()
+                self._avisar(f'No pude preparar el informe: {self._texto_fallo(error)}', 'error')
+
+        def informe_de(ident):
+            try:
+                return cliente.error_detalle(ident)
+            except ApiError as e:
+                if e.codigo == 404:   # (se borró mientras tanto: va sin su informe)
+                    return None
+                raise
+
+        def siguiente():
+            errores, i = estado['errores'], estado['i']
+            if i >= len(errores):
+                listo()
+                return
+            self._progreso_informe(f'Preparando el informe completo: {i + 1:,} de {plural(len(errores), "error", "errores")}…')
+
+            def llego(d):
+                if not sigue():
+                    return
+                if d:
+                    errores[i] = dict(errores[i], detalle=d.get('detalle'), ficha_equipo=d.get('ficha_equipo'),
+                                      equipo_datos=d.get('equipo_datos') or errores[i].get('equipo_datos'))
+                estado['i'] += 1
+                siguiente()
+
+            self._pedir('informe_err', lambda ident=errores[i]['id']: informe_de(ident), llego, fallo)
+
+        def lista(r):
+            if not sigue():
+                return
+            estado['errores'] = list(r['errores'])
+            if not estado['errores']:
+                terminar()
+                self._avisar('Ningún cliente tiene errores guardados.', 'info')
+                return
+            siguiente()
+
+        def listo():
+            terminar()
+            errores = estado['errores']
+            texto = informe_completo_de_errores(errores, texto_version(self.version_ultima))
+            clientes = len({e['licencia_id'] for e in errores})
+            fallos = len({clave_de_fallo(e) for e in errores})
+            resumen = (f"{plural(len(errores), 'error', 'errores')} de {plural(clientes, 'cliente', 'clientes')} en "
+                       f"{plural(fallos, 'fallo distinto', 'fallos distintos')}, con el informe técnico de cada uno. "
+                       'Guárdalo o cópialo para pasarlo a quien los vaya a arreglar.')
+            d = DialogoInforme(self, texto, resumen, f'errores-cinecaptions-{dt.date.today():%Y-%m-%d}.md', self._copiar,
+                               lambda titulo, explicacion: self._mensaje(titulo, explicacion))
+            d.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
+            d.finished.connect(lambda _r, d=d: setattr(self, 'dialogo_informe', None) if self.dialogo_informe is d else None)
+            self.dialogo_informe = d
+            d.open()   # (modal, sin un bucle de eventos anidado: la cola sigue)
+
+        self._pedir('informe_err', lambda: cliente.errores('todos', '', None, LIMITE_LISTA), lista, fallo)
+
+    def _borrar_todos_errores(self):
+        """2.10: «Borrar todo»: borra PARA SIEMPRE en el servidor todos los errores (también los que no se ven con el filtro o la
+        búsqueda de ahora), con su informe técnico y sus capturas. Pregunta antes: no se puede deshacer."""
+        if not self.cliente or self._borrando_err:
+            return
+        if self._clave_mala:
+            self._mensaje('Primero cambia la clave',
+                          'El servidor rechazó la clave de administrador. Cámbiala en Configuración → Cambiar clave.')
+            return
+        n = len(self.modelo_err.filas)
+        if not n:
+            self._avisar('No hay errores para borrar.', 'info')
+            return
+        clientes = len({e['licencia_id'] for e in self.modelo_err.filas})
+        cuantos = (f"todos los errores de tus clientes (más de {LIMITE_LISTA:,})" if n >= LIMITE_LISTA
+                   else 'el error de tu cliente' if n == 1
+                   else f"los {n:,} errores de {plural(clientes, 'cliente', 'clientes')}")
+        if not self._confirmar(f'¿Borrar {cuantos}?',
+                               'Se borran para siempre del servidor, con su informe técnico y sus capturas, también los que '
+                               'no se ven con el filtro o la búsqueda de ahora. No se puede deshacer.\n'
+                               'Si quieres conservarlos, guarda antes el «Informe completo». Si un error vuelve a pasar, '
+                               'CineCaptions lo manda otra vez y aparece como nuevo.', 'Borrar todo', True, 'basura'):
+            return
+        cliente, generacion = self.cliente, self._generacion
+        self._borrando_err = True
+        self._acciones += 1
+        self.panel_error.set_ocupado(True)
+        self._poner_botones_errores()
+        self.btn_todo_visto.setEnabled(False)
+        self.statusBar().showMessage('Borrando los errores…')
+        self.trabajos.iniciar(lambda: cliente.errores_borrar(todos=True),
+                              lambda r: self._errores_borrados(generacion, r),
+                              lambda e: self._errores_no_borrados(e, generacion))
+
+    def _errores_borrados(self, generacion, r):
+        self._acciones = max(0, self._acciones - 1)
+        self._borrando_err = False
+        self.panel_error.set_ocupado(False)
+        self.statusBar().clearMessage()
+        if generacion != self._generacion:
+            self._poner_botones_errores()
+            return   # (de otra clave u otra API)
+        for tabla in (self.tabla_err, self.tabla_cli):
+            tabla.clearSelection()
+            tabla.selectionModel().setCurrentIndex(QModelIndex(), QItemSelectionModel.SelectionFlag.Clear)
+        self.cliente_err = None
+        self._elegir_error(None)
+        self._recargar(self.tabla_err, self.modelo_err, [])
+        self._mensaje_errores('Ningún cliente ha tenido errores.')
+        self._poner_resumen_errores(r['resumen'], propio=True)
+        self._filtrar_locales()
+        self._agrupar_errores()
+        self._cuando.pop('errores', None)   # (la próxima vez que se abra la página, se vuelven a pedir)
+        n = r['borrados']
+        self._avisar(f"{plural(n, 'error borrado', 'errores borrados')}." if n else 'No había errores para borrar.')
+        self.accion_terminada.emit('borrar_errores', True)
+
+    def _errores_no_borrados(self, error, generacion):
+        self._borrando_err = False
+        self.panel_error.set_ocupado(False)
+        self._poner_botones_errores()
+        self._poner_resumen_errores(self.errores_resumen, propio=True)   # (vuelve a encender «Marcar todo como visto»)
+        if isinstance(error, ApiError) and error.desconocida:   # (el admin.php publicado todavía no sabe borrar)
+            self._acciones = max(0, self._acciones - 1)
+            self.statusBar().clearMessage()
+            self._mensaje('Tu servidor todavía no sabe borrar errores', SERVIDOR_SIN_BORRAR_ERRORES)
+            self.accion_terminada.emit('borrar_errores', False)
+            return
+        self._accion_fallo('borrar_errores', error, generacion)
 
     def _copiar_de_tabla(self, tabla, campo):
         if tabla is self.tabla_cup:   # (2.8: en Cupones, Ctrl+C copia el código)
@@ -11218,7 +11686,8 @@ class VentanaPrincipal(QMainWindow):
                   'editar': 'No se guardaron los datos del cliente', 'nota': 'No se pudo guardar la nota',
                   'avisar': 'No se pudo mandar el aviso', 'error_visto': 'No se pudo marcar el error',
                   'todo_visto': 'No se pudieron marcar los errores', 'eliminar': 'No se pudo eliminar la venta',
-                  'restaurar': 'No se pudo restaurar la venta'}.get(nombre, 'No se pudo completar la acción')
+                  'restaurar': 'No se pudo restaurar la venta',
+                  'borrar_errores': 'No se pudieron borrar los errores'}.get(nombre, 'No se pudo completar la acción')
         self._mensaje(titulo, self._texto_fallo(error))
         self.accion_terminada.emit(nombre, False)
 
@@ -12219,10 +12688,7 @@ def main(argv=None):
             ventana.usar_clave(clave)
             QTimer.singleShot(0, ventana.actualizar_todo)
         else:
-            # Hay una clave guardada que no se pudo abrir: se cifró con otro usuario de Windows o en otra PC
-            aviso = (('La clave guardada no se puede abrir con este usuario de Windows (se guardó en otra PC o con otro '
-                      'usuario). Pégala de nuevo.') if os.name == 'nt' else
-                     'No se pudo leer la clave del Llavero de esta Mac. Pégala de nuevo.') if config.datos.get('clave') else ''
+            aviso = aviso_sin_clave(config)
             QTimer.singleShot(200, lambda: ventana.pedir_clave_inicial(aviso))
     codigo = app.exec()
     if not ventana.trabajos.cerrar(2500):   # una llamada colgada no deja el programa abierto en segundo plano

@@ -37,6 +37,7 @@ Uso:
   python servidor_prueba.py --pocos              casi sin datos: una venta en los últimos 30 días, sin canjes ni avisos
   python servidor_prueba.py --sin-cupones        como el admin.php de antes de los cupones (app 2.8): sin cupones ni el
                                                  cupón de cada venta
+  python servidor_prueba.py --sin-borrar-errores como el admin.php publicado con la app 2.9: sin errores_borrar
 Cupones (app 2.8): LANZAMIENTO (35 %, vencido, con las 3 ventas de $19), NAVIDAD (20 %, activo), AMIGOS100 (100 %, tope 5)
 y BLACKFRIDAY (40 %, pausado), con las acciones cupones, cupon_crear, cupon_editar y cupon_borrar.
 Los números de las ventas salen como texto ("2900"), igual que PDO en algunos servidores, para probar que la app los convierte.
@@ -85,6 +86,8 @@ CAMPOS_NUEVOS_FILA = ('version', 'ultima_vez', 'equipos_desactualizados')
 ALFABETO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 # 2.8: los cupones de descuento (cupones.php y las acciones de admin.php). Con --sin-cupones (y los servidores de antes) no están
 ACCIONES_CUPONES = {'cupones', 'cupon_crear', 'cupon_editar', 'cupon_borrar'}
+# App 2.10: borrar errores (errores_borrar). Con --sin-borrar-errores (el admin.php publicado con la app 2.9) y los de antes, no está
+ACCIONES_BORRAR_ERRORES = {'errores_borrar'}
 CAMPOS_CUPON = ('cupon_id', 'cupon', 'descuento')
 PRECIO = 2900                     # PRECIO_CENTAVOS de config.php
 CUPON_PRECIO_MINIMO = 100         # (el de cupones.php)
@@ -310,6 +313,7 @@ class Datos:
         self.sin_fichas = False       # como el admin.php de la 5.71 (con los errores, sin las fichas de los equipos)
         self.sin_ventanas = False     # como el admin.php de la 5.72 (con las fichas, sin la captura de la ventana)
         self.sin_cupones = False      # como el admin.php de antes de los cupones (app 2.8): sin sus acciones ni campos
+        self.sin_borrar_errores = False   # como el admin.php publicado con la app 2.9: sin errores_borrar
         self.github_caido = False     # version_actual no puede leer GitHub
         self.tope_hora, self.ventana_tope, self.envios_tope = TOPE_AVISOS_HORA, 3600, []   # avisos por hora (global)
 
@@ -681,6 +685,12 @@ class Datos:
     def con_cupones(self):
         """El admin.php de ahora tiene los cupones; el de antes (--sin-cupones) y los más viejos, no."""
         return self.con_ventanas and not self.sin_cupones
+
+    @property
+    def con_borrar_errores(self):
+        """App 2.10: el admin.php nuevo borra errores (errores_borrar); el publicado con la 2.9 (--sin-borrar-errores) y los
+        de antes, no."""
+        return self.con_cupones and not self.sin_borrar_errores
 
     def cupon_real(self, cid):
         return next((c for c in self.cupones if c['id'] == cid), None)
@@ -1127,7 +1137,8 @@ def atender(datos, entrada):
     if ((datos.viejo and accion in ACCIONES_NUEVAS)
             or (datos.sin_errores and accion in ACCIONES_ERRORES | ACCIONES_ELIMINAR)
             or (not datos.con_fichas and accion in ACCIONES_FICHAS)
-            or (not datos.con_cupones and accion in ACCIONES_CUPONES)):
+            or (not datos.con_cupones and accion in ACCIONES_CUPONES)
+            or (not datos.con_borrar_errores and accion in ACCIONES_BORRAR_ERRORES)):
         return 400, {'error': 'Acción desconocida.'}
 
     if accion == 'resumen':
@@ -1227,6 +1238,20 @@ def atender(datos, entrada):
         for e in cambiar:
             e['visto'] = visto
         return 200, {'ok': True, 'cambiados': len(cambiar), 'resumen': datos.resumen_errores()}
+
+    if accion == 'errores_borrar':
+        # App 2.10: borra para siempre (con sus capturas, que viven dentro del error) todos = true o los de ids = [1, 2, …]
+        if _php_bool(entrada.get('todos')):
+            borrar = list(datos.errores)
+        else:
+            ids = entrada.get('ids')
+            ids = list(ids.values()) if isinstance(ids, dict) else ids if isinstance(ids, list) else []
+            ids = [n for n in map(_entero, ids) if n][:1000]
+            if not ids:
+                return 400, {'error': 'Faltan los errores que borrar.'}
+            borrar = [e for e in datos.errores if e['id'] in ids]
+        datos.errores = [e for e in datos.errores if e not in borrar]
+        return 200, {'ok': True, 'borrados': len(borrar), 'resumen': datos.resumen_errores()}
 
     if accion == 'detalle':
         lic = datos.licencia(_entero(entrada.get('licencia_id')))
@@ -1911,9 +1936,10 @@ class Manejador(BaseHTTPRequestHandler):
 
 def crear(puerto=8799, clave=CLAVE, demora=0.0, sin_configurar=False, fallos_max=5, registro=False, utc=False,
           redirigir=None, viejo=False, github_caido=False, ahora=None, pocos=False, sin_errores=False, sin_fichas=False,
-          sin_ventanas=False, sin_cupones=False):
+          sin_ventanas=False, sin_cupones=False, sin_borrar_errores=False):
     """Crea el servidor (sin arrancarlo). Sirve también para las pruebas automáticas.
     sin_cupones: como el admin.php de antes de los cupones (app 2.8): sin sus acciones ni el cupón de cada venta.
+    sin_borrar_errores: como el admin.php publicado con la app 2.9 (con los cupones, sin errores_borrar).
     utc: MySQL en UTC, como en el hosting. redirigir: responde 302 hacia esa dirección (la app no debe seguirla).
     viejo: como el admin.php anterior. ahora: la hora de arranque de los datos (fija, para comparar dos servidores).
     pocos: casi sin datos (una venta en los últimos 30 días, sin canjes, avisos ni errores). sin_errores: como el
@@ -1925,6 +1951,7 @@ def crear(puerto=8799, clave=CLAVE, demora=0.0, sin_configurar=False, fallos_max
     srv.datos = Datos(ahora=ahora, utc=utc, pocos=pocos)
     srv.datos.viejo, srv.datos.github_caido, srv.datos.sin_errores = viejo, github_caido, sin_errores
     srv.datos.sin_fichas, srv.datos.sin_ventanas, srv.datos.sin_cupones = sin_fichas, sin_ventanas, sin_cupones
+    srv.datos.sin_borrar_errores = sin_borrar_errores
     if viejo or sin_errores:   # (en esos servidores nunca se pudo eliminar una venta: no hay ninguna eliminada)
         srv.datos.pedidos = [p for p in srv.datos.pedidos if not p.get('eliminada')]
     if not srv.datos.con_ventanas:   # (sin errores_ventanas nunca llegó la captura de la ventana)
@@ -1965,11 +1992,13 @@ def main():
     parser.add_argument('--sin-ventanas', action='store_true',
                         help='como el admin.php de la 5.72 (con las fichas, sin la captura de la ventana de CineCaptions)')
     parser.add_argument('--sin-cupones', action='store_true', help='como el admin.php de antes de los cupones (app 2.8)')
+    parser.add_argument('--sin-borrar-errores', action='store_true',
+                        help='como el admin.php publicado con la app 2.9 (sin errores_borrar)')
     args = parser.parse_args()
     srv = crear(args.puerto, demora=args.demora, sin_configurar=args.sin_configurar, fallos_max=args.fallos_max, registro=True,
                 utc=args.utc, viejo=args.viejo, github_caido=args.github_caido, pocos=args.pocos,
                 sin_errores=args.sin_errores, sin_fichas=args.sin_fichas, sin_ventanas=args.sin_ventanas,
-                sin_cupones=args.sin_cupones)
+                sin_cupones=args.sin_cupones, sin_borrar_errores=args.sin_borrar_errores)
     print(f'Servidor de prueba en http://127.0.0.1:{args.puerto}  (X-Admin-Clave: {CLAVE})', flush=True)
     try:
         srv.serve_forever()

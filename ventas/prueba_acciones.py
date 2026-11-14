@@ -1437,13 +1437,13 @@ def prueba_errores_clientes():
             'Errores: se abre en «Sin ver» (3 de 5)')
     revisar(w.panel_error.isVisible() and not w.panel.isVisible() and w.panel_error.vacio.isVisible(),
             'a la derecha, el panel del error (todavía sin elegir)')
-    revisar('3 errores sin ver' in w.lbl_pie_err.text() and w.btn_todo_visto.isEnabled(),
+    revisar('3 errores sin ver' in w.lbl_pie_err.texto() and w.btn_todo_visto.isEnabled(),
             'el pie dice cuántos sin ver y «Marcar todo como visto» está activo')
 
     # Vista «Por usuario» (la de siempre al abrir): los clientes con errores y, al elegir uno, sus errores por equipo
     revisar(w.vista_errores.valor == 'usuario' and w.pila_err.currentIndex() == 0 and w._tabla_actual() is w.tabla_cli,
             'Errores se abre en «Por usuario»')
-    revisar(w.modelo_cli.rowCount() == 3 and w.proxy_cli.rowCount() == 2 and '2 de 3 clientes' in w.lbl_pie_err.text(),
+    revisar(w.modelo_cli.rowCount() == 3 and w.proxy_cli.rowCount() == 2 and '2 de 3 clientes' in w.lbl_pie_err.texto(),
             'por usuario: 3 clientes con errores; en «Sin ver», los 2 que tienen errores sin ver')
     primero = w._fila_de(w.tabla_cli, w.proxy_cli.index(0, 0))
     cc = {c: i for i, (c, _t, _a) in enumerate(v.ModeloClientesErrores.COLUMNAS)}
@@ -1515,7 +1515,7 @@ def prueba_errores_clientes():
     elegido = w.error_elegido
     w.vista_errores.poner('lista')
     revisar(w.pila_err.currentIndex() == 1 and w._tabla_actual() is w.tabla_err and w._fila_actual(w.tabla_err)['id'] == elegido
-            and w.error_elegido == elegido and '3 de 5 errores' in w.lbl_pie_err.text(),
+            and w.error_elegido == elegido and '3 de 5 errores' in w.lbl_pie_err.texto(),
             '«Todos los errores»: la tabla, con el mismo error elegido')
     col = {c: i for i, (c, _t, _a) in enumerate(v.ModeloErrores.COLUMNAS)}
     resolve = next(x for x in w.modelo_err.filas if x['titulo'].startswith('No se pudieron colocar'))
@@ -1546,7 +1546,7 @@ def prueba_errores_clientes():
             'marcar como visto: el servidor y el contador (2)')
     revisar(w.proxy_err.rowCount() == 3 and pe.btn_visto.text().strip() == 'Marcar nuevo' and pe.estado.text() == 'Visto',
             'el que se está viendo no desaparece de «Sin ver» (se puede deshacer)')
-    revisar('2 errores sin ver' in w.lbl_pie_err.text() and w.filtro_err.botones['sin_ver'].text().endswith('2'),
+    revisar('2 errores sin ver' in w.lbl_pie_err.texto() and w.filtro_err.botones['sin_ver'].text().endswith('2'),
             'el pie y el filtro cuentan 2 sin ver')
     apretar(w, pe.btn_visto, 'marcar como nuevo')
     revisar(err(datos, fila['id'])['visto'] == 0 and boton_nav.contador == 3 and pe.btn_visto.text().strip() == 'Marcar visto',
@@ -2846,16 +2846,15 @@ def naranja(r, g, b):
 
 def en_la_isla(w):
     """Que nada se salga ni tape: cada ítem dentro de la isla, la isla dentro de la ventana y sin tocar el título (su
-    texto), «Exportar CSV» (si se ve) ni el subtítulo."""
+    texto), «Exportar CSV» o «Informe completo» (2.10, en Errores; si se ven) ni el subtítulo."""
     isla, raiz = w.barra, w.centralWidget()
     g = isla.geometry()
     dentro = all(isla.rect().contains(b.geometry()) for b in [isla.logo, *isla.botones.values(), isla.btn_config])
     t = w.lbl_titulo
     texto = QRect(t.mapTo(raiz, v.QPoint(0, 0)), v.QSize(v.QFontMetrics(t.font()).horizontalAdvance(t.text()), t.height()))
-    e = w.btn_exportar
-    exportar = QRect(e.mapTo(raiz, v.QPoint(0, 0)), e.size()) if e.isVisible() else QRect()
+    botones = [QRect(e.mapTo(raiz, v.QPoint(0, 0)), e.size()) for e in (w.btn_exportar, w.btn_informe_err) if e.isVisible()]
     sub = w.lbl_sub.mapTo(raiz, v.QPoint(0, 0)).y()
-    return (dentro and raiz.rect().contains(g) and not g.intersects(texto) and not g.intersects(exportar)
+    return (dentro and raiz.rect().contains(g) and not g.intersects(texto) and not any(g.intersects(b) for b in botones)
             and sub >= g.bottom())
 
 
@@ -3147,12 +3146,409 @@ def prueba_cupones():
     srv2.shutdown()
 
 
+# ------------------------------------------------------------------ 15. Errores: «Informe completo» y «Borrar todo» (2.10)
+def prueba_informe_y_borrar():
+    print('Errores: «Informe completo» y «Borrar todo» (2.10)')
+    # La función del informe, sola: agrupa el mismo fallo, cada caso con su informe (el repetido, una vez), sin correos ni claves
+    base = {'licencia_id': 1, 'equipo': 'a', 'nombre_equipo': 'PC-ANA', 'cliente': 'Ana Gómez', 'correo': 'ana@example.com',
+            'clave': 'CC-AAAA-BBBB-CCCC-DDDD', 'nivel': 'error', 'titulo': 'KeyError: 7', 'mensaje': 'Falló al colocar',
+            'origen': 'colocar', 'version': '5.54', 'so': 'windows', 'veces': 2, 'primera': '2026-11-01 10:00:00',
+            'ultima': '2026-11-10 10:00:00', 'visto': False, 'detalle': 'Traceback (most recent call last):\n  línea 1\nKeyError: 7',
+            'equipo_datos': 'GPU X · RAM 8 GB'}
+    errores = [dict(base, id=1),
+               dict(base, id=2, licencia_id=2, equipo='b', nombre_equipo='MAC-LUIS', cliente='Luis Paz', correo='luis@example.com',
+                    clave='CC-EEEE-FFFF-GGGG-HHHH', titulo='KeyError: 9', version='5.53', so='macOS 15.1', veces=3, visto=True,
+                    ultima='2026-11-12 08:00:00'),
+               dict(base, id=3, nivel='aviso', titulo='Sin conexión | GitHub', mensaje='No se pudo leer el version.json',
+                    veces=1, origen='actualizar', detalle='```\nbloque raro\n```'),
+               dict(base, id=4, titulo='Se cerró el motor', mensaje='Código 3', veces=1, detalle=None)]
+    t = v.informe_completo_de_errores(errores, '5.54', ahora=dt.datetime(2026, 11, 13, 9, 30))
+    revisar(t.startswith('# Informe de errores de CineCaptions\n')
+            and '13/11/2026 09:30 · 4 errores (3 sin ver) de 2 clientes en 2 equipos · 7 veces en total · 3 fallos distintos · '
+                'última versión publicada: 5.54' in t, 'informe completo: la cabecera con cuántos, de quiénes y cuántos fallos')
+    revisar(t.count('\n| 1 | ') == 1 and t.count('\n| 2 | ') == 1 and t.count('\n| 3 | ') == 1 and '\n| 4 | ' not in t
+            and '| Sin conexión / GitHub |' in t, 'la tabla del resumen: un fallo por fila (un «|» del título no rompe la tabla)')
+    revisar('## 1. Error · KeyError: 9' in t and '- **Pasó:** 5 veces · 2 clientes · 2 equipos · 1 sin ver' in t
+            and '- **Versiones:** 5.53 (1 equipo) · 5.54 (1 equipo)' in t and 'macOS 15.1 (1 equipo)' in t
+            and '- **Dónde:** colocar' in t, 'el mismo fallo en dos equipos (KeyError 7 y 9): veces, clientes, versiones y sistemas')
+    revisar(t.index('### Informe técnico de #2 · Luis P. · MAC-LUIS') < t.index('### Informe técnico de #1 · Ana G. · PC-ANA')
+            and t.count('KeyError: 7\n```') == 1 and '_El mismo informe que #2._' in t and '**Al fallar:** GPU X · RAM 8 GB' in t,
+            'cada caso con su informe (el más reciente primero; el mismo informe, una sola vez)')
+    revisar('~~~~text\n```\nbloque raro\n```\n~~~~' in t and 'Sin informe técnico' in t,
+            'un informe con ``` va en otro cerco y uno sin informe lo dice')
+    revisar('example.com' not in t and 'CC-' not in t, 'el informe completo no trae correos ni claves de licencia')
+    vacio = v.informe_completo_de_errores([])
+    revisar('Ningún cliente tiene errores guardados.' in vacio and '## Resumen' not in vacio, 'sin errores: lo dice')
+
+    # La acción errores_borrar
+    srv, url = servidor()
+    datos = srv.datos
+    c = v.ClienteApi(url, servidor_prueba.CLAVE)
+    total = len(datos.errores)
+    e = error_de(lambda: c.errores_borrar([]))
+    revisar(e is not None and e.codigo == 400 and e.mensaje == 'Faltan los errores que borrar.', 'errores_borrar sin ids: 400')
+    uno = next(x for x in datos.errores if not x['visto'])
+    r = c.errores_borrar([uno['id'], 999])
+    revisar(r['borrados'] == 1 and all(x['id'] != uno['id'] for x in datos.errores) and r['resumen']['sin_ver'] == 2,
+            'errores_borrar con ids: solo ese (uno que no existe no cuenta) y el resumen nuevo')
+    lectura = v.ClienteApi(url, servidor_prueba.CLAVE, solo_lectura=True)
+    antes = len(srv.acciones_recibidas)
+    e = error_de(lambda: lectura.errores_borrar(todos=True))
+    revisar(e is not None and len(srv.acciones_recibidas) == antes and len(datos.errores) == total - 1,
+            'solo lectura (--captura): errores_borrar ni sale')
+    r = c.errores_borrar(todos=True)
+    revisar(r['borrados'] == total - 1 and datos.errores == []
+            and r['resumen'] == {'sin_ver': 0, 'equipos': 0, 'ultimo_id': None, 'ultima': None},
+            'errores_borrar con todos=true: no queda ninguno (ni el contador)')
+    revisar(c.errores_borrar(todos=True)['borrados'] == 0, 'borrar todo otra vez: 0')
+    srv.shutdown()
+    for opciones in ({'sin_borrar_errores': True}, {'sin_cupones': True}, {'sin_errores': True}, {'viejo': True}):
+        srv, url = servidor(**opciones)
+        n = len(srv.datos.errores)
+        e = error_de(lambda: v.ClienteApi(url, servidor_prueba.CLAVE).errores_borrar(todos=True))
+        revisar(e is not None and e.desconocida and len(srv.datos.errores) == n,
+                f'admin.php de antes ({next(iter(opciones))}): errores_borrar da «Acción desconocida» y no borra nada')
+        srv.shutdown()
+
+    # En la ventana: «Informe completo» arriba (solo en Errores) y «Borrar todo» en el pie
+    aplicacion()
+    srv, url = servidor()
+    datos = srv.datos
+    w = ventana(url, mostrar=True)
+    revisar(not w.btn_informe_err.isVisible() and w.barra.nivel == 'expandida',
+            '«Informe completo» no sale en Resumen; la isla sigue abierta a 1440 px')
+    w.ir_a('errores')
+    esperar(lambda: quieto(w) and w.modelo_err.rowCount() == 5, 'página Errores')
+    b_inf, b_borrar = w.btn_informe_err, w.btn_borrar_err
+    revisar(b_inf.isVisible() and b_inf.isEnabled() and not w.btn_exportar.isVisible() and b_borrar.isVisible()
+            and b_borrar.isEnabled() and b_borrar.property('tipo') == 'peligro' and w.proxy_err.rowCount() == 3,
+            'Errores: «Informe completo» arriba, «Borrar todo» (rojo) en el pie; la lista en «Sin ver» (3 de 5)')
+    esperar_isla(w)
+    revisar(w.barra.nivel == 'expandida' and en_la_isla(w), 'a 1440 px la isla no tapa «Informe completo» ni se cierra')
+
+    antes = len(srv.acciones_recibidas)
+    b_inf.click()
+    revisar(not b_inf.isEnabled() and not b_borrar.isEnabled() and b_inf.text().strip() == 'Preparando…',
+            'mientras se arma: «Preparando…» y los dos botones apagados')
+    esperar(lambda: quieto(w) and w.dialogo_informe is not None, 'informe completo')
+    d = w.dialogo_informe
+    pedidas = srv.acciones_recibidas[antes:]
+    revisar(d is not None and pedidas.count('errores') == 1 and pedidas.count('error_detalle') == 5 and srv.max_en_curso == 1,
+            f'pide la lista de TODOS y el informe de cada uno, de a una petición ({pedidas})')
+    texto = d.texto if d else ''
+    revisar(all(f"#{x['id']}" in texto for x in datos.errores)
+            and all(x['detalle'].strip().splitlines()[-1] in texto for x in datos.errores if x.get('detalle'))
+            and not any(datos.licencia_real(x['licencia_id'])['correo'] in texto for x in datos.errores)
+            and d.vista.toPlainText().startswith('Informe de errores de CineCaptions') and d.vista.document().blockCount() > 40
+            and d.archivo.startswith('errores-cinecaptions-') and d.archivo.endswith('.md'),
+            'el informe trae los 5 (no solo los 3 «Sin ver») con su informe técnico, sin correos; se ve formateado en el diálogo')
+    revisar(b_inf.isEnabled() and b_inf.text().strip() == 'Informe completo' and b_borrar.isEnabled() and b_inf.minimumWidth() == 0,
+            'al terminar, los botones vuelven como estaban')
+    if d:
+        d.btn_copiar.click()
+        revisar(v.QGuiApplication.clipboard().text() == texto and w.aviso.texto.text().startswith('Informe copiado'),
+                '«Copiar todo» copia el informe entero')
+        ruta = TEMPORAL / 'informe-errores.md'
+        revisar(d.guardar_en(str(ruta)) and ruta.read_text(encoding='utf-8') == texto and d.guardado == str(ruta)
+                and str(ruta) in d.sub.text(), '«Guardar…» lo escribe en UTF-8 y dice dónde quedó')
+        revisar(not d.guardar_en(str(TEMPORAL / 'no-existe' / 'x.md')) and d.guardado == str(ruta)
+                and w.mensajes[-1][0] == 'No se pudo guardar el informe', 'si no se puede guardar, lo dice y no cambia nada')
+        d.close()
+        esperar(lambda: w.dialogo_informe is None, 'cerrar el informe')
+    # Un informe que ya no está (404) va sin el suyo; un fallo de la red corta el informe y lo dice
+    real = w.cliente.error_detalle
+    primero = datos.errores[0]['id']
+
+    def con_404(ident):
+        if ident == primero:
+            raise v.ApiError('Ese error ya no existe.', 404)
+        return real(ident)
+
+    w.cliente.error_detalle = con_404
+    b_inf.click()
+    esperar(lambda: quieto(w) and w.dialogo_informe is not None, 'informe con un 404')
+    revisar(w.dialogo_informe is not None and 'Sin informe técnico' in w.dialogo_informe.texto,
+            'un error que se borró a medio camino va sin su informe')
+    w.dialogo_informe.close()
+    esperar(lambda: w.dialogo_informe is None, 'cerrar')
+    w.cliente.error_detalle = lambda ident: (_ for _ in ()).throw(v.ApiError('No hay conexión con el servidor.', 0))
+    b_inf.click()
+    esperar(lambda: quieto(w) and w._informe_err is None, 'informe que falla')
+    revisar(w.dialogo_informe is None and w.aviso.texto.text().startswith('No pude preparar el informe')
+            and b_inf.isEnabled() and b_borrar.isEnabled() and b_inf.text().strip() == 'Informe completo',
+            'si falla la red: lo dice, no abre nada y los botones vuelven')
+    w.cliente.error_detalle = real
+
+    # «Borrar todo»: con su pregunta; si no se confirma, no sale nada
+    w._confirmar = lambda pregunta, *a, **k: w.preguntas.append(pregunta) and False
+    antes = len(srv.acciones_recibidas)
+    apretar(w, b_borrar, 'borrar todo (sin confirmar)')
+    revisar(len(datos.errores) == 5 and 'errores_borrar' not in srv.acciones_recibidas[antes:] and w.modelo_err.rowCount() == 5,
+            'Borrar todo sin confirmar: no borra nada')
+    w._confirmar = lambda pregunta, *a, **k: w.preguntas.append(pregunta) or True
+    w.vista_errores.poner('lista')
+    w.filtro_err.poner('todos')
+    elegir_error(w, lambda f: True)   # (con un error en el panel: al borrar, el panel queda vacío)
+    antes = len(w.preguntas)
+    apretar(w, b_borrar, 'borrar todo')
+    revisar(w.preguntas[antes:] == ['¿Borrar los 5 errores de 3 clientes?'],
+            'Borrar todo pregunta antes, con cuántos (todos, no solo los «Sin ver») y de cuántos clientes')
+    revisar(datos.errores == [] and w.modelo_err.rowCount() == 0 and w.modelo_cli.rowCount() == 0
+            and w.barra.botones['errores'].contador is None and w.panel_error.vacio.isVisible() and w.error_elegido is None
+            and not b_borrar.isEnabled() and not b_inf.isEnabled() and not w.btn_todo_visto.isEnabled()
+            and not w.btn_resumen_err.isEnabled() and w.aviso.texto.text() == '5 errores borrados.' and w._acciones == 0
+            and w.tabla_err.mensaje_vacio == 'Ningún cliente ha tenido errores.' and not v.ERRORES,
+            'borrado: las listas vacías, sin contador ni error elegido, los botones apagados y «5 errores borrados.»')
+    act = datos.activaciones[0]
+    nuevo = datos.recibir_error(act['licencia_id'], act['equipo'], 'e' * 40, 'error', 'Otro fallo', 'Pasó de nuevo.')
+    w.actualizar_todo()
+    esperar(lambda: w.intento_listo and quieto(w) and w.modelo_err.rowCount() == 1, 'un error nuevo después de borrar')
+    revisar(nuevo == 6 and w.barra.botones['errores'].contador == 1 and b_borrar.isEnabled() and b_inf.isEnabled(),
+            'después de borrar, un error nuevo entra con su id nuevo (6) y los botones vuelven')
+    w.solo_lectura = True   # (--captura: «Borrar todo» nunca se enciende; el informe sí, porque solo lee)
+    w._poner_botones_errores()
+    revisar(not b_borrar.isEnabled() and b_inf.isEnabled(), 'en solo lectura, «Borrar todo» apagado e «Informe completo» activo')
+    w.solo_lectura = False
+    # Angosta (1100 px): el pie cabe sin empujar el panel del error (el texto del pie se corta con «…»)
+    w.vista_errores.poner('usuario')
+    w.resize(1100, 720)
+    esperar(lambda: quieto(w), 'a 1100 px')
+    esperar_isla(w)
+    raiz = w.centralWidget()
+    derecha = max(x.mapTo(raiz, v.QPoint(x.width(), 0)).x() for x in (w.btn_resumen_err, w.btn_todo_visto, b_borrar))
+    revisar(derecha <= w.panel_error.mapTo(raiz, v.QPoint(0, 0)).x() and w.panel_error.width() >= 400 and en_la_isla(w),
+            f'a 1100 px el pie de Errores cabe en su columna y el panel sigue ancho ({w.panel_error.width()} px)')
+    w.close()
+    srv.shutdown()
+
+    # El admin.php publicado (sin errores_borrar): lo dice y todo sigue igual
+    srv, url = servidor(sin_borrar_errores=True)
+    w = ventana(url, mostrar=True)
+    w.ir_a('errores')
+    esperar(lambda: quieto(w) and w.modelo_err.rowCount() == 5, 'Errores con el admin.php publicado')
+    apretar(w, w.btn_borrar_err, 'borrar todo con el admin.php publicado')
+    revisar(w.mensajes[-1:] == [('Tu servidor todavía no sabe borrar errores', v.SERVIDOR_SIN_BORRAR_ERRORES)]
+            and len(srv.datos.errores) == 5 and w.modelo_err.rowCount() == 5 and w.btn_borrar_err.isEnabled()
+            and w.btn_todo_visto.isEnabled() and w._acciones == 0 and w.barra.botones['errores'].contador == 3,
+            'con el admin.php publicado: avisa que falta subirlo y no cambia nada')
+    w.close()
+    srv.shutdown()
+
+
+# ------------------------------------------------------------------ La clave al estrenar la app en un equipo (Windows y Mac)
+class LlaveroFalso:
+    """keyring de mentira con las reglas del Llavero de macOS (así se prueban también en Windows): una entrada solo la
+    cambia o la borra la «app» que la creó (si no, -25244: sin firma de Apple cada versión es otra app) y el dueño puede
+    negar el permiso de leerla."""
+
+    def __init__(self):
+        self.entradas, self.app, self.negar = {}, 'Ventas 2.9', False
+
+    def get_password(self, servicio, cuenta):
+        if self.negar:
+            raise RuntimeError('User interaction is not allowed. (-25308)')
+        return self.entradas.get((servicio, cuenta), (None,))[0]
+
+    def set_password(self, servicio, cuenta, clave):
+        if self.entradas.get((servicio, cuenta), (None, self.app))[1] != self.app:
+            raise RuntimeError('(-25244) errSecInvalidOwnerEdit')
+        self.entradas[(servicio, cuenta)] = (clave, self.app)
+
+    def delete_password(self, servicio, cuenta):
+        if (servicio, cuenta) not in self.entradas:
+            raise RuntimeError('The specified item could not be found in the keychain.')
+        if self.entradas[(servicio, cuenta)][1] != self.app:
+            raise RuntimeError('(-25244) errSecInvalidOwnerEdit')
+        del self.entradas[(servicio, cuenta)]
+
+
+class OsComoMac:
+    """os con name 'posix' (lo demás es el os real): ventas.py toma el camino de Mac (el Llavero) también en Windows."""
+    name = 'posix'
+
+    def __getattr__(self, nombre):
+        return getattr(os, nombre)
+
+
+def config_nueva(nombre):
+    """Una carpeta de configuración vacía: la app recién instalada en un equipo."""
+    os.environ['CC_VENTAS_CONFIG'] = str(TEMPORAL / 'estreno' / nombre)
+    return v.Configuracion()
+
+
+def contestar_clave(w, texto, cancelar=False):
+    """Contesta el cuadro de la clave en cuanto se abre, como el dueño: pega y «Guardar clave», o «Cancelar».
+    Devuelve una lista que se llena con los textos que mostró el cuadro."""
+    from PySide6.QtWidgets import QAbstractButton
+    visto = []
+
+    def responder(intento=0):
+        d = next((x for x in w.findChildren(v.DialogoClave) if x.isVisible()), None)
+        if d is None:
+            if intento < 400:
+                v.QTimer.singleShot(25, lambda: responder(intento + 1))
+            return
+        visto.extend([l.text() for l in d.findChildren(v.QLabel)] + [b.text() for b in d.findChildren(QAbstractButton)])
+        if cancelar:
+            d.reject()
+        else:
+            d.campo.setText(texto)
+            d.accept()
+
+    v.QTimer.singleShot(25, responder)
+    return visto
+
+
+def ventana_real(config, url):
+    """Como al abrir la app de verdad (no --captura): guarda la clave que se pega."""
+    w = v.VentanaPrincipal(config, url)
+    w.mensajes = []
+    w._mensaje = lambda titulo, texto, tipo='error': w.mensajes.append((titulo, texto))
+    w._confirmar = lambda pregunta, *a, **k: True
+    w.setAttribute(v.Qt.WidgetAttribute.WA_DontShowOnScreen, True)
+    w.resize(1440, 900)
+    w.show()
+    return w
+
+
+def prueba_clave_estreno():
+    en_mac = sys.platform == 'darwin'
+    print(f'La clave al estrenar la app en un equipo ({"Mac, con el Llavero de verdad" if en_mac else "Windows"})')
+    aplicacion()
+    original = os.environ['CC_VENTAS_CONFIG']
+    srv, url = servidor()
+    try:
+        # 1) Primera vez en este equipo: no hay clave → el cuadro sale sin aviso de error; se pega (con espacios) y carga
+        cfg = config_nueva('ventana')
+        revisar(cfg.leer_clave() is None and v.aviso_sin_clave(cfg) == '',
+                'equipo nuevo: no hay clave y el cuadro sale sin aviso de error')
+        w = ventana_real(cfg, url)
+        visto = contestar_clave(w, f'  {servidor_prueba.CLAVE}\n')
+        w.pedir_clave_inicial(v.aviso_sin_clave(cfg))
+        esperar(lambda: w.intento_listo and quieto(w), 'primera carga con la clave pegada')
+        revisar(bool(visto) and not w.banda.isVisible() and not w._clave_mala and w.modelo_v.rowCount() > 0
+                and not w.mensajes, f'pega la clave (con espacios alrededor): carga las ventas sin avisos ({w.mensajes})')
+        texto_cuadro = ' '.join(visto)
+        if en_mac:
+            revisar('Llavero de esta Mac' in texto_cuadro and 'Windows' not in texto_cuadro and '\\' not in texto_cuadro,
+                    'en Mac el cuadro habla del Llavero, sin «Windows» ni rutas con «\\»')
+        else:
+            revisar('usuario de Windows' in texto_cuadro and 'CineCaptions_claves\\admin_ventas.txt' in texto_cuadro,
+                    'en Windows el cuadro sigue igual')
+        crudo = cfg.ruta.read_text(encoding='utf-8')
+        guardada = json.loads(crudo).get('clave') or ''
+        revisar(servidor_prueba.CLAVE not in crudo and (guardada.startswith('llavero:administrador-') if en_mac else True),
+                'la clave no queda a la vista en config.json' + (' (va al Llavero)' if en_mac else ' (va cifrada)'))
+        revisar(v.Configuracion().leer_clave() == servidor_prueba.CLAVE,
+                'al volver a abrir la app lee la clave guardada (no la pide otra vez)')
+
+        # 2) «Cambiar clave» con una equivocada: la banda lo dice; con la buena vuelve a cargar
+        contestar_clave(w, 'clave-equivocada-0123456789')
+        w.cambiar_clave()
+        esperar(lambda: quieto(w) and w._clave_mala, 'el servidor rechaza la clave equivocada')
+        revisar(w.banda.isVisible() and w.banda.btn_clave.isVisible() and 'Cambiar clave' in w.banda.btn_clave.text(),
+                'clave equivocada: la banda pide cambiarla')
+        contestar_clave(w, servidor_prueba.CLAVE)
+        w.banda.btn_clave.click()
+        esperar(lambda: quieto(w) and not w._clave_mala and not w.banda.isVisible(), 'otra vez con la clave buena')
+        revisar(w.modelo_v.rowCount() > 0 and v.Configuracion().leer_clave() == servidor_prueba.CLAVE,
+                'con «Cambiar clave» y la buena vuelve a cargar y queda guardada la buena')
+        if en_mac:   # cada guardado es una entrada NUEVA; la anterior (de esta misma app) se borra
+            nueva = v.Configuracion().datos['clave'].split(':', 1)[1]
+            anterior = guardada.split(':', 1)[1]
+            revisar(nueva != anterior and v._llavero().get_password(v.servicio_llavero(), anterior) is None,
+                    'Llavero: la clave nueva va en otra entrada y la anterior se borra')
+        w.close()
+
+        # 3) Si cancela el cuadro: banda «Pegar clave» y no se guarda nada; con el botón de la banda se arregla
+        cfg = config_nueva('cancelar')
+        w = ventana_real(cfg, url)
+        contestar_clave(w, '', cancelar=True)
+        w.pedir_clave_inicial('')
+        revisar(w.banda.isVisible() and 'Pegar clave' in w.banda.btn_clave.text() and cfg.leer_clave() is None
+                and 'clave' not in v.Configuracion().datos, 'si cancela: banda «Pegar clave» y no se guarda nada')
+        contestar_clave(w, servidor_prueba.CLAVE)
+        w.banda.btn_clave.click()
+        esperar(lambda: w.intento_listo and quieto(w) and not w.banda.isVisible(), 'pegar la clave desde la banda')
+        revisar(w.modelo_v.rowCount() > 0 and v.Configuracion().leer_clave() == servidor_prueba.CLAVE,
+                'desde la banda «Pegar clave» también queda guardada y carga')
+        w.close()
+
+        # 4) La clave desde el archivo de CineCaptions_claves (con su encabezado), como con «Abrir archivo…»
+        revisar(v.extraer_clave(f'Clave de administrador de CineCaptions Ventas:\n{servidor_prueba.CLAVE}\n')
+                == servidor_prueba.CLAVE and v.extraer_clave(f'﻿{servidor_prueba.CLAVE}\r\n') == servidor_prueba.CLAVE,
+                'el archivo admin_ventas.txt (con encabezado, BOM o fin de línea de Windows) da la clave')
+
+        # 5) Las reglas del Llavero de Mac, también desde Windows (con un Llavero de mentira que se porta igual)
+        llavero, os_real, llavero_real = LlaveroFalso(), v.os, v._llavero
+        v.os, v._llavero = OsComoMac(), (lambda: llavero)
+        try:
+            servicio = v.servicio_llavero()
+            cfg = config_nueva('mac')
+            cfg.guardar_clave('clave-de-la-mac-123456')
+            cuenta = cfg.datos['clave'].split(':', 1)[1]
+            revisar(len(llavero.entradas) == 1 and len(cuenta) == len('administrador-') + 8
+                    and 'clave-de-la-mac' not in cfg.ruta.read_text(encoding='utf-8')
+                    and v.Configuracion().leer_clave() == 'clave-de-la-mac-123456',
+                    'Mac: la clave va al Llavero («llavero:administrador-…» en config.json) y se lee al reabrir')
+            cfg.guardar_clave('otra-clave-de-la-mac-789')
+            revisar(len(llavero.entradas) == 1 and (servicio, cuenta) not in llavero.entradas
+                    and v.Configuracion().leer_clave() == 'otra-clave-de-la-mac-789',
+                    'Mac: cambiar la clave deja una sola entrada (la anterior se borra)')
+            llavero.app = 'Ventas 2.10'   # versión nueva instalada: macOS no la deja cambiar ni borrar lo de la 2.9
+            revisar(v.Configuracion().leer_clave() == 'otra-clave-de-la-mac-789',
+                    'Mac, versión nueva: lee la clave que guardó la anterior (tras «Permitir siempre»)')
+            cfg = v.Configuracion()
+            cfg.guardar_clave('clave-tras-actualizar-42')
+            revisar(v.Configuracion().leer_clave() == 'clave-tras-actualizar-42' and len(llavero.entradas) == 2,
+                    'Mac, versión nueva: guarda en una entrada nueva aunque no pueda borrar la vieja (-25244)')
+            llavero.negar = True
+            cfg = v.Configuracion()
+            aviso = v.aviso_sin_clave(cfg)
+            revisar(cfg.leer_clave() is None and 'Llavero de esta Mac' in aviso and 'Windows' not in aviso,
+                    'Mac: si se niega el permiso del Llavero, no se cae: vuelve a pedir la clave con un aviso de Mac')
+            llavero.negar = False
+            llavero.entradas.clear()
+            revisar(v.Configuracion().leer_clave() is None, 'Mac: si la entrada se borró del Llavero, vuelve a pedirla')
+            cfg = config_nueva('mac_vieja')
+            cfg.datos['clave'] = v.EN_LLAVERO
+            cfg.guardar()
+            llavero.entradas[(servicio, 'administrador')] = ('clave-formato-viejo-1', llavero.app)
+            revisar(v.Configuracion().leer_clave() == 'clave-formato-viejo-1',
+                    'Mac: entiende el config.json viejo («clave»: «llavero»)')
+            v._llavero = lambda: None
+            cfg = v.Configuracion()
+            try:
+                cfg.guardar_clave('sin-keyring-123456')
+                sin_keyring = 'no avisó'
+            except OSError as e:
+                sin_keyring = str(e)
+            revisar(cfg.leer_clave() is None and 'keyring' in sin_keyring,
+                    f'Mac sin el módulo keyring: no se cae y el error es claro ({sin_keyring})')
+            v._llavero = lambda: llavero
+            d = v.DialogoClave(None, primera_vez=True)
+            textos = ' '.join(l.text() for l in d.findChildren(v.QLabel))
+            revisar('Llavero de esta Mac' in textos and 'Windows' not in textos,
+                    'Mac: el cuadro de la clave dice «Llavero de esta Mac» y no «Windows»')
+            d.deleteLater()
+        finally:
+            v.os, v._llavero = os_real, llavero_real
+        nota_bien = ('/' in v.NOTA_CLAVE and '\\' not in v.NOTA_CLAVE and v.ESTE_EQUIPO == 'esta Mac' and v.CTRL == '⌘'
+                     if en_mac else '\\' in v.NOTA_CLAVE and v.ESTE_EQUIPO == 'esta PC' and v.CTRL == 'Ctrl+')
+        revisar(nota_bien, 'la ruta del archivo, «esta PC/esta Mac» y los atajos (Ctrl+/⌘) van con lo de este sistema')
+    finally:
+        os.environ['CC_VENTAS_CONFIG'] = original
+        srv.shutdown()
+
+
 if __name__ == '__main__':
     inicio = time.monotonic()
     v.instalar_errores(con_ventanas=False)   # un error dentro de la ventana queda en v.ERRORES (y la prueba falla)
+    # (prueba_confirmar_eliminar y prueba_clave_estreno abren diálogos con exec(): antes de las capturas, ver arriba)
     for prueba in (prueba_funciones, prueba_acciones, prueba_errores, prueba_importar, prueba_ventana, prueba_isla,
-                   prueba_confirmar_eliminar, prueba_casos_ventana, prueba_errores_clientes, prueba_fichas,
-                   prueba_dos_capturas, prueba_recurso, prueba_visual, prueba_eliminar, prueba_versiones, prueba_cupones):
+                   prueba_confirmar_eliminar, prueba_clave_estreno, prueba_casos_ventana, prueba_errores_clientes,
+                   prueba_fichas, prueba_dos_capturas, prueba_recurso, prueba_visual, prueba_eliminar, prueba_versiones,
+                   prueba_cupones, prueba_informe_y_borrar):
         prueba()
     revisar(not v.ERRORES, f'ningún error inesperado en toda la prueba ({len(v.ERRORES)})')
     print(f'\n{"TODO BIEN" if not FALLAS else f"{len(FALLAS)} FALLAS"} en {time.monotonic() - inicio:.1f} s')
