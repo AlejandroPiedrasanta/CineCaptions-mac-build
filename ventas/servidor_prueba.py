@@ -88,6 +88,7 @@ ALFABETO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 ACCIONES_CUPONES = {'cupones', 'cupon_crear', 'cupon_editar', 'cupon_borrar'}
 # App 2.10: borrar errores (errores_borrar). Con --sin-borrar-errores (el admin.php publicado con la app 2.9) y los de antes, no está
 ACCIONES_BORRAR_ERRORES = {'errores_borrar'}
+ACCIONES_APP = {'app_version', 'app_descargar'}   # (app 2.11: las versiones nuevas de la propia app de ventas)
 CAMPOS_CUPON = ('cupon_id', 'cupon', 'descuento')
 PRECIO = 2900                     # PRECIO_CENTAVOS de config.php
 CUPON_PRECIO_MINIMO = 100         # (el de cupones.php)
@@ -302,6 +303,8 @@ class Datos:
     Con utc=True, «MySQL» va en UTC (como en el hosting): las fechas se guardan y salen en UTC. Si no, en la hora de esta
     PC. fecha_venta siempre va en UTC, porque admin.php la guarda con gmdate(). «ahora» fija la hora de arranque (para que
     dos servidores de prueba tengan exactamente los mismos datos)."""
+    sin_app = False      # (2.11: como el admin.php de antes de las actualizaciones de la app de ventas)
+    app_info = None      # (2.11: el version.json de pagos/ventas_app/; None: no hay ninguna versión publicada)
 
     def __init__(self, ahora=None, utc=False, pocos=False):
         self.utc = utc
@@ -1138,11 +1141,15 @@ def atender(datos, entrada):
             or (datos.sin_errores and accion in ACCIONES_ERRORES | ACCIONES_ELIMINAR)
             or (not datos.con_fichas and accion in ACCIONES_FICHAS)
             or (not datos.con_cupones and accion in ACCIONES_CUPONES)
-            or (not datos.con_borrar_errores and accion in ACCIONES_BORRAR_ERRORES)):
+            or (not datos.con_borrar_errores and accion in ACCIONES_BORRAR_ERRORES)
+            or (datos.sin_app and accion in ACCIONES_APP)):
         return 400, {'error': 'Acción desconocida.'}
 
     if accion == 'resumen':
         return 200, {'ok': True, **datos.resumen()}
+
+    if accion == 'app_version':   # (app 2.11: la última versión de la app de ventas, el version.json de pagos/ventas_app/)
+        return 200, {'ok': True, 'app': json.loads(json.dumps(datos.app_info))}
 
     def lista_ventas():   # (lista_ventas de admin.php: estado, buscar, limite 1..1000 y desde)
         return [_como_pdo(f) for f in datos.ventas(str(entrada.get('estado') or ''), entrada.get('buscar'),
@@ -1924,6 +1931,17 @@ class Manejador(BaseHTTPRequestHandler):
             if self.headers.get('X-Admin-Clave', '') != srv.clave:
                 srv.fallos.append(ahora)
                 return self._responder(401, {'error': 'Clave de administrador incorrecta.'}, accion)
+            if accion == 'app_descargar' and not (srv.datos.viejo or srv.datos.sin_app):
+                # (como readfile() en admin.php: el archivo tal cual, no JSON; sin archivo para ese equipo, 404 JSON)
+                contenido = srv.app_contenidos.get(str(entrada.get('plataforma') or ''))
+                if contenido is None:
+                    return self._responder(404, {'error': 'No hay una versión para este equipo.'}, accion)
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/octet-stream')
+                self.send_header('Content-Length', str(len(contenido)))
+                self.end_headers()
+                self.wfile.write(contenido)
+                return
             try:
                 codigo, respuesta = atender(srv.datos, entrada)
                 if srv.datos.viejo and codigo == 200:
@@ -1936,8 +1954,10 @@ class Manejador(BaseHTTPRequestHandler):
 
 def crear(puerto=8799, clave=CLAVE, demora=0.0, sin_configurar=False, fallos_max=5, registro=False, utc=False,
           redirigir=None, viejo=False, github_caido=False, ahora=None, pocos=False, sin_errores=False, sin_fichas=False,
-          sin_ventanas=False, sin_cupones=False, sin_borrar_errores=False):
+          sin_ventanas=False, sin_cupones=False, sin_borrar_errores=False, app=None, sin_app=False):
     """Crea el servidor (sin arrancarlo). Sirve también para las pruebas automáticas.
+    app (2.11): la versión nueva de la app de ventas, {'info': <version.json>, 'contenidos': {plataforma: bytes}};
+    sin él, app_version dice que no hay ninguna. sin_app: como el admin.php de antes de las actualizaciones (2.10).
     sin_cupones: como el admin.php de antes de los cupones (app 2.8): sin sus acciones ni el cupón de cada venta.
     sin_borrar_errores: como el admin.php publicado con la app 2.9 (con los cupones, sin errores_borrar).
     utc: MySQL en UTC, como en el hosting. redirigir: responde 302 hacia esa dirección (la app no debe seguirla).
@@ -1952,6 +1972,9 @@ def crear(puerto=8799, clave=CLAVE, demora=0.0, sin_configurar=False, fallos_max
     srv.datos.viejo, srv.datos.github_caido, srv.datos.sin_errores = viejo, github_caido, sin_errores
     srv.datos.sin_fichas, srv.datos.sin_ventanas, srv.datos.sin_cupones = sin_fichas, sin_ventanas, sin_cupones
     srv.datos.sin_borrar_errores = sin_borrar_errores
+    srv.datos.sin_app = sin_app or viejo
+    srv.datos.app_info = (app or {}).get('info')
+    srv.app_contenidos = dict((app or {}).get('contenidos') or {})
     if viejo or sin_errores:   # (en esos servidores nunca se pudo eliminar una venta: no hay ninguna eliminada)
         srv.datos.pedidos = [p for p in srv.datos.pedidos if not p.get('eliminada')]
     if not srv.datos.con_ventanas:   # (sin errores_ventanas nunca llegó la captura de la ventana)

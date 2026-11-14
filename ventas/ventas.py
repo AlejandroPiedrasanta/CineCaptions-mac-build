@@ -87,7 +87,7 @@ from PySide6.QtWidgets import (QAbstractButton, QAbstractItemView, QApplication,
 from logo_ventas import icono_app, pixmap_logo   # ícono verde propio: no se confunde con el de CineCaptions
 
 APP = 'CineCaptions Ventas'
-VERSION = '2.10.0'   # (2.10: en Errores, «Informe completo» —todos los errores con su informe técnico en un solo archivo— y «Borrar todo»; la interfaz, más pareja; en Mac, sin textos de Windows: el cuadro de la clave habla del Llavero, «esta Mac» y ⌘ en los atajos; 2.9: también en Mac —la clave en el Llavero, carpetas de macOS— con su .dmg Apple Silicon e Intel; 2.8: la página Cupones —crear, pausar y borrar cupones de descuento— y el cupón de cada venta; 2.7:el menú es la isla flotante de arriba, sin la barra lateral; 2.6: «Copiar resumen» de los errores; 2.5: las dos capturas del error, pantalla y ventana, de CineCaptions 5.73; 2.4: la ficha del equipo)
+VERSION = '2.11.0'   # (2.11: se actualiza sola desde el servidor —banda «Actualizar ahora», con avance— y se instala al instante: en Mac, doble clic en el .dmg con la ventanita «Instalando…»; en Windows, el instalador la abre al terminar; 2.10:en Errores, «Informe completo» —todos los errores con su informe técnico en un solo archivo— y «Borrar todo»; la interfaz, más pareja; en Mac, sin textos de Windows: el cuadro de la clave habla del Llavero, «esta Mac» y ⌘ en los atajos; 2.9: también en Mac —la clave en el Llavero, carpetas de macOS— con su .dmg Apple Silicon e Intel; 2.8: la página Cupones —crear, pausar y borrar cupones de descuento— y el cupón de cada venta; 2.7:el menú es la isla flotante de arriba, sin la barra lateral; 2.6: «Copiar resumen» de los errores; 2.5: las dos capturas del error, pantalla y ventana, de CineCaptions 5.73; 2.4: la ficha del equipo)
 API_POR_DEFECTO = 'https://cinecaptions.shop/pagos/admin.php'
 SITIO = 'https://cinecaptions.shop'   # (2.8: el enlace de un cupón, si el servidor no manda el suyo)
 DESCARGA = 'https://github.com/AlejandroPiedrasanta/CineCaptions-releases/releases/latest'
@@ -1235,6 +1235,51 @@ class ClienteApi:
     def resumen(self):
         return normalizar_resumen(self.llamar('resumen'))
 
+    def app_version(self):
+        """2.11: la última versión de esta app que hay en el servidor (normalizar_app) o None."""
+        return normalizar_app(self.llamar('app_version').get('app'))
+
+    def app_descargar(self, plataforma, destino, sha256, avance=None):
+        """2.11: baja el instalador de `plataforma` a `destino` con avance(bajados, total) y comprueba su huella SHA-256
+        (si no cuadra, lo borra y lanza ApiError). Un archivo, no JSON: por eso no pasa por llamar()."""
+        import hashlib
+        cuerpo = json.dumps({'accion': 'app_descargar', 'plataforma': plataforma}).encode('utf-8')
+        pedido = urllib.request.Request(self.url, data=cuerpo, method='POST', headers={
+            'X-Admin-Clave': self.clave, 'Content-Type': 'application/json',
+            'User-Agent': f'CineCaptionsVentas/{VERSION} ({"Windows" if os.name == "nt" else "Mac"})'})
+        huella, bajados = hashlib.sha256(), 0
+        destino = Path(destino)
+        try:
+            with self._abridor.open(pedido, timeout=max(self.tiempo, 60)) as r:
+                if 'json' in (r.headers.get('Content-Type') or ''):   # (un error del servidor, no el archivo)
+                    raise _error_http(200, None, r.headers)
+                total = entero(r.headers.get('Content-Length'))
+                with open(destino, 'wb') as f:
+                    while True:
+                        trozo = r.read(256 * 1024)
+                        if not trozo:
+                            break
+                        f.write(trozo)
+                        huella.update(trozo)
+                        bajados += len(trozo)
+                        if avance:
+                            avance(bajados, total or bajados)
+        except urllib.error.HTTPError as e:
+            try:
+                crudo = e.read()
+                error = json.loads(crudo.decode('utf-8')).get('error')
+            except (OSError, ValueError, AttributeError, http.client.HTTPException):
+                error = None
+            raise _error_http(e.code, str(error) if error else None, e.headers) from None
+        except urllib.error.URLError as e:
+            raise ApiError(_mensaje_red(e.reason), 0, str(e.reason)) from None
+        except (OSError, http.client.HTTPException) as e:
+            raise ApiError(_mensaje_red(e), 0, str(e)) from None
+        if huella.hexdigest() != sha256:
+            destino.unlink(missing_ok=True)
+            raise ApiError('La versión nueva llegó incompleta o dañada. Vuelve a intentarlo.', 0)
+        return destino
+
     def ventas(self, estado='', buscar='', limite=LIMITE_LISTA, desde=0):
         r = self.llamar('ventas', estado=estado, buscar=buscar, limite=limite, desde=desde)
         return [normalizar_venta(v) for v in (r.get('ventas') or []) if isinstance(v, dict)]
@@ -1853,6 +1898,7 @@ QFrame#divisor { background: @BORDE; border: 0; }
 
 QFrame#banda { background: rgba(239, 68, 68, 22); border: 1px solid rgba(239, 68, 68, 100); border-radius: @RADIO_CAJA; }
 QFrame#banda[tipo="info"] { background: rgba(255, 164, 99, 18); border: 1px solid rgba(255, 164, 99, 90); }
+QFrame#banda[tipo="nueva"] { background: rgba(126, 226, 168, 16); border: 1px solid rgba(126, 226, 168, 80); }
 QFrame#banda QLabel { background: transparent; }
 QFrame#caja { background: @SUPERFICIE_2; border: 1px solid @BORDE; border-radius: @RADIO_CAJA; }
 QFrame#caja QLabel { background: transparent; }
@@ -2449,6 +2495,110 @@ class Banda(QFrame):
         if boton_clave:
             self.btn_clave.setText(' ' + boton_clave)
         self.show()
+
+
+class BandaNueva(QFrame):
+    """2.11: «Hay una versión nueva de CineCaptions Ventas» con «Actualizar ahora» (se baja, se instala y se abre sola)."""
+    actualizar = Signal()
+
+    def __init__(self):
+        super().__init__()
+        self.setObjectName('banda')
+        self.setProperty('tipo', 'nueva')
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(16, 10, 12, 10)
+        lay.setSpacing(12)
+        ic = QLabel()
+        ic.setPixmap(pintar_icono('actualizar', EXITO, 20))
+        self.texto = etiqueta('')
+        self.texto.setWordWrap(True)
+        self.btn = boton('Actualizar ahora', 'actualizar', tipo='primario', chico=True)
+        self.btn.clicked.connect(self.actualizar)
+        lay.addWidget(ic)
+        lay.addWidget(self.texto, 1)
+        lay.addWidget(self.btn)
+        self.hide()
+
+    def mostrar(self, version):
+        self.texto.setText(f'Hay una versión nueva de CineCaptions Ventas: la {texto_version(version)}. '
+                           'Se instala en unos segundos y la app se vuelve a abrir sola.')
+        self.show()
+
+
+class VentanaInstalando(QDialog):
+    """2.11 (el dueño: «que muestre rápido el proceso de que se está instalando»): una ventanita con la barra de avance,
+    para instalar desde el .dmg de Mac y para las actualizaciones. Sale al instante; el trabajo va en otro hilo."""
+    _avance = Signal(object, object, str)
+
+    def __init__(self, titulo, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(APP)
+        self.setModal(parent is not None)
+        self.setMinimumWidth(440)
+        self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(28, 24, 28, 24)
+        lay.setSpacing(12)
+        fila = QHBoxLayout()
+        fila.setSpacing(14)
+        logo = QLabel()
+        logo.setPixmap(pixmap_logo(44))
+        fila.addWidget(logo, 0, Qt.AlignmentFlag.AlignTop)
+        textos = QVBoxLayout()
+        textos.setSpacing(3)
+        self.titulo = etiqueta(titulo, 'dialogoTitulo')
+        self.detalle = etiqueta('Preparando…', 'suave')
+        self.detalle.setWordWrap(True)
+        textos.addWidget(self.titulo)
+        textos.addWidget(self.detalle)
+        fila.addLayout(textos, 1)
+        lay.addLayout(fila)
+        self.barra = QProgressBar()
+        self.barra.setTextVisible(False)
+        self.barra.setRange(0, 0)          # (sin saber cuánto falta, se mueve igual: nunca parece colgada)
+        lay.addWidget(self.barra)
+        self.pie = QHBoxLayout()
+        self.pie.addStretch(1)
+        self.btn_cerrar = boton('Cerrar')
+        self.btn_cerrar.clicked.connect(self.reject)
+        self.btn_cerrar.hide()
+        self.pie.addWidget(self.btn_cerrar)
+        lay.addLayout(self.pie)
+        self.cerrable = False
+        self._avance.connect(self._poner, Qt.ConnectionType.QueuedConnection)
+
+    def avance(self, hechos, total, texto):
+        """Se puede llamar desde cualquier hilo."""
+        self._avance.emit(hechos, total, texto)
+
+    @Slot(object, object, str)
+    def _poner(self, hechos, total, texto):
+        if total:
+            self.barra.setRange(0, 1000)
+            self.barra.setValue(int(1000 * min(hechos, total) / total))
+            pct = int(round(100 * min(hechos, total) / total))
+            mb = f' ({hechos / 1048576:.0f} de {total / 1048576:.0f} MB)' if total > 4 * 1048576 else ''
+            self.detalle.setText(f'{texto} {pct} %{mb}')
+        else:
+            self.barra.setRange(0, 0)
+            self.detalle.setText(texto)
+
+    def fallo(self, texto):
+        self.titulo.setText('No se pudo terminar')
+        self.detalle.setText(texto)
+        self.barra.hide()
+        self.cerrable = True
+        self.btn_cerrar.show()
+
+    def closeEvent(self, evento):
+        if not self.cerrable:   # (a medias, no: una copia cortada no sirve)
+            evento.ignore()
+            return
+        super().closeEvent(evento)
+
+    def reject(self):
+        if self.cerrable:
+            super().reject()
 
 
 class Aviso(QWidget):
@@ -9266,9 +9416,11 @@ class VentanaPrincipal(QMainWindow):
     datos_listos = Signal()             # terminó una actualización completa (bien o mal)
     detalle_listo = Signal()            # llegó (o falló) el detalle de la fila elegida
     accion_terminada = Signal(str, bool)
+    _nueva_lista = Signal(str, str)     # 2.11: la versión nueva se bajó (instalador, '') o falló ('', mensaje)
 
     def __init__(self, config, api_url, captura=False, solo_lectura=False):
         super().__init__()
+        self._nueva_lista.connect(self._al_bajar_nueva, Qt.ConnectionType.QueuedConnection)
         self.config, self.api_url, self.captura, self.solo_lectura = config, api_url, captura, solo_lectura
         self.cliente = None
         self.resumen = None
@@ -9417,6 +9569,11 @@ class VentanaPrincipal(QMainWindow):
         cuerpo.addWidget(self.banda)
         self.banda_servidor = Banda('info')
         cuerpo.addWidget(self.banda_servidor)
+        self.banda_nueva = BandaNueva()   # 2.11: versión nueva de esta app
+        self.banda_nueva.actualizar.connect(self.actualizar_app)
+        cuerpo.addWidget(self.banda_nueva)
+        self.app_nueva = None             # lo que dijo app_version, si es más nueva que esta
+        self._app_buscada = False
 
         self.divisor = QSplitter(Qt.Orientation.Horizontal)
         self.divisor.setHandleWidth(16)
@@ -10162,6 +10319,81 @@ class VentanaPrincipal(QMainWindow):
             self.ultima = dt.datetime.now()
         self._poner_estado()
         self.datos_listos.emit()
+        if ok and not self._app_buscada and not self.captura:
+            self._buscar_app_nueva()
+
+    # --- 2.11: actualizaciones de esta app (ver app_version / app_descargar en ClienteApi)
+    def _buscar_app_nueva(self):
+        """Una vez por sesión, después de la primera carga buena (así no compite con ella): ¿hay una versión nueva?
+        Si el servidor todavía no sabe de actualizaciones («Acción desconocida») o falla, no se dice nada."""
+        if self.cliente is None or plataforma_app() is None:
+            return
+        self._app_buscada = True
+        self.trabajos.iniciar(self.cliente.app_version, self._app_version_lista, lambda _e: None, clave='app_version')
+
+    def _app_version_lista(self, app):
+        self.app_nueva = hay_version_nueva(app)
+        if self.app_nueva:
+            self.banda_nueva.mostrar(self.app_nueva['version'])
+        else:
+            self.banda_nueva.hide()
+
+    def actualizar_app(self):
+        """«Actualizar ahora»: baja el instalador (con su avance), comprueba la huella, lo instala y la app se vuelve a
+        abrir sola. Va en un hilo propio (no en la cola de la API: un archivo de 40 MB la tendría parada)."""
+        import tempfile
+        import threading
+        app, plataforma = self.app_nueva, plataforma_app()
+        if not app or self.cliente is None or self.solo_lectura:
+            return
+        archivo = app['archivos'][plataforma]
+        destino = Path(tempfile.mkdtemp(prefix='ccventas-nueva-')) / Path(archivo['archivo']).name
+        d = VentanaInstalando(f'Actualizando a la {texto_version(app["version"])}', self)
+        self._dialogo_nueva = d
+        cliente, propia = self.cliente, app_en_uso()
+
+        def trabajo():
+            try:
+                cliente.app_descargar(plataforma, destino, archivo['sha256'],
+                                      lambda h, t: d.avance(h, t, 'Bajando la versión nueva…'))
+                if plataforma != 'windows':
+                    if propia is None:
+                        raise ApiError('Esta copia no está instalada como app: instálala con el .dmg.', 0)
+                    aplicar_dmg(destino, propia, lambda h, t: d.avance(h, t, 'Instalando…'))
+                d.avance(0, 0, 'Listo: se vuelve a abrir sola…')
+                self._nueva_lista.emit(str(destino), '')
+            except Exception as e:   # (cualquier cosa: se dice en la ventanita y la app sigue como estaba)
+                self._nueva_lista.emit('', mensaje_de(e))
+
+        threading.Thread(target=trabajo, name='actualizar-app', daemon=True).start()
+        d.show()
+
+    @Slot(str, str)
+    def _al_bajar_nueva(self, instalador, error):
+        d = getattr(self, '_dialogo_nueva', None)
+        if error:
+            if d is not None:
+                d.fallo(error)
+            return
+        import subprocess
+        orden = ordenes_actualizar(instalador, plataforma_app(), app_en_uso())
+        try:
+            if os.name == 'nt':
+                subprocess.Popen(orden, close_fds=True, creationflags=0x00000008 | 0x00000200)   # (DETACHED, NEW_GROUP)
+            else:
+                subprocess.Popen(orden, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+        except OSError as e:
+            if d is not None:
+                d.fallo(f'No se pudo abrir el instalador: {e}')
+            return
+        if d is not None:
+            d.cerrable = True
+            d.close()
+        self._salir_para_actualizar()
+
+    def _salir_para_actualizar(self):
+        self.close()                     # (guarda la ventana y la página, como al cerrarla a mano)
+        QApplication.instance().quit()   # (el instalador de Windows espera a que se cierre; en Mac, la espera la reabre)
 
     def _marcar_servidor(self, nuevo):
         """Lo que se sabe del admin.php publicado: el nuevo (con versiones, avisos, historial y notas) o el anterior."""
@@ -12730,27 +12962,135 @@ def volumenes_ventas():
         return []
 
 
-def instalar_desde_dmg(volumen):
-    """Copia la app del .dmg a Aplicaciones (o ~/Aplicaciones si no se puede escribir ahí) y devuelve la copia.
-    Primero a una carpeta aparte y después se cambia: una copia a medias nunca reemplaza a la buena."""
+def copiar_app(origen, destino, avance=None):
+    """Copia una .app (una carpeta: en las pruebas de Windows, cualquier carpeta) a `destino` con avance(hechos, total)
+    en bytes, conservando los enlaces de la app. Primero a una carpeta aparte y después se cambia: una copia a medias
+    nunca reemplaza a la buena. (2.11: con avance real, para que la ventana «Instalando…» lo enseñe; ditto no lo daba.)"""
     import shutil
-    import subprocess
+    origen, destino = Path(origen), Path(destino)
+    archivos = [Path(r) / n for r, _d, ns in os.walk(origen) for n in ns]
+    total = sum(f.lstat().st_size for f in archivos if not f.is_symlink()) or 1
+    hechos = 0
+
+    def copiar(desde, hasta):
+        nonlocal hechos
+        shutil.copy2(desde, hasta)
+        hechos += os.path.getsize(hasta)
+        if avance:
+            avance(min(hechos, total), total)
+
+    nueva = destino.with_name(f'.{destino.name}.nueva')
+    shutil.rmtree(nueva, ignore_errors=True)
+    shutil.copytree(origen, nueva, symlinks=True, copy_function=copiar)
+    if sys.platform == 'darwin':   # (el dueño ya la abrió: la copia no vuelve a preguntar)
+        import subprocess
+        subprocess.run(['xattr', '-dr', 'com.apple.quarantine', str(nueva)], timeout=60,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if destino.exists() or destino.is_symlink():
+        vieja = destino.with_name(f'.{destino.name}.vieja')
+        shutil.rmtree(vieja, ignore_errors=True)
+        os.replace(destino, vieja)
+        os.replace(nueva, destino)
+        shutil.rmtree(vieja, ignore_errors=True)
+    else:
+        os.replace(nueva, destino)
+    if avance:
+        avance(total, total)
+    return destino
+
+
+def instalar_desde_dmg(volumen, avance=None):
+    """Copia la app del .dmg a Aplicaciones (o ~/Aplicaciones si no se puede escribir ahí) y devuelve la copia."""
     destino_dir = Path(os.environ.get('CC_VENTAS_APLICACIONES') or '/Applications')
     if not os.access(destino_dir, os.W_OK):
         destino_dir = Path.home() / 'Applications'
         destino_dir.mkdir(exist_ok=True)
-    destino = destino_dir / f'{APP}.app'
-    nueva = destino_dir / f'.{APP}.app.nueva'
-    shutil.rmtree(nueva, ignore_errors=True)
-    subprocess.run(['ditto', str(volumen / f'{APP}.app'), str(nueva)], check=True, timeout=180,
-                   stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-    # El dueño ya la abrió (aceptó a macOS que la abra): la copia no vuelve a preguntar
-    subprocess.run(['xattr', '-dr', 'com.apple.quarantine', str(nueva)], timeout=60,
-                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    if destino.exists():
-        shutil.rmtree(destino)
-    os.replace(nueva, destino)
-    return destino
+    return copiar_app(volumen / f'{APP}.app', destino_dir / f'{APP}.app', avance)
+
+
+# ---------------------------------------------------------------- Actualizaciones de la propia app (2.11)
+# El dueño: «que pueda recibir actualizaciones». Las versiones nuevas viven en el servidor (pagos/ventas_app/, cerrada al
+# navegador) y SOLO las da admin.php con la clave: la de Mac lleva la clave dentro, así que nunca puede ser pública.
+# app_version dice cuál es la última (version.json) y app_descargar da el instalador de este equipo; la app comprueba su
+# huella SHA-256, lo instala y se vuelve a abrir sola.
+
+def tupla_version(texto):
+    """«2.11.0» → (2, 11, 0); lo que no se entiende, (0,)."""
+    partes = re.findall(r'\d+', str(texto or ''))[:4]
+    return tuple(int(p) for p in partes) or (0,)
+
+
+def plataforma_app():
+    """El archivo de la versión nueva que le toca a este equipo: windows, mac_applesilicon o mac_intel (None: ninguno)."""
+    if os.name == 'nt':
+        return 'windows'
+    if sys.platform == 'darwin':
+        import platform
+        return 'mac_applesilicon' if platform.machine() == 'arm64' else 'mac_intel'
+    return None
+
+
+def normalizar_app(d):
+    """La respuesta de app_version: {version, notas, fecha, archivos: {plataforma: {archivo, tamano, sha256}}} o None."""
+    if not isinstance(d, dict) or not texto_o_nada(d.get('version')):
+        return None
+    archivos = {}
+    for plataforma, a in (d.get('archivos') or {}).items() if isinstance(d.get('archivos'), dict) else ():
+        if isinstance(a, dict) and texto_o_nada(a.get('archivo')) and re.fullmatch(r'[0-9a-f]{64}', str(a.get('sha256') or '')):
+            archivos[str(plataforma)] = {'archivo': str(a['archivo']), 'tamano': entero(a.get('tamano')),
+                                         'sha256': str(a['sha256'])}
+    return {'version': str(d['version']).strip(), 'notas': texto_o_nada(d.get('notas')) or '',
+            'fecha': texto_o_nada(d.get('fecha')) or '', 'archivos': archivos}
+
+
+def hay_version_nueva(app):
+    """La versión nueva para este equipo (el dict de normalizar_app) si es más nueva que esta, o None."""
+    plataforma = plataforma_app()
+    if not app or not plataforma or plataforma not in app['archivos']:
+        return None
+    return app if tupla_version(app['version']) > tupla_version(VERSION) else None
+
+
+def app_en_uso():
+    """La .app de Mac que está corriendo (…/CineCaptions Ventas.app), o None (Windows, sin compilar)."""
+    if sys.platform != 'darwin' or not getattr(sys, 'frozen', False):
+        return None
+    app = Path(sys.executable).resolve().parents[2]
+    return app if app.suffix == '.app' else None
+
+
+def aplicar_dmg(dmg, app_destino, avance=None):
+    """Mac: abre el .dmg de la versión nueva sin enseñarlo, copia su app encima de `app_destino` y lo cierra."""
+    import subprocess
+    import tempfile
+    monte = tempfile.mkdtemp(prefix='ccventas-')
+    # (-noverify: la huella SHA-256 ya se comprobó al bajarlo; así no espera a que macOS revise el .dmg entero)
+    subprocess.run(['hdiutil', 'attach', '-nobrowse', '-readonly', '-noverify', '-mountpoint', monte, str(dmg)],
+                   check=True, timeout=180, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    try:
+        return copiar_app(Path(monte) / f'{APP}.app', app_destino, avance)
+    finally:
+        subprocess.run(['hdiutil', 'detach', monte, '-force', '-quiet'], timeout=60,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def acceso_en_escritorio():
+    """Windows: ¿hay acceso directo de la app en el escritorio? (al actualizar, el instalador lo deja como estaba)."""
+    escritorio = Path(os.environ.get('USERPROFILE') or Path.home()) / 'Desktop'
+    return (escritorio / f'{APP}.lnk').exists()
+
+
+def ordenes_actualizar(instalador, plataforma, app=None):
+    """Lo que se lanza para instalar la versión nueva y volver a abrir la app (para las pruebas: sin lanzarlo).
+    Windows: el instalador nuevo en silencio, que cierra esta app, instala y la abre (/abrir).
+    Mac: una espera a que esta app se cierre y la vuelve a abrir (la copia del .dmg ya se hizo antes)."""
+    if plataforma == 'windows':
+        orden = [str(instalador), '/silencioso', '/abrir']
+        if not acceso_en_escritorio():
+            orden.append('/sinescritorio')
+        return orden
+    return ['/bin/sh', '-c', 'while kill -0 "$1" 2>/dev/null; do sleep 0.2; done; open "$2"', 'reabrir',
+            str(os.getpid()), str(app)]
 
 
 def expulsar_luego(volumen, segundos=2):
@@ -12761,6 +13101,75 @@ def expulsar_luego(volumen, segundos=2):
     try:
         subprocess.Popen(['/bin/sh', '-c', orden, 'expulsar', str(volumen)], stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL, start_new_session=True)
+    except OSError:
+        pass
+
+
+def instalar_con_ventana(volumen, argumentos_qt):
+    """Mac, doble clic en la app del .dmg (2.11, el dueño: «que muestre rápido el proceso … todo debe ser inmediato»):
+    la ventanita «Instalando…» sale enseguida con el avance real de la copia; al terminar dice «Abriendo…» y espera a
+    que la ventana de la copia ya se vea (la copia avisa con --avisar-lista) para cerrarse. True si se instaló."""
+    import subprocess
+    import tempfile
+    import threading
+    # (la prueba de la compilación: CC_VENTAS_T0 = cuándo se le dio doble clic, para medir; CC_VENTAS_PRUEBA_SIN_ABRIR:
+    # no abre la copia, solo hace como que su ventana ya se ve)
+    t0 = float(os.environ.get('CC_VENTAS_T0') or 0)
+    prueba = bool(os.environ.get('CC_VENTAS_PRUEBA_SIN_ABRIR'))
+    app = QApplication.instance() or crear_app(argumentos_qt)
+    v = VentanaInstalando('Instalando CineCaptions Ventas')
+    v.show()
+    v.raise_()
+    v.activateWindow()
+    app.processEvents()
+    if t0:
+        print(f'Ventana «Instalando» a la vista a los {time.time() - t0:.2f} s', flush=True)
+    resultado = {}
+    marca = Path(tempfile.mkdtemp(prefix='ccventas-')) / 'lista'
+
+    def copiar():
+        try:
+            resultado['copia'] = instalar_desde_dmg(volumen, lambda h, t: v.avance(h, t, 'Copiando a Aplicaciones…'))
+        except Exception as e:
+            resultado['error'] = e
+        v.avance(0, 0, '')   # (despierta al hilo de la ventana)
+
+    def mirar():
+        if 'error' in resultado:
+            v.fallo(f'No se pudo copiar a Aplicaciones: {resultado["error"]}. Se abre desde aquí.')
+            QTimer.singleShot(2500, app.quit)
+            return
+        if 'copia' in resultado and not getattr(mirar, 'abierta', False):
+            mirar.abierta = True
+            v.titulo.setText('Abriendo CineCaptions Ventas')
+            v.avance(0, 0, 'Ya está en Aplicaciones. Abriendo…')
+            if t0:
+                print(f'Copiada a Aplicaciones a los {time.time() - t0:.2f} s', flush=True)
+            if prueba:
+                QTimer.singleShot(300, lambda: _escribir_marca(marca))
+            else:
+                subprocess.Popen(['open', '-n', str(resultado['copia']), '--args', '--expulsar', str(volumen),
+                                  '--avisar-lista', str(marca)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            mirar.desde = time.monotonic()
+        if getattr(mirar, 'abierta', False) and (marca.exists() or time.monotonic() - mirar.desde > 90):
+            if t0:
+                print(f'La app ya se ve: la ventanita se cierra a los {time.time() - t0:.2f} s', flush=True)
+            v.cerrable = True
+            app.quit()
+            return
+        QTimer.singleShot(100, mirar)
+
+    threading.Thread(target=copiar, name='instalar', daemon=True).start()
+    QTimer.singleShot(100, mirar)
+    app.exec()
+    v.cerrable = True
+    v.close()
+    return 'copia' in resultado
+
+
+def _escribir_marca(ruta):
+    try:
+        Path(ruta).write_text('lista', encoding='utf-8')
     except OSError:
         pass
 
@@ -12794,6 +13203,7 @@ def main(argv=None):
                         help='prueba la conexión segura con la web (sin clave) y sale')
     parser.add_argument('--comprobar-clave-incluida', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--expulsar', metavar='VOLUMEN', help=argparse.SUPPRESS)   # (Mac: lo pasa la app del .dmg a su copia)
+    parser.add_argument('--avisar-lista', metavar='ARCHIVO', help=argparse.SUPPRESS)   # (y este: cuando su ventana ya se ve)
     args, resto = parser.parse_known_args(argv[1:])
     if args.expulsar:
         expulsar_luego(Path(args.expulsar))
@@ -12804,18 +13214,16 @@ def main(argv=None):
     if sys.platform == 'darwin' and not (args.importar_clave or args.captura):
         volumen = volumen_del_dmg()
         if volumen is not None:   # doble clic en la app del .dmg: se instala, abre la copia y se cierra
-            try:
-                copia = instalar_desde_dmg(volumen)
-            except Exception as e:   # (no se pudo: sigue abriéndose desde el .dmg, como antes)
-                print(f'No se pudo copiar a Aplicaciones: {e}', file=sys.stderr, flush=True)
-            else:
-                if os.environ.get('CC_VENTAS_NO_ABRIR'):   # (la prueba de la compilación: solo copia)
-                    print(f'Instalada en {copia}', flush=True)
+            if os.environ.get('CC_VENTAS_NO_ABRIR'):   # (la prueba de la compilación: solo copia, sin ventanas)
+                try:
+                    print(f'Instalada en {instalar_desde_dmg(volumen)}', flush=True)
                     return 0
-                import subprocess
-                subprocess.Popen(['open', '-n', str(copia), '--args', '--expulsar', str(volumen)],
-                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                except Exception as e:
+                    print(f'No se pudo copiar a Aplicaciones: {e}', file=sys.stderr, flush=True)
+                    return 1
+            if instalar_con_ventana(volumen, argv[:1] + resto):
                 return 0
+            # (no se pudo copiar: sigue abriéndose desde el .dmg, como antes)
         elif getattr(sys, 'frozen', False) and not args.expulsar:   # se arrastró y se abrió: el .dmg montado se expulsa
             for v in volumenes_ventas():
                 expulsar_luego(v, 1)
@@ -12832,7 +13240,7 @@ def main(argv=None):
             return 2
     captura = bool(args.captura)
     instalar_errores(con_ventanas=not captura)
-    app = crear_app(argv[:1] + resto)
+    app = QApplication.instance() or crear_app(argv[:1] + resto)   # (ya existe si falló instalar desde el .dmg)
     config = Configuracion()
     # --captura es SOLO LECTURA: el cliente de la API ni siquiera deja salir una acción que cambie algo o mande correos
     ventana = VentanaPrincipal(config, api or config.api, captura=captura, solo_lectura=captura)
@@ -12852,6 +13260,8 @@ def main(argv=None):
     else:
         ventana.restaurar_tamano()
         ventana.show()
+        if args.avisar_lista:   # (Mac: la ventanita «Abriendo…» del .dmg se cierra cuando esta ya se ve)
+            QTimer.singleShot(150, lambda: _escribir_marca(args.avisar_lista))
         if clave:
             ventana.usar_clave(clave)
             QTimer.singleShot(0, ventana.actualizar_todo)

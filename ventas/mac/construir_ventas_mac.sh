@@ -119,11 +119,35 @@ SALIDA=$(CC_VENTAS_APLICACIONES="$APPS" CC_VENTAS_NO_ABRIR=1 "$DENTRO" 2>&1) || 
 echo "$SALIDA" | grep -q '^Instalada en' || falla "la app del .dmg no se copió sola a Aplicaciones: $SALIDA"
 [ -x "$APPS/CineCaptions Ventas.app/Contents/MacOS/CineCaptions Ventas" ] || falla "la copia en Aplicaciones no trae la app"
 [ -z "$(xattr -p com.apple.quarantine "$APPS/CineCaptions Ventas.app" 2>/dev/null)" ] || falla "la copia quedó en cuarentena"
+# 2.11 (el dueño: «que muestre rápido el proceso … todo debe ser inmediato»): el doble clic de verdad, con la ventanita
+# «Instalando…» y su avance (sin abrir la copia: hace como que su ventana ya se ve). Se mide cuánto tarda cada paso.
+APPS2=$(mktemp -d)
+CC_VENTAS_T0=$($PY -c 'import time; print(time.time())') CC_VENTAS_APLICACIONES="$APPS2" CC_VENTAS_PRUEBA_SIN_ABRIR=1 \
+    "$DENTRO" > /tmp/instalar_ventana.txt 2>&1 &
+PID_INST=$!
+for _ in $(seq 1 120); do kill -0 $PID_INST 2>/dev/null || break; sleep 1; done
+if kill -0 $PID_INST 2>/dev/null; then kill $PID_INST; falla "la ventanita «Instalando…» no terminó en 2 minutos"; fi
+wait $PID_INST || falla "la ventanita «Instalando…» falló: $(cat /tmp/instalar_ventana.txt)"
+sed 's/^/    /' /tmp/instalar_ventana.txt
+grep -q 'Ventana «Instalando» a la vista' /tmp/instalar_ventana.txt || falla "la ventanita «Instalando…» no salió"
+[ -x "$APPS2/CineCaptions Ventas.app/Contents/MacOS/CineCaptions Ventas" ] || falla "la ventanita no dejó la app en Aplicaciones"
+rm -rf "$APPS2"
 # … y la copia, al abrirse, expulsa el .dmg (con eso se cierra su ventana)
 "$APPS/CineCaptions Ventas.app/Contents/MacOS/CineCaptions Ventas" --expulsar "$VOL" --comprobar-https https://cinecaptions.shop/ \
     > /dev/null || falla "la copia de Aplicaciones no abre"
 for _ in $(seq 1 30); do [ -d "$VOL" ] || break; sleep 1; done
 [ -d "$VOL" ] && { hdiutil detach "$VOL" -force -quiet || true; falla "la copia no expulsó el .dmg"; }
+# La copia abierta de verdad (con la clave de prueba, contra el servidor de prueba): avisa cuando su ventana ya se ve,
+# que es cuando la ventanita «Abriendo…» del .dmg se cierra
+MARCA="$(mktemp -d)/lista"
+T0=$($PY -c 'import time; print(time.time())')
+CC_VENTAS_CONFIG="$CONFIG" "$APPS/CineCaptions Ventas.app/Contents/MacOS/CineCaptions Ventas" --api http://127.0.0.1:8799 \
+    --avisar-lista "$MARCA" > /dev/null 2>&1 &
+PID_APP=$!
+for _ in $(seq 1 600); do [ -f "$MARCA" ] && break; sleep 0.1; done
+kill $PID_APP 2>/dev/null || true
+[ -f "$MARCA" ] || falla "la app copiada no avisó que su ventana ya se ve (--avisar-lista)"
+echo "    La app copiada se ve a los $($PY -c "import time; print(f'{time.time() - $T0:.2f}')") s de abrirla"
 rm -rf "$APPS"
 echo "    OK: doble clic en la app del .dmg la copia a Aplicaciones y la copia expulsa el .dmg"
 # Solo para mirarla: la pantalla de esta Mac con el .dmg abierto en el Finder (sin AppleScript). Si la Mac de GitHub no deja, nada.

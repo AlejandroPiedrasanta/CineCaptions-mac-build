@@ -3610,12 +3610,136 @@ def prueba_clave_estreno():
         srv.shutdown()
 
 
+# ------------------------------------------------------------------ Actualizaciones de la propia app (2.11)
+def prueba_actualizaciones():
+    import hashlib
+    import subprocess as sp
+    print('Actualizaciones de la app (2.11)')
+    aplicacion()
+    plataforma = v.plataforma_app()
+    revisar(plataforma == ('windows' if os.name == 'nt' else 'mac_applesilicon' if os.uname().machine == 'arm64' else 'mac_intel'),
+            f'a este equipo le toca el archivo «{plataforma}»')
+    revisar(v.tupla_version('2.11.0') > v.tupla_version('2.10.0') > v.tupla_version('2.9.9')
+            and v.tupla_version('2.10') == (2, 10) and v.tupla_version(None) == (0,),
+            'las versiones se comparan por número (2.10 va después de 2.9)')
+    contenido = os.urandom(3 * 1024 * 1024 + 7)
+    huella = hashlib.sha256(contenido).hexdigest()
+
+    def info(version, sha=huella, plat=plataforma):
+        return {'version': version, 'fecha': '2026-11-14', 'notas': 'Prueba',
+                'archivos': {plat: {'archivo': f'Instalar {version}.exe', 'tamano': len(contenido), 'sha256': sha},
+                             'otro_equipo': {'archivo': 'x', 'tamano': 1, 'sha256': 'no-es-huella'}}}
+
+    app = v.normalizar_app(info('99.0.0'))
+    revisar(app and set(app['archivos']) == {plataforma} and app['archivos'][plataforma]['tamano'] == len(contenido),
+            'app_version: se quedan solo los archivos con su huella SHA-256 bien escrita')
+    revisar(v.hay_version_nueva(app) is app and v.hay_version_nueva(v.normalizar_app(info(v.VERSION))) is None
+            and v.hay_version_nueva(v.normalizar_app(info('1.0.0'))) is None
+            and v.hay_version_nueva(v.normalizar_app(info('99.0.0', plat='otra'))) is None
+            and v.normalizar_app(None) is None and v.normalizar_app({'version': ''}) is None,
+            'solo hay «versión nueva» si es más nueva que esta y trae el archivo de este equipo')
+
+    # El cliente: la versión, la descarga con su avance y su huella, y los errores
+    srv, url = servidor(sin_app=True)
+    e = error_de(v.ClienteApi(url, servidor_prueba.CLAVE).app_version)
+    revisar(e is not None and e.desconocida, 'admin.php de antes (2.10): app_version da «Acción desconocida»')
+    srv.shutdown()
+    srv, url = servidor(app={'info': info('99.0.0'), 'contenidos': {plataforma: contenido}})
+    c = v.ClienteApi(url, servidor_prueba.CLAVE)
+    revisar(c.app_version()['version'] == '99.0.0', 'app_version da la versión del servidor')
+    avances, destino = [], TEMPORAL / 'nueva.bin'
+    c.app_descargar(plataforma, destino, huella, lambda h, t: avances.append((h, t)))
+    revisar(destino.read_bytes() == contenido and avances and avances[-1] == (len(contenido), len(contenido))
+            and len(avances) > 3, f'la descarga llega entera, con su avance ({len(avances)} pasos)')
+    e = error_de(lambda: c.app_descargar(plataforma, destino, '0' * 64))
+    revisar(e is not None and 'dañada' in e.mensaje and not destino.exists(),
+            'si la huella no cuadra: error claro y el archivo se borra')
+    e = error_de(lambda: c.app_descargar('otra', TEMPORAL / 'otra.bin', huella))
+    revisar(e is not None and e.codigo == 404 and 'este equipo' in e.mensaje, 'sin archivo para ese equipo: 404 claro')
+    srv.shutdown()
+
+    # copiar_app: con avance real, reemplaza entera la que había (en Mac es la .app; aquí, una carpeta)
+    origen, copia = TEMPORAL / 'app_origen', TEMPORAL / 'apps' / 'Copia.app'
+    (origen / 'Contents' / 'MacOS').mkdir(parents=True)
+    (origen / 'Contents' / 'MacOS' / 'bin').write_bytes(os.urandom(200000))
+    (origen / 'Contents' / 'Info.plist').write_text('x', encoding='utf-8')
+    copia.mkdir(parents=True)
+    (copia / 'vieja.txt').write_text('x', encoding='utf-8')
+    pasos = []
+    v.copiar_app(origen, copia, lambda h, t: pasos.append((h, t)))
+    revisar((copia / 'Contents' / 'MacOS' / 'bin').read_bytes() == (origen / 'Contents' / 'MacOS' / 'bin').read_bytes()
+            and not (copia / 'vieja.txt').exists() and pasos[-1][0] == pasos[-1][1]
+            and not any(p.name.startswith('.') for p in copia.parent.iterdir()),
+            'copiar_app: copia con avance, reemplaza la anterior y no deja carpetas a medias')
+    orden = v.ordenes_actualizar(TEMPORAL / 'Instalar.exe', 'windows')
+    revisar(orden[:3] == [str(TEMPORAL / 'Instalar.exe'), '/silencioso', '/abrir'],
+            'Windows: el instalador nuevo va en silencio y abre la app al terminar (/abrir)')
+    app_mac = Path('/Applications/CineCaptions Ventas.app')
+    orden = v.ordenes_actualizar(None, 'mac_intel', app_mac)
+    revisar(orden[0] == '/bin/sh' and orden[-1] == str(app_mac) and orden[-2] == str(os.getpid()),
+            'Mac: espera a que esta app se cierre y vuelve a abrir la nueva')
+
+    # La ventana: la banda sale solo con una versión más nueva; «Actualizar ahora» baja, comprueba e instala
+    for nombre, opciones, se_ve in (('más nueva', {'app': {'info': info('99.0.0'), 'contenidos': {plataforma: contenido}}}, True),
+                                    ('la misma', {'app': {'info': info(v.VERSION)}}, False),
+                                    ('sin publicar', {}, False), ('admin.php de antes', {'sin_app': True}, False)):
+        srv, url = servidor(**opciones)
+        w = ventana_real(config_nueva(f'act_{len(nombre)}'), url)
+        w.usar_clave(servidor_prueba.CLAVE)
+        w.actualizar_todo()
+        esperar(lambda: w.intento_listo and quieto(w), f'primera carga ({nombre})')
+        revisar(w.banda_nueva.isVisible() == se_ve and not w.mensajes and not v.ERRORES,
+                f'versión {nombre}: la banda de actualización {"sale" if se_ve else "no sale"} y no hay errores')
+        if se_ve:
+            revisar('99.0' in w.banda_nueva.texto.text(), 'la banda dice qué versión es')
+            lanzado, salir = [], []
+            popen_real = sp.Popen
+            sp.Popen = lambda orden, **k: lanzado.append(orden)
+            w._salir_para_actualizar = lambda: salir.append(True)
+            aplicar_real, en_uso_real = v.aplicar_dmg, v.app_en_uso
+            v.aplicar_dmg = lambda dmg, destino, avance=None: lanzado.append(['aplicar', dmg, destino])
+            v.app_en_uso = lambda: TEMPORAL / 'CineCaptions Ventas.app'
+            try:
+                w.banda_nueva.btn.click()
+                d = w._dialogo_nueva
+                revisar(d.isVisible() and 'Actualizando a la 99.0' in d.titulo.text(),
+                        'al darle «Actualizar ahora» la ventanita de avance sale enseguida')
+                esperar(lambda: salir, 'baja la versión nueva y lanza el instalador', 30)
+            finally:
+                sp.Popen = popen_real
+                v.aplicar_dmg, v.app_en_uso = aplicar_real, en_uso_real
+            bajado = Path(lanzado[-1][0]) if os.name == 'nt' else None
+            if os.name == 'nt':
+                revisar(bajado.read_bytes() == contenido and lanzado[-1][1:3] == ['/silencioso', '/abrir'],
+                        'Windows: corre el instalador bajado (huella comprobada) en silencio y con /abrir, y la app se cierra')
+            else:
+                revisar(lanzado[0][0] == 'aplicar' and lanzado[-1][0] == '/bin/sh',
+                        'Mac: copia la app del .dmg bajado encima de esta y la vuelve a abrir al cerrarse')
+        w.close()
+        srv.shutdown()
+
+    if sys.platform == 'darwin':   # aplicar_dmg con un .dmg de verdad
+        carpeta = TEMPORAL / 'dmg_src'
+        (carpeta / f'{v.APP}.app' / 'Contents' / 'MacOS').mkdir(parents=True)
+        (carpeta / f'{v.APP}.app' / 'Contents' / 'MacOS' / v.APP).write_text('nueva', encoding='utf-8')
+        dmg = TEMPORAL / 'nueva.dmg'
+        sp.run(['hdiutil', 'create', '-quiet', '-srcfolder', str(carpeta), '-format', 'UDZO', str(dmg)], check=True, timeout=120)
+        destino = TEMPORAL / 'Apps_act' / f'{v.APP}.app'
+        (destino / 'Contents').mkdir(parents=True)
+        (destino / 'Contents' / 'vieja').write_text('x', encoding='utf-8')
+        v.aplicar_dmg(dmg, destino)
+        revisar((destino / 'Contents' / 'MacOS' / v.APP).read_text(encoding='utf-8') == 'nueva'
+                and not (destino / 'Contents' / 'vieja').exists(),
+                'Mac: aplicar_dmg abre el .dmg, reemplaza la app y lo cierra')
+
+
 if __name__ == '__main__':
     inicio = time.monotonic()
     v.instalar_errores(con_ventanas=False)   # un error dentro de la ventana queda en v.ERRORES (y la prueba falla)
     # (prueba_confirmar_eliminar y prueba_clave_estreno abren diálogos con exec(): antes de las capturas, ver arriba)
     for prueba in (prueba_funciones, prueba_acciones, prueba_errores, prueba_importar, prueba_ventana, prueba_isla,
-                   prueba_confirmar_eliminar, prueba_clave_estreno, prueba_casos_ventana, prueba_errores_clientes,
+                   prueba_confirmar_eliminar, prueba_clave_estreno, prueba_actualizaciones, prueba_casos_ventana,
+                   prueba_errores_clientes,
                    prueba_fichas, prueba_dos_capturas, prueba_recurso, prueba_visual, prueba_eliminar, prueba_versiones,
                    prueba_cupones, prueba_informe_y_borrar):
         prueba()
