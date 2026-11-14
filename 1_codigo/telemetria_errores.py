@@ -486,6 +486,7 @@ def _bucle():
         _DESPERTAR.clear()
         if _ESTADO.get('parar'):
             break
+        _ESTADO['ocupado'] = True                # (v5.88: esperar_envios no da por terminado lo que este hilo tiene entre manos)
         try:
             if _COLA:
                 time.sleep(ESPERA_LOTE_S)
@@ -494,6 +495,8 @@ def _bucle():
             _enviar()
         except Exception:
             pass
+        finally:
+            _ESTADO['ocupado'] = False
         try:
             _enviar_ficha()
         except Exception:
@@ -811,10 +814,11 @@ def _post(campos, archivos=None, url=None):
 
 
 def esperar_envios(segundos=30.0):
-    """Para pruebas: espera a que no quede nada por procesar (True) o a que pase el tiempo (False)."""
+    """Para pruebas: espera a que no quede nada por procesar (True) o a que pase el tiempo (False). v5.88: tampoco lo que el hilo ya sacó
+    de la cola y aún arma (en Windows 11 ARM, todo emulado, la prueba veía cola y pendientes vacíos a mitad de camino y paraba el hilo)."""
     fin = time.time() + segundos
     while time.time() < fin:
-        if not _COLA and not _PENDIENTES:
+        if not _COLA and not _PENDIENTES and not _ESTADO.get('ocupado'):
             return True
         time.sleep(0.2)
     return False

@@ -20,6 +20,11 @@ jobs:
           - nombre: Intel
             runner: macos-15-intel
             python: '3.13'
+          # v5.88 (el usuario: «prueba diferentes modelos de Mac y varios entornos»): también el macOS más nuevo. El más viejo que admite
+          # el programa (14.0) ya no está en GitHub: «The configuration 'macos-14-arm64-us-default' is not supported» (2026-11-13)
+          - nombre: AppleSilicon-macOS26
+            runner: macos-26
+            python: '3.14'
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 170
     steps:

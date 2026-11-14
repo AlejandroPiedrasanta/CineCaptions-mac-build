@@ -185,6 +185,16 @@ Poppins-Regular.ttf   (155 KB)  — la que pide «Luxe Slide» en Regular (plant
   Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL
   URL       : https://scripts.sil.org/OFL
 ------------------------------------------------------------------
+Poppins-ExtraBold.ttf   (149 KB)  — la que pide el Estilo 2 (Referencia); v5.87: en una Mac sin Poppins salía «Faltan 2 tipografías» sin remedio
+  Copyright: Copyright 2020 The Poppins Project Authors (https://github.com/itfoundry/Poppins)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL
+  URL       : https://scripts.sil.org/OFL
+------------------------------------------------------------------
+Poppins-Light.ttf   (156 KB)  — la que pide el Estilo 2 (Referencia); v5.87, igual
+  Copyright: Copyright 2020 The Poppins Project Authors (https://github.com/itfoundry/Poppins)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL
+  URL       : https://scripts.sil.org/OFL
+------------------------------------------------------------------
 DMSerifText-Italic.ttf   (68 KB)
   Copyright: Copyright 2014 - 2017 Adobe Systems Incorporated (http://www.adobe.com/), with Reserved Font Name 'Source'. Copyright 2019 Google LLC.
   Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL

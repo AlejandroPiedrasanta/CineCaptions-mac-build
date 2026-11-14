@@ -680,13 +680,18 @@ def preparar(video, cues, carpeta=None, emoji_arriba=True, estilo=None, cancelad
     if m.get('solo_audio'):
         return {'ok': False, 'error': 'un audio suelto va con la capa de siempre'}
     ancho, alto = int(m['ancho']), int(m['alto'])
-    destino = Path(carpeta) if carpeta else video.with_name(video.stem + CARPETA_SUFIJO)
+    # v5.88: con Windows sin rutas largas, el nombre de la carpeta se recorta para que quepan sus PNG (~30 letras más)
+    hueco = CARPETA_SUFIJO + '/' + 'x' * 30
+    destino = Path(carpeta) if carpeta else video.with_name(RSR.nombre_que_cabe(video.parent, video.stem, hueco) + CARPETA_SUFIJO)
     try:
+        if not RSR.rutas_largas_permitidas() and len(str(destino)) + 31 + RSR.MARGEN_TEMPORAL > RSR.TOPE_RUTA_WIN:
+            raise OSError('ruta demasiado larga para este Windows')
         destino.mkdir(parents=True, exist_ok=True)
         (destino / '.prueba').write_bytes(b'')
         (destino / '.prueba').unlink()
     except OSError:
-        destino = Path.home() / 'Videos' / 'CineCaptions' / (video.stem + CARPETA_SUFIJO)
+        casa = RSR.carpeta_videos() / 'CineCaptions'     # (v5.88: la Videos real, también con OneDrive)
+        destino = casa / (RSR.nombre_que_cabe(casa, video.stem, hueco) + CARPETA_SUFIJO)
         destino.mkdir(parents=True, exist_ok=True)
     capas = RSR.preparar(cues, ancho, alto, emoji_arriba=emoji_arriba, estilo=estilo)
     fps = float(m['fps'])

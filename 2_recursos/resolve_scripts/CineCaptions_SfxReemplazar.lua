@@ -41,7 +41,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.87 (sfx reemplazar)"
+local VERSION = "5.88 (sfx reemplazar)"
 
 -- La ENTREGA del Puente (v1.0.43): ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -199,6 +199,13 @@ end
 local function home()
     if es_windows() then
         local perfil = os.getenv("USERPROFILE")
+        -- v5.88 (medido en Resolve 21.2): os.getenv da la ruta en ANSI; io.open la entiende, pero bmd.fileexists/readfile (lo unico que
+        -- queda en Free 21.1, sin io) solo entienden UTF-8. Con un usuario con tilde («C:/Users/José») y sin io: la de Fusion (UTF-8).
+        if io == nil and perfil and perfil:find("[\128-\255]") then
+            local ok, ud = pcall(function() return fusion:MapPath("UserData:") end)
+            local casa = ok and type(ud) == "string" and ud:match("^(.-)[\\/][Aa][Pp][Pp][Dd][Aa][Tt][Aa][\\/]")
+            if casa and casa ~= "" then return casa end
+        end
         if perfil and perfil ~= "" then return perfil end
         local unidad = os.getenv("HOMEDRIVE") or ""
         local ruta = os.getenv("HOMEPATH")
@@ -449,6 +456,9 @@ local function parsear_json(texto)
 end
 
 local function archivo_existe(ruta)
+    -- v5.88: bmd.fileexists entiende tildes y ñ; io.open NO (medido en Resolve 21.2 Windows: «Boda de María.mp4» salía «no existe»)
+    local okb, hayb = pcall(function() return bmd.fileexists(ruta) end)
+    if okb and type(hayb) == "boolean" then return hayb end
     if SIN_IO then
         -- Free 21.1: bmd.fileexists si esta en el menu (medido); sin el, se
         -- da por existente y decide ImportMedia (que falla bien).
@@ -466,9 +476,12 @@ end
 local function cargar_tabla(ruta)
     if not SIN_IO then
         local txt = leer_archivo(ruta)
-        if not txt then return nil, false end
-        local ok, t = pcall(parsear_json, txt)
-        return (ok and type(t) == "table") and t or nil, true
+        if txt then
+            local ok, t = pcall(parsear_json, txt)
+            return (ok and type(t) == "table") and t or nil, true
+        end
+        -- v5.88: io.open no abre rutas con tildes o ñ en Windows (medido en Resolve 21.2): entonces su sidecar (bmd.readfile sí)
+        if not tostring(ruta):find("[\128-\255]") then return nil, false end
     end
     -- v1.0.42: por la cadena de CC_FREE (loadfile, dofile, bmd.readfile, RunScript, consola): sirve tambien al Free sin loadfile ni dofile.
     local t = CC_FREE.leer(ruta)

@@ -177,6 +177,7 @@ class CarruselPacks(QWidget):
         self._entro = False
         self._rueda = 0
         self._ult_rueda = 0.0
+        self._gesto = {'ult': 0.0, 'acum': 0.0, 'hecho': False}     # v5.88: trackpad: una tarjeta por gesto (desplazar_con_rueda)
         self._px = {}
         self._reprod = {}                        # valor de la carta -> vistas_slider.Reproductor (solo suena el de la tarjeta del centro)
         self._glow = QColor(ui.ACCENT)
@@ -332,6 +333,8 @@ class CarruselPacks(QWidget):
     def resizeEvent(self, e):
         self._capas = self._cajas_previas = None
         super().resizeEvent(e)
+        for r in self._reprod.values():
+            self._tam_video(r)
 
     def _gestionar_video(self):
         """Solo la tarjeta del centro reproduce su video (desde el principio al llegar); las demás se paran. Con el slider oculto no suena ninguno."""
@@ -347,7 +350,19 @@ class CarruselPacks(QWidget):
                     r.parar()
                 import vistas_slider
                 r = self._reprod[centro.valor] = vistas_slider.Reproductor(ruta)
+            self._tam_video(r)
             r.arrancar()
+
+    def _tam_video(self, r):
+        """v5.88 (ejemplos a 1080×1920): el cuadro se escala en el hilo del video a los píxeles REALES de la tarjeta (Retina/4K incluidos, sin
+        pasar del video): la interfaz solo lo copia, sin reescalar un cuadro de 2 MP en cada repintado."""
+        try:
+            w, h = self._medidas()[:2]
+            dpr = max(1.0, float(self.devicePixelRatioF()))
+            ancho = int(min(1080.0, w * dpr))
+            r.tam = (ancho, int(round(ancho * h / max(1.0, w)))) if ancho > 8 else None
+        except Exception:
+            r.tam = None
 
     def _cuadro_video(self, carta, centro):
         """El cuadro del video si la tarjeta está al centro y ya suena; si no, su fotograma fijo (o None = se pinta con la foto y los captions de siempre)."""
@@ -1065,14 +1080,39 @@ class CarruselPacks(QWidget):
         self._arrancar()
         e.accept()
 
+    GESTO_PX = 40            # trackpad: recorrido (px lógicos) para que cuente como «pasar»
+    GESTO_ANGULO = 60        # touchpad sin píxeles (Windows): lo mismo en unidades de rueda (una muesca = 120)
+    GESTO_PAUSA_S = 0.22     # sin eventos este tiempo = el gesto terminó
+
     def desplazar_con_rueda(self, e):
-        """La rueda mueve el slider de una tarjeta en una (rueda abajo / derecha = la siguiente), en cualquier dirección. Devuelve True."""
-        d = e.angleDelta()
+        """La rueda mueve el slider de una tarjeta en una (rueda abajo / derecha = la siguiente), en cualquier dirección. Devuelve True.
+
+        v5.88 (el usuario: «con la Mac va muy rápido»): un deslizamiento del trackpad manda decenas de eventos y luego la inercia; antes
+        cada uno que llegara pasados 0,16 s movía una tarjeta y un solo gesto saltaba 5-8. Ahora la rueda de un ratón sigue a una tarjeta
+        por muesca, y el trackpad (con fases en la Mac, o pasos pequeños sin fase en Windows) mueve UNA por gesto; la inercia no cuenta."""
+        fase = e.phase()
+        px = e.pixelDelta()
+        d = e.angleDelta() if px.isNull() else px
         paso = d.y() if abs(d.y()) >= abs(d.x()) else d.x()
         ahora = time.perf_counter()
-        if ahora - self._ult_rueda > 0.16 and paso:
-            self._ult_rueda = ahora
-            self._ir_a(self._obj + (-1 if paso > 0 else 1))
+        sin_fase = fase == Qt.ScrollPhase.NoScrollPhase
+        if sin_fase and px.isNull() and abs(paso) >= 120:              # rueda de ratón: una tarjeta por muesca
+            if ahora - self._ult_rueda > 0.16:
+                self._ult_rueda = ahora
+                self._ir_a(self._obj + (-1 if paso > 0 else 1))
+            return True
+        g = self._gesto
+        if fase == Qt.ScrollPhase.ScrollMomentum:                      # la inercia tras soltar: alarga el gesto, no mueve
+            g['ult'] = ahora
+            return True
+        if fase == Qt.ScrollPhase.ScrollBegin or ahora - g['ult'] > self.GESTO_PAUSA_S:
+            g.update(acum=0.0, hecho=False)
+        g['ult'] = ahora
+        if not g['hecho'] and paso:
+            g['acum'] += paso
+            if abs(g['acum']) >= (self.GESTO_ANGULO if px.isNull() else self.GESTO_PX):
+                g['hecho'] = True
+                self._ir_a(self._obj + (-1 if g['acum'] > 0 else 1))
         return True
 
     def wheelEvent(self, e):

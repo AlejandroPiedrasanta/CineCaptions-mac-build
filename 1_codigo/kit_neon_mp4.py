@@ -223,7 +223,7 @@ def renderizar(video, escena, plan=None, cues=None, salida=None, progreso=None, 
     destino = Path(salida) if salida else RSR.ruta_de_salida(video)
     if not RSR._carpeta_escribible(destino):
         import sys
-        casa = Path.home() / ('Movies' if sys.platform == 'darwin' else 'Videos')
+        casa = RSR.carpeta_videos()                      # (v5.88: la Videos real, también con OneDrive)
         destino = RSR.ruta_de_salida(casa / 'CineCaptions' / video.name)
         destino.parent.mkdir(parents=True, exist_ok=True)
     temporal = destino.with_name(f'.~{destino.stem}.{int(time.time())}.mp4')

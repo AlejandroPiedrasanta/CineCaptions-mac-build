@@ -31,6 +31,7 @@ from PIL import Image, ImageDraw, ImageFilter
 
 import guion_captions as GC
 import tema4_planificador as T
+from archivos_seguros import MARGEN_TEMPORAL, TOPE_RUTA_WIN, carpeta_videos, nombre_que_cabe, rutas_largas_permitidas   # v5.88: rutas de más de 260 en Windows
 
 ENTRADA_S = 0.09            # fundido de cada palabra (≈3 fotogramas a 30 fps), medido en TEMA 4.mp4
 SALIDA_S = 0.05             # el bloque se va casi de golpe (la frase siguiente lo reemplaza)
@@ -392,13 +393,15 @@ def ruta_de_salida(video):
     video = Path(video)
     for n in range(1, 200):
         sufijo = ' (CineCaptions)' if n == 1 else f' (CineCaptions {n})'
-        cand = video.with_name(video.stem + sufijo + '.mp4')
+        cand = video.with_name(nombre_que_cabe(video.parent, video.stem, sufijo + '.mp4') + sufijo + '.mp4')
         if not cand.exists():
             return cand
-    return video.with_name(video.stem + f' (CineCaptions {int(time.time())}).mp4')
+    return video.with_name(nombre_que_cabe(video.parent, video.stem, ' (CineCaptions 1234567890).mp4') + f' (CineCaptions {int(time.time())}).mp4')
 
 
 def _carpeta_escribible(destino):
+    if not rutas_largas_permitidas() and len(str(destino)) + MARGEN_TEMPORAL > TOPE_RUTA_WIN:
+        return False                                  # (carpeta tan profunda que ni recortando el nombre cabe: a Videos/Movies)
     try:
         destino.parent.mkdir(parents=True, exist_ok=True)
         prueba = destino.parent / f'.cinecaptions_prueba_{os.getpid()}'
@@ -417,7 +420,7 @@ def renderizar(video, cues, salida=None, progreso=None, cancelado=None, emoji_ar
     video = Path(video)
     destino = Path(salida) if salida else ruta_de_salida(video)
     if not _carpeta_escribible(destino):              # carpeta de solo lectura (un USB protegido, una carpeta del sistema): a Videos/Movies
-        casa = Path.home() / ('Movies' if sys.platform == 'darwin' else 'Videos')
+        casa = carpeta_videos()                          # (v5.88: la Videos real, también con OneDrive)
         destino = ruta_de_salida(casa / 'CineCaptions' / video.name)
         destino.parent.mkdir(parents=True, exist_ok=True)
     temporal = destino.with_name(f'.~{destino.stem}.{os.getpid()}.mp4')
@@ -635,10 +638,12 @@ def ruta_de_capa(video):
     """«<video> (CineCaptions capa).mov» junto al original (si ya existe: «… capa 2», «… capa 3»…)."""
     video = Path(video)
     for n in range(1, 200):
-        cand = video.with_name(video.stem + (' (CineCaptions capa)' if n == 1 else f' (CineCaptions capa {n})') + '.mov')
+        resto = (' (CineCaptions capa)' if n == 1 else f' (CineCaptions capa {n})') + '.mov'
+        cand = video.with_name(nombre_que_cabe(video.parent, video.stem, resto) + resto)
         if not cand.exists():
             return cand
-    return video.with_name(video.stem + f' (CineCaptions capa {int(time.time())}).mov')
+    return video.with_name(nombre_que_cabe(video.parent, video.stem, ' (CineCaptions capa 1234567890).mov') +
+                           f' (CineCaptions capa {int(time.time())}).mov')
 
 
 def medir_video(ruta):
@@ -735,7 +740,7 @@ def renderizar_capa(video, cues, salida=None, progreso=None, cancelado=None, emo
     video = Path(video)
     destino = Path(salida) if salida else ruta_de_capa(video)
     if not _carpeta_escribible(destino):
-        casa = Path.home() / ('Movies' if sys.platform == 'darwin' else 'Videos')
+        casa = carpeta_videos()                          # (v5.88: la Videos real, también con OneDrive)
         destino = ruta_de_capa(casa / 'CineCaptions' / video.name)
         destino.parent.mkdir(parents=True, exist_ok=True)
     temporal = destino.with_name(f'.~{destino.stem}.{os.getpid()}.mov')

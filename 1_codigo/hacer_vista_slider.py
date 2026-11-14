@@ -6,12 +6,13 @@ hacer_vista_slider.py  (v5.4.5)
 Las tarjetas del slider de Proyecto enseñan un video con los captions del pack TAL CUAL quedan en la línea de tiempo (no una imagen fija). Este script lo
 fabrica de punta a punta con el flujo REAL de la app:
 
-    python hacer_vista_slider.py <video.mp4> <pack> <salida.mp4> [--ancho 486] [--crf 27]
+    python hacer_vista_slider.py <video.mp4> <pack> <salida.mp4> [--ancho 1080] [--crf 20]
 
   1. suelta el video en la app sin pantalla (probar_go.py --soltar, con el pack forzado en memoria): proyecto nuevo «CineCaptions», timeline con el video,
      transcribe, planifica y coloca los captions con el pack;
   2. Resolve renderiza ese timeline (H.264 Master, resolución del timeline);
-  3. ffmpeg lo reduce a un mp4 pequeño y SIN audio (el slider es mudo) con +faststart;
+  3. ffmpeg lo pasa a 1080 de ancho (v5.88: antes 486, se veía borroso en Retina/4K; la tarjeta lo decodifica a su tamaño real) SIN audio
+     (el slider es mudo) con +faststart;
   4. limpia lo creado y vuelve al proyecto y timeline que había (igual que el MCP `arrastrar_video`).
 
 Los resultados viven en 2_recursos/vistas_slider/<pack>.mp4 (vistas_slider.py los busca por el nombre del pack). Cambiar un pack o su planificador obliga a
@@ -50,7 +51,7 @@ def _fin_sin_negro(render):
         return None
 
 
-def generar(media, pack, salida, ancho=486, crf=27, timeout=900, conservar=False, verificar=None):
+def generar(media, pack, salida, ancho=1080, crf=20, timeout=900, conservar=False, verificar=None):
     import banco_pruebas as b
     import mcp_cinecaptions as m
     import resolve_mcp
@@ -86,7 +87,7 @@ def generar(media, pack, salida, ancho=486, crf=27, timeout=900, conservar=False
         salida.parent.mkdir(parents=True, exist_ok=True)
         fin = _fin_sin_negro(render)
         cmd = [_ffmpeg(), '-hide_banner', '-loglevel', 'error', '-y', '-i', render] + (['-t', '%.3f' % fin] if fin else []) + ['-an', '-vf', f'scale={ancho}:{alto}:flags=lanczos,fps=30',
-               '-c:v', 'libx264', '-preset', 'slow', '-crf', str(crf), '-maxrate', '1800k', '-bufsize', '3600k', '-pix_fmt', 'yuv420p', '-g', '60',
+               '-c:v', 'libx264', '-preset', 'slow', '-crf', str(crf), '-maxrate', '7000k', '-bufsize', '14000k', '-pix_fmt', 'yuv420p', '-g', '60',
                '-movflags', '+faststart', str(salida)]
         subprocess.run(cmd, check=True)
         print(f'LISTO {salida} ({salida.stat().st_size / 1e6:.1f} MB)', flush=True)
@@ -103,4 +104,4 @@ def generar(media, pack, salida, ancho=486, crf=27, timeout=900, conservar=False
 if __name__ == '__main__':
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     opc = dict(zip(sys.argv[1:], sys.argv[2:]))
-    generar(args[0], args[1], args[2], ancho=int(opc.get('--ancho', 486)), crf=int(opc.get('--crf', 27)))
+    generar(args[0], args[1], args[2], ancho=int(opc.get('--ancho', 1080)), crf=int(opc.get('--crf', 20)))

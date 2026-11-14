@@ -13613,7 +13613,8 @@ class SubtitleApp(QWidget):
         except OSError:
             pass
         # Carpeta VIEJA a la vista (versiones <= 5.4.44): se vacia de NUESTROS renders y se quita si queda vacia.
-        for base in [Path.home() / 'Downloads', Path.home() / 'Descargas', Path.home()]:
+        # (v5.88: en la Mac no se mira Descargas: tocarla saca el aviso de permisos de macOS al abrir el programa, y allí nunca existió)
+        for base in ([Path.home()] if sys.platform == 'darwin' else [Path.home() / 'Downloads', Path.home() / 'Descargas', Path.home()]):
             vieja = base / 'CineCaptions Audio'
             try:
                 if not vieja.is_dir():
@@ -15307,6 +15308,11 @@ class SubtitleApp(QWidget):
             except Exception:
                 pass
             project_name = media_path.stem
+            import archivos_seguros as _as     # v5.88: Windows sin rutas largas: <nombre>.es.kinetic.json.free.lua no se podría escribir (fallaba a mitad de GO)
+            _cola = len(str(st.SHARED_FOLDER / '.es.kinetic.json.free.lua')) + _as.MARGEN_TEMPORAL
+            if not _as.rutas_largas_permitidas() and len(project_name) + _cola > _as.TOPE_RUTA_WIN:
+                raise SystemExit(tr('El nombre del video es demasiado largo para este Windows ({n} letras). Ponle un nombre más corto '
+                                    '(menos de {m} letras) y pulsa GO otra vez.', n=len(project_name), m=_as.TOPE_RUTA_WIN - _cola))
             try:
                 self.msg_queue.put(('duracion', st._duracion_segundos(str(media_path))))           # los tiempos esperados de GO dependen de ella
             except Exception:

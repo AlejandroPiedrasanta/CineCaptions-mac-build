@@ -9,6 +9,8 @@ python verificar_mac.py <carpeta de salida> [--solo simular,humo,opciones,go,pre
   opciones  la ventana principal sin pantalla: cada página y las 5 pestañas de Ajustes; cada interruptor y casilla se enciende y se apaga
             (ida y vuelta, sin guardar las preferencias): ninguna excepción ni error en el Registro
   go        GO con «Video sin editores» y cada uno de los 9 estilos (voz fija, sin IA) sobre un video de prueba hecho aquí: el MP4 sale
+  formatos  v5.88: GO sin editores con los videos que llegan de verdad (horizontal 1080p 25 fps, cuadrado 29,97, vertical 4K 60 y
+            horizontal 4K 23,976): el MP4 sale con el MISMO tamaño y ritmo que el original
   premiere  GO con «Usar con Premiere Pro» y un Premiere FALSO (premiere_falso.js con el colocar.jsx real; Node): textos editables
             (con una plantilla «Basic Title» de mentira, hecha aquí) y la capa de video
 
@@ -34,6 +36,9 @@ CODIGO = Path(__file__).resolve().parent.parent
 HERR = Path(__file__).resolve().parent
 EN_CI = bool(os.environ.get('CI'))
 ESTILOS = ('Kinetic', 'Referencia', 'VIRAL', 'Tema4', 'Tema5', 'Tema6', 'Tema7', 'Tema8', 'Tema9')
+FORMATOS = (('horizontal_1080p25', 1920, 1080, 25, 8.0), ('cuadrado_2997', 1080, 1080, (30000, 1001), 8.0),
+            ('vertical_4k60', 2160, 3840, 60, 5.0), ('horizontal_4k2398', 3840, 2160, (24000, 1001), 5.0))
+ESTILOS_FORMATOS = ('Tema4', 'VIRAL')
 PALABRAS = ('hola bienvenidos a esta prueba de captions en mac con todos los estilos del programa y sus sonidos '
             'esto tiene que salir perfecto sin errores ni avisos raros').split()
 
@@ -54,9 +59,12 @@ def entorno_aislado(carpeta):
 
 
 def video_de_prueba(ruta, segundos=8.0, ancho=720, alto=1280, fps=30):
-    """Un MP4 vertical con color que cambia y un tono (PyAV, el de CineCaptions): no hace falta ningún video de fuera."""
+    """Un MP4 vertical con color que cambia y un tono (PyAV, el de CineCaptions): no hace falta ningún video de fuera.
+    `fps` puede ser (num, den): 29,97 = (30000, 1001)."""
     import av
     import numpy as np
+    from fractions import Fraction
+    fps = Fraction(*fps) if isinstance(fps, tuple) else fps
     ruta = Path(ruta)
     if ruta.is_file():
         return ruta
@@ -185,6 +193,39 @@ def parte_opciones(R, salida, env):
              (' · ' + ' | '.join((d['excepciones'] + d['fallos'])[:6]) if d['excepciones'] or d['fallos'] else '') + f' · {seg:.0f} s')
     for e in d['registro_errores'][:12]:
         R.anotar(None, 'opciones', 'Registro: ' + e)
+
+
+def parte_formatos(R, salida, env):
+    """v5.88 (el usuario: «muchos casos de uso»): GO sin editores con los formatos que llegan de verdad; el MP4 tiene que salir con el
+    tamaño y los fotogramas por segundo del original (un 29,97 que sale a 30 se desincroniza con el audio)."""
+    import av
+    from fractions import Fraction
+    for etiqueta, ancho, alto, fps, seg in FORMATOS:
+        sub = salida / 'formatos' / etiqueta
+        sub.mkdir(parents=True, exist_ok=True)
+        try:
+            video = video_de_prueba(sub / f'zz_{etiqueta}.mp4', segundos=seg, ancho=ancho, alto=alto, fps=fps)
+        except Exception as e:
+            R.anotar(False, 'formatos', f'{etiqueta}: no pude hacer el video ({type(e).__name__}: {e})')
+            continue
+        antes = R.fallos
+        parte_go(R, sub, env, video, 'mp4', ESTILOS_FORMATOS)
+        esperado = Fraction(*fps) if isinstance(fps, tuple) else Fraction(fps)
+        for pack in ESTILOS_FORMATOS:
+            mp4 = sub / f'video_mp4_{pack} (CineCaptions).mp4'
+            if not mp4.is_file():
+                continue                                     # (parte_go ya lo anotó como fallo)
+            try:
+                with av.open(str(mp4)) as c:
+                    s = c.streams.video[0]
+                    w, h, r = s.codec_context.width, s.codec_context.height, s.average_rate or s.guessed_rate
+                ok = (w, h) == (ancho, alto) and r is not None and abs(float(r) - float(esperado)) < 0.01
+                R.anotar(ok, 'formatos', f'{etiqueta} {pack}: sale {w}x{h} a {float(r or 0):.3f} fps (original {ancho}x{alto} a {float(esperado):.3f})')
+            except Exception as e:
+                R.anotar(False, 'formatos', f'{etiqueta} {pack}: no pude leer el MP4 ({type(e).__name__}: {e})')
+        if R.fallos == antes:
+            for f in sub.glob('*.mp4'):                       # (los 4K pesan: lo que salió bien no se guarda)
+                f.unlink(missing_ok=True)
 
 
 def parte_go(R, salida, env, video, modo, estilos):
@@ -435,7 +476,7 @@ def main():
         return dentro_go(*sys.argv[i + 1:i + 5])
     salida = Path([a for a in sys.argv[1:] if not a.startswith('--')][0]).resolve()
     salida.mkdir(parents=True, exist_ok=True)
-    solo = sys.argv[sys.argv.index('--solo') + 1].split(',') if '--solo' in sys.argv else ['simular', 'humo', 'opciones', 'go', 'premiere']
+    solo = sys.argv[sys.argv.index('--solo') + 1].split(',') if '--solo' in sys.argv else ['simular', 'humo', 'opciones', 'go', 'formatos', 'premiere']
     global ESTILOS
     if '--estilos' in sys.argv:                                # (para probar rápido: --estilos Kinetic,Tema4)
         ESTILOS = tuple(sys.argv[sys.argv.index('--estilos') + 1].split(','))
@@ -452,6 +493,7 @@ def main():
     partes = {'simular': lambda: parte_simular(R, salida, env), 'humo': lambda: parte_humo(R, salida, env),
               'opciones': lambda: parte_opciones(R, salida, env),
               'go': lambda: video and parte_go(R, salida, env, video, 'mp4', ESTILOS),
+              'formatos': lambda: parte_formatos(R, salida, env),
               'premiere': lambda: video and (parte_go(R, salida, env, video, 'premiere', ESTILOS) or
                                              parte_go(R, salida, env, video, 'premiere_capa', ('Tema4',)))}
     for nombre in solo:

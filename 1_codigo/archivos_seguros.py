@@ -21,6 +21,53 @@ from pathlib import Path
 
 _CERROJO = threading.RLock()
 
+TOPE_RUTA_WIN = 259          # MAX_PATH sin el carácter final
+MARGEN_TEMPORAL = 12         # los temporales («.~<nombre>.<pid>.mp4», «.tmp») son algo más largos que el destino
+_LARGAS = {}
+
+
+def rutas_largas_permitidas():
+    """v5.88 (pedido «prueba varios entornos de Windows»): Windows solo deja pasar de 260 caracteres con LongPathsEnabled, que viene
+    APAGADO (en el equipo del autor está encendido: las pruebas de aquí nunca lo veían). Sin él, lo que se escribe junto a un video de una
+    carpeta profunda o de nombre largo (el MP4 de «Video sin editores», el proyecto de Premiere) fallaba aunque la carpeta existiera.
+    En Mac no hay tope práctico. Se lee una vez por sesión."""
+    if not os.name == 'nt':
+        return True
+    if 'v' not in _LARGAS:
+        try:
+            import winreg
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'SYSTEM\CurrentControlSet\Control\FileSystem') as k:
+                _LARGAS['v'] = bool(winreg.QueryValueEx(k, 'LongPathsEnabled')[0])
+        except OSError:
+            _LARGAS['v'] = False
+    return _LARGAS['v']
+
+
+def carpeta_videos():
+    """La carpeta Videos (Movies en Mac) DE VERDAD. v5.88: con OneDrive (o movida a otro disco) la de Windows no es ~/Videos: el MP4 de
+    respaldo iba a una carpeta que el usuario no ve en el Explorador. CSIDL_MYVIDEO = 14."""
+    if os.name == 'nt':
+        try:
+            import ctypes
+            buf = ctypes.create_unicode_buffer(1024)
+            if ctypes.windll.shell32.SHGetFolderPathW(None, 14, None, 0, buf) == 0 and buf.value:
+                return Path(buf.value)
+        except Exception:
+            pass
+        return Path.home() / 'Videos'
+    return Path.home() / 'Movies'
+
+
+def nombre_que_cabe(carpeta, base, resto):
+    """`base` recortada con «…» para que `carpeta`/`base``resto` (y su temporal) quepa en 260 caracteres si Windows no admite rutas
+    largas; si las admite (o es una Mac), `base` tal cual."""
+    if rutas_largas_permitidas():
+        return base
+    sobra = len(str(carpeta)) + 1 + len(base) + len(resto) + MARGEN_TEMPORAL - TOPE_RUTA_WIN
+    if sobra <= 0:
+        return base
+    return base[:max(8, len(base) - sobra - 1)].rstrip() + '…'
+
 
 def _reemplazar(origen, destino):
     """os.replace con reintentos: en Windows un antivirus, el indexador o un lector pueden tener el archivo abierto un instante."""

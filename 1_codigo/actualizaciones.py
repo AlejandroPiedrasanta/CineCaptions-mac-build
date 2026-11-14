@@ -101,8 +101,27 @@ def clave_plataforma():
     if sys.platform.startswith('win'):
         return 'windows'
     if sys.platform == 'darwin':
-        return 'mac_arm64' if platform.machine().lower() in ('arm64', 'aarch64') else 'mac_x86_64'
+        return 'mac_arm64' if platform.machine().lower() in ('arm64', 'aarch64') or mac_con_rosetta() else 'mac_x86_64'
     return 'linux'
+
+
+def mac_con_rosetta():
+    """v5.88 (pedido «prueba diferentes modelos de Mac»): la versión Intel abierta en una Mac con chip de Apple (Rosetta) ve
+    platform.machine() = «x86_64» y se actualizaba SIEMPRE a la Intel (más lenta y sin el motor de IA de Apple Silicon). Con Rosetta
+    `sysctl.proc_translated` vale 1: la actualización le trae la de Apple Silicon."""
+    if sys.platform != 'darwin':
+        return False
+    if 'v' not in _ROSETTA:                     # (una vez por sesión; se llama al leer el manifiesto, en el hilo de la búsqueda)
+        try:
+            import subprocess
+            r = subprocess.run(['/usr/sbin/sysctl', '-n', 'sysctl.proc_translated'], capture_output=True, text=True, timeout=5)
+            _ROSETTA['v'] = r.stdout.strip() == '1'
+        except Exception:
+            _ROSETTA['v'] = False
+    return _ROSETTA['v']
+
+
+_ROSETTA = {}
 
 
 def _contexto_ssl():

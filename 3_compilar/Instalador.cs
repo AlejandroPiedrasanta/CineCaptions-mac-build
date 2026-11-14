@@ -80,6 +80,17 @@ static class Programa
                                 MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return 2;
             }
+            if (!op.Desinstalar)
+            {
+                string motivo = Compatibilidad(BuildDeWindows(), Environment.Is64BitOperatingSystem, MaquinaNativa());
+                if (motivo != null)
+                {
+                    Registro.Escribir("Equipo no compatible: " + motivo);
+                    if (!op.Silencioso)
+                        MessageBox.Show(motivo, Nombre, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return 3;
+                }
+            }
             if (op.Silencioso)
             {
                 Instalacion ins = new Instalacion(op, null);
@@ -103,6 +114,52 @@ static class Programa
                                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             return 1;
         }
+    }
+
+    // v5.88 (el usuario: «prueba diferentes modelos de Windows»): el programa es x64 con Python 3.15 y Qt 6.12 (Windows 10 u 11). En Windows
+    // 7/8, en uno de 32 bits o en Windows 10 en ARM (solo emula x86: los portátiles Snapdragon con Windows 10) se instalaba igual y luego no
+    // abría sin decir por qué. Windows 11 en ARM sí: emula x64 (probado en las Windows 11 ARM de GitHub, verificar_windows.yml).
+    // INICIO Compatibilidad (simular_equipos.py la compila y la prueba tal cual: no cambiar estas marcas)
+    public static string Compatibilidad(int build, bool es64, ushort nativo)
+    {
+        if (build > 0 && build < 10240)
+            return "CineCaptions necesita Windows 10 u 11, y este equipo tiene una versión anterior de Windows.";
+        if (!es64)
+            return "CineCaptions necesita Windows de 64 bits, y este equipo tiene Windows de 32 bits.";
+        if (nativo == 0xAA64 && build > 0 && build < 22000)
+            return "Este equipo tiene un procesador ARM con Windows 10, que no puede abrir programas de 64 bits (x64) como CineCaptions. " +
+                   "Con Windows 11 sí funciona.";
+        return null;
+    }
+    // FIN Compatibilidad
+
+    public static int BuildDeWindows()
+    {
+        try
+        {
+            using (Microsoft.Win32.RegistryKey k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion"))
+            {
+                int b;
+                if (k != null && int.TryParse(Convert.ToString(k.GetValue("CurrentBuildNumber")), out b)) return b;
+            }
+        }
+        catch { }
+        return 0;                                   // (sin dato: no se bloquea nada)
+    }
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern bool IsWow64Process2(IntPtr proceso, out ushort maquinaProceso, out ushort maquinaNativa);
+
+    // La arquitectura REAL del equipo (0xAA64 = ARM64, 0x8664 = x64); 0 si no se sabe (Windows anterior a 10 1709: no existe la función).
+    public static ushort MaquinaNativa()
+    {
+        try
+        {
+            ushort proceso, nativa;
+            if (IsWow64Process2(Process.GetCurrentProcess().Handle, out proceso, out nativa)) return nativa;
+        }
+        catch { }
+        return 0;
     }
 
     public static bool DentroDe(string archivo, string carpeta)
@@ -726,7 +783,8 @@ class Instalacion
     public void Correr()
     {
         Log("=== " + (op.Desinstalar ? "Desinstalacion" : "Instalacion") + " de " + Programa.Nombre + " " + Programa.Version + " ===");
-        Log("Carpeta: " + op.Dir + " | Windows " + Environment.OSVersion.Version + (Environment.Is64BitOperatingSystem ? " x64" : " x86"));
+        Log("Carpeta: " + op.Dir + " | Windows " + Environment.OSVersion.Version + " (compilacion " + Programa.BuildDeWindows() + ")" +
+            (Programa.MaquinaNativa() == 0xAA64 ? " ARM64 (x64 emulado)" : Environment.Is64BitOperatingSystem ? " x64" : " x86"));
         try
         {
             if (op.Desinstalar) Desinstalar(); else Instalar();

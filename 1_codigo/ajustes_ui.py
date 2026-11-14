@@ -592,6 +592,13 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.88', [
+        'Los ejemplos de los estilos, rehechos en alta calidad: nítidos también en pantallas Retina y 4K.',
+        'El deslizador de estilos va suave con el trackpad de la Mac: cada gesto pasa una sola tarjeta.',
+        'Mac: se acabó «Faltan tipografías»: las letras de todos los estilos vienen con CineCaptions y se instalan solas al abrirlo.',
+        'Más equipos sin sorpresas: videos con nombres muy largos o en carpetas profundas en Windows, videos con tildes o ñ en Resolve Free, y en Mac ya no pide permiso para el Escritorio ni Descargas.',
+        'Mac con chip de Apple que tenía la versión Intel: al actualizar pasa sola a la de Apple Silicon (más rápida y con la IA local).',
+    ]),
     ('5.87', [
         'Actualizaciones automáticas: aunque CineCaptions esté cerrado, busca las versiones nuevas, te avisa y las instala solo (en Mac sin pedir contraseña); con el programa abierto, la descarga sola y la instala al cerrarlo.',
         'Mac: los estilos vuelven a verse en la página Estilo (en algunos equipos solo salía «No hay plantillas de básicos»).',

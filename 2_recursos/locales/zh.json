@@ -4666,6 +4666,12 @@
     "Mac: los estilos vuelven a verse en la página Estilo (en algunos equipos solo salía «No hay plantillas de básicos»).": "Mac：样式页面重新显示样式（部分电脑上之前只显示“没有基础模板”）。",
     "Mac: al actualizar, CineCaptions se cierra y se vuelve a abrir solo, y el instalador tiene una ventana nueva con los dos pasos.": "Mac：更新时 CineCaptions 会自动关闭并重新打开，安装程序也换成了显示两个步骤的新窗口。",
     "Premiere Pro: cada caption llega con su animación, ya no se pierde ninguna palabra y GO abre tu proyecto aunque Premiere esté en su pantalla de inicio.": "Premiere Pro：每条字幕都带着动画送达，不再丢字；即使 Premiere 停在主屏幕，GO 也会打开你的项目。",
-    "Más resistente: con «Video sin editores» y Resolve abierto, Inicio te dice cómo volver a tu timeline; lo descargado de una actualización ya no ocupa espacio y la IA de la Mac no se instala si falta sitio en el disco.": "更稳定：在“无编辑器视频”模式下且 Resolve 已打开时，首页会告诉你如何回到时间线；更新下载的文件不再占用空间；磁盘空间不足时不会安装 Mac 的 AI。"
+    "Más resistente: con «Video sin editores» y Resolve abierto, Inicio te dice cómo volver a tu timeline; lo descargado de una actualización ya no ocupa espacio y la IA de la Mac no se instala si falta sitio en el disco.": "更稳定：在“无编辑器视频”模式下且 Resolve 已打开时，首页会告诉你如何回到时间线；更新下载的文件不再占用空间；磁盘空间不足时不会安装 Mac 的 AI。",
+    "Los ejemplos de los estilos, rehechos en alta calidad: nítidos también en pantallas Retina y 4K.": "样式示例以高画质重新制作：在 Retina 和 4K 屏幕上也同样清晰。",
+    "El deslizador de estilos va suave con el trackpad de la Mac: cada gesto pasa una sola tarjeta.": "样式滑块在 Mac 触控板上更顺滑：每次滑动只切换一张卡片。",
+    "Mac: se acabó «Faltan tipografías»: las letras de todos los estilos vienen con CineCaptions y se instalan solas al abrirlo.": "Mac：不再出现“缺少字体”：所有样式的字体都随 CineCaptions 附带，打开时会自动安装。",
+    "El nombre del video es demasiado largo para este Windows ({n} letras). Ponle un nombre más corto (menos de {m} letras) y pulsa GO otra vez.": "视频名称对此 Windows 来说太长了（{n} 个字符）。请改成更短的名称（少于 {m} 个字符），然后再按一次 GO。",
+    "Más equipos sin sorpresas: videos con nombres muy largos o en carpetas profundas en Windows, videos con tildes o ñ en Resolve Free, y en Mac ya no pide permiso para el Escritorio ni Descargas.": "更多电脑上更稳定：支持 Windows 上名称很长或位于深层文件夹的视频、Resolve Free 中名称带重音符号的视频；在 Mac 上不再请求访问桌面或下载文件夹。",
+    "Mac con chip de Apple que tenía la versión Intel: al actualizar pasa sola a la de Apple Silicon (más rápida y con la IA local).": "装着 Intel 版本的 Apple 芯片 Mac：更新时会自动切换到 Apple Silicon 版本（更快，并可使用本地 AI）。"
   }
 }

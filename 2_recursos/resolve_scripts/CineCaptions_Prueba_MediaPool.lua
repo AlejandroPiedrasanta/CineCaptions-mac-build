@@ -69,6 +69,13 @@ local SEP = es_windows() and "\\" or "/"
 local function home()
     if es_windows() then
         local perfil = os.getenv("USERPROFILE")
+        -- v5.88 (medido en Resolve 21.2): os.getenv da la ruta en ANSI; io.open la entiende, pero bmd.fileexists/readfile (lo unico que
+        -- queda en Free 21.1, sin io) solo entienden UTF-8. Con un usuario con tilde («C:/Users/José») y sin io: la de Fusion (UTF-8).
+        if io == nil and perfil and perfil:find("[\128-\255]") then
+            local ok, ud = pcall(function() return fusion:MapPath("UserData:") end)
+            local casa = ok and type(ud) == "string" and ud:match("^(.-)[\\/][Aa][Pp][Pp][Dd][Aa][Tt][Aa][\\/]")
+            if casa and casa ~= "" then return casa end
+        end
         if perfil and perfil ~= "" then return perfil end
         local unidad = os.getenv("HOMEDRIVE") or ""
         local ruta = os.getenv("HOMEPATH")

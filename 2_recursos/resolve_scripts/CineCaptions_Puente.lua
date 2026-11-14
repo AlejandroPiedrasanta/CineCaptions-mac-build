@@ -61,7 +61,8 @@ en sus propios archivos (subtitles_manifest.json, sfx_pendiente.json).
 -- v1.0.42: Free SIN loadfile NI dofile (caso real: «Trabajos atendidos: 0» y la app esperando 240 s). Lee los sidecars por bmd.readfile o
 -- fusion:RunScript del «<x>.json.free.lua» y corre los scripts por RunScript/Execute con la entrega por GetData (ver FREE). Si nada funciona,
 -- lo dice con un reporte claro (arranque "sin_lectura"/"sin_cargador") y la señal jobs/pendiente.ilegible. Sube con VERSION_PUENTE_ESPERADA.
-local VERSION = "1.0.42"
+-- 1.0.43 (v5.88): con un usuario de Windows con tilde y sin io, la carpeta en UTF-8 (fusion:MapPath; bmd no entiende la ANSI de os.getenv).
+local VERSION = "1.0.43"
 
 -- La version del PROGRAMA con la que se distribuyo este archivo. Existe
 -- porque el propio creador leyo el 1.0.28 de arriba como "quedo una copia
@@ -70,7 +71,7 @@ local VERSION = "1.0.42"
 -- regla que los tres auxiliares). OJO: no va en el latido — las apps
 -- viejas parten el latido en dos campos y un tercero las haria declarar
 -- INCOMPATIBLE a un Puente sano.
-local PAQUETE = "5.87"
+local PAQUETE = "5.88"
 
 -- El resolve VALIDADO del arranque. Es un local a proposito: si mas tarde
 -- algo pisa el global 'resolve' (el veneno clasico de la sesion), este
@@ -138,6 +139,13 @@ local SEP = es_windows() and "\\" or "/"
 local function home()
     if es_windows() then
         local perfil = os.getenv("USERPROFILE")
+        -- v5.88 (medido en Resolve 21.2): os.getenv da la ruta en ANSI; io.open la entiende, pero bmd.fileexists/readfile (lo unico que
+        -- queda en Free 21.1, sin io) solo entienden UTF-8. Con un usuario con tilde («C:/Users/José») y sin io: la de Fusion (UTF-8).
+        if io == nil and perfil and perfil:find("[\128-\255]") then
+            local ok, ud = pcall(function() return fusion:MapPath("UserData:") end)
+            local casa = ok and type(ud) == "string" and ud:match("^(.-)[\\/][Aa][Pp][Pp][Dd][Aa][Tt][Aa][\\/]")
+            if casa and casa ~= "" then return casa end
+        end
         if perfil and perfil ~= "" then return perfil end
         local unidad = os.getenv("HOMEDRIVE") or ""
         local ruta = os.getenv("HOMEPATH")

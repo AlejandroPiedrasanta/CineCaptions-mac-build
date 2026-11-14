@@ -515,6 +515,8 @@ def revisar_salud_al_arrancar():
             r.info(f'Actualización: quité lo descargado de la anterior ({quitados / 1024 ** 2:.0f} MB).', 'arranque')
     except Exception:
         pass
+    if getattr(sys, 'frozen', False):
+        _tipografias_al_dia(r)
     if sys.platform.startswith('win') and getattr(sys, 'frozen', False):
         try:                                          # v5.87: las versiones nuevas se instalan solas también con el programa cerrado (actualizar_fondo)
             import actualizar_fondo
@@ -573,7 +575,35 @@ def poner_motores_al_dia():
     _MOTORES_AL_DIA['v'].start()
 
 
-MAC_IA_ESPERA_S = 90                     # tras abrir, antes de empezar la descarga (el arranque y un primer GO van primero)
+def _tipografias_al_dia(r):
+    """v5.88 (el usuario: «en Mac tiene problemas de faltan tipografías»): las letras de los estilos que TRAE el programa y no están en el
+    sistema se instalan solas al abrir (antes solo el instalador o el enlace «instalar» de la tarjeta; si la tarea del instalador no corrió,
+    la página Estilo decía «Faltan N tipografías»). Las mismas que instala el instalador (`tareas_instalador._tarea_fuentes`): sin
+    administrador (Windows por usuario, Mac en ~/Library/Fonts). Resolve las ve al volver a abrirlo. En un hilo; no lanza."""
+    try:
+        import instalar_fuentes
+        import plantillas
+        pares = set()
+        for pack in plantillas.packs_incorporados():
+            try:
+                pares.update(pack.fuentes())
+            except Exception:
+                pass
+        arreglables, _sin_remedio = instalar_fuentes.faltantes(sorted(pares))
+        rutas = sorted({ruta for _par, ruta in arreglables})
+        if not rutas:
+            return
+        instaladas, fallos = instalar_fuentes.instalar(rutas)
+        if instaladas:
+            r.info(f'Tipografías: instalé {len(instaladas)} de los estilos que faltaban en el sistema '
+                   '(si DaVinci Resolve estaba abierto, las ve al volver a abrirlo).', 'arranque')
+        for nombre, motivo in fallos[:3]:
+            r.aviso(f'Tipografías: no pude instalar {nombre} ({motivo}).', 'arranque')
+    except Exception as e:
+        r.aviso(f'Tipografías: no pude revisarlas al abrir ({type(e).__name__}: {e}).', 'arranque')
+
+
+MAC_IA_ESPERA_S = 90                    # tras abrir, antes de empezar la descarga (el arranque y un primer GO van primero)
 MAC_IA_REINTENTO_S = 24 * 3600           # tras un intento fallido, el siguiente automático (con «Instalar» en Ajustes, cuando quiera)
 MAC_IA_DISCO_GB = 12                     # lo mínimo libre para empezar solo: Python + PyTorch (~1,5 GB), voz y alineador (2,5-5) y la IA de texto ligera (4)
 

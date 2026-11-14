@@ -461,6 +461,13 @@ def textos_estado(est):
             (tr('Premiere Pro no encontrado'), tr('¿Está instalado?')))
 
 
+def _proyecto_junto_al_video(video):
+    """«<video> (CineCaptions).prproj» junto al video (v5.88: con el nombre recortado si Windows no admite rutas de más de 260)."""
+    from archivos_seguros import nombre_que_cabe
+    base = nombre_que_cabe(video.parent, video.stem, ' (CineCaptions) 99.prproj')
+    return str(_ruta_libre(video.with_name(f'{base} (CineCaptions).prproj')).resolve())
+
+
 def _ruta_libre(ruta):
     ruta = Path(ruta)
     if not ruta.exists():
@@ -532,7 +539,7 @@ def armar_pedido(video, capa, sfx, nombre_estilo='', musica=None, piezas=None):
             'id': uuid.uuid4().hex, 'version': 2, 'creado': time.time(), 'video': str(video.resolve()), 'capa': None, 'solo_audio': False,
             'duracion': piezas.get('duracion'), 'fps': piezas.get('fps'), 'secuencia': f'{video.stem} (CineCaptions)', 'bin': 'CineCaptions',
             'sfx': sonidos, 'musica': _sonidos(musica), 'pistas_sfx': PISTAS_SFX,
-            'proyecto_nuevo': str(_ruta_libre(video.with_name(f'{video.stem} (CineCaptions).prproj')).resolve()), 'estilo': nombre_estilo or '',
+            'proyecto_nuevo': _proyecto_junto_al_video(video), 'estilo': nombre_estilo or '',
             'plantilla': str(plantilla) if plantilla else None,
             'textos': piezas.get('textos') or [], 'imagenes': piezas.get('imagenes') or [],
             'carriles_texto': piezas.get('carriles_texto') or 0, 'carriles_imagen': piezas.get('carriles_imagen') or 0,
@@ -552,7 +559,7 @@ def armar_pedido(video, capa, sfx, nombre_estilo='', musica=None, piezas=None):
         'sfx': sonidos,
         'musica': _sonidos(musica),
         'pistas_sfx': PISTAS_SFX,
-        'proyecto_nuevo': str(_ruta_libre(video.with_name(f'{video.stem} (CineCaptions).prproj')).resolve()),
+        'proyecto_nuevo': _proyecto_junto_al_video(video),
         'estilo': nombre_estilo or '',
     }
 

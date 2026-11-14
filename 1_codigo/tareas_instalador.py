@@ -241,6 +241,13 @@ def _tarea_verificar(estado):
         vacios = [n for n in plantillas.FABRICA if n in cargados and not cargados[n].formatos]
         if faltan or vacios:
             raise RuntimeError(('no cargan: ' + ', '.join(faltan) if faltan else '') + (' · sin formatos: ' + ', '.join(vacios) if vacios else ''))
+        # v5.88 (Mac: «Faltan 2 tipografías» en el Estilo 2): cada letra de los estilos de fábrica tiene que viajar en fonts/ (Poppins
+        # ExtraBold y Light no estaban: en una Mac sin Poppins no había forma de instalarlas)
+        import fuentes_sistema
+        sin_archivo = sorted({f'{fam} {est}' for n in plantillas.FABRICA if n in cargados for fam, est in cargados[n].fuentes()
+                              if fuentes_sistema._buscar(fuentes_sistema._indice_incluidas(), fam, est, exacto=True) is None})
+        if sin_archivo:
+            raise RuntimeError('tipografías de los estilos que no vienen en fonts/: ' + ', '.join(sin_archivo))
 
     @prueba('Ventanas (Qt)')
     def _():

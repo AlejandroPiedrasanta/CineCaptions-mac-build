@@ -4666,6 +4666,12 @@
     "Mac: los estilos vuelven a verse en la página Estilo (en algunos equipos solo salía «No hay plantillas de básicos»).": "Mac: 스타일 페이지에 스타일이 다시 보입니다(일부 컴퓨터에서는 «기본 템플릿이 없습니다»만 나왔습니다).",
     "Mac: al actualizar, CineCaptions se cierra y se vuelve a abrir solo, y el instalador tiene una ventana nueva con los dos pasos.": "Mac: 업데이트할 때 CineCaptions가 알아서 닫혔다가 다시 열리며, 설치 프로그램은 두 단계가 보이는 새 창으로 바뀌었습니다.",
     "Premiere Pro: cada caption llega con su animación, ya no se pierde ninguna palabra y GO abre tu proyecto aunque Premiere esté en su pantalla de inicio.": "Premiere Pro: 모든 캡션이 애니메이션과 함께 들어가고 더 이상 단어가 빠지지 않으며, Premiere가 홈 화면에 있어도 GO가 프로젝트를 엽니다.",
-    "Más resistente: con «Video sin editores» y Resolve abierto, Inicio te dice cómo volver a tu timeline; lo descargado de una actualización ya no ocupa espacio y la IA de la Mac no se instala si falta sitio en el disco.": "더 안정적으로: «편집기 없는 동영상»에서 Resolve가 열려 있으면 홈에서 타임라인으로 돌아가는 방법을 알려 줍니다. 업데이트 다운로드는 더 이상 공간을 차지하지 않으며, 디스크 공간이 부족하면 Mac의 AI를 설치하지 않습니다."
+    "Más resistente: con «Video sin editores» y Resolve abierto, Inicio te dice cómo volver a tu timeline; lo descargado de una actualización ya no ocupa espacio y la IA de la Mac no se instala si falta sitio en el disco.": "더 안정적으로: «편집기 없는 동영상»에서 Resolve가 열려 있으면 홈에서 타임라인으로 돌아가는 방법을 알려 줍니다. 업데이트 다운로드는 더 이상 공간을 차지하지 않으며, 디스크 공간이 부족하면 Mac의 AI를 설치하지 않습니다.",
+    "Los ejemplos de los estilos, rehechos en alta calidad: nítidos también en pantallas Retina y 4K.": "스타일 예시를 고화질로 다시 만들었습니다: Retina와 4K 화면에서도 선명합니다.",
+    "El deslizador de estilos va suave con el trackpad de la Mac: cada gesto pasa una sola tarjeta.": "스타일 슬라이더가 Mac 트랙패드에서 부드럽게 움직입니다: 한 번 밀 때마다 카드 한 장만 넘어갑니다.",
+    "Mac: se acabó «Faltan tipografías»: las letras de todos los estilos vienen con CineCaptions y se instalan solas al abrirlo.": "Mac: «글꼴이 없습니다»가 더 이상 나오지 않습니다: 모든 스타일의 글꼴이 CineCaptions에 포함되어 있고 열 때 자동으로 설치됩니다.",
+    "El nombre del video es demasiado largo para este Windows ({n} letras). Ponle un nombre más corto (menos de {m} letras) y pulsa GO otra vez.": "이 Windows에서는 동영상 이름이 너무 깁니다({n}자). 더 짧은 이름({m}자 미만)으로 바꾸고 GO를 다시 누르세요.",
+    "Más equipos sin sorpresas: videos con nombres muy largos o en carpetas profundas en Windows, videos con tildes o ñ en Resolve Free, y en Mac ya no pide permiso para el Escritorio ni Descargas.": "더 많은 컴퓨터에서 문제 없이: Windows의 매우 긴 이름이나 깊은 폴더의 동영상, Resolve Free의 악센트가 있는 이름의 동영상을 처리하며, Mac에서는 더 이상 데스크탑이나 다운로드 접근 권한을 묻지 않습니다.",
+    "Mac con chip de Apple que tenía la versión Intel: al actualizar pasa sola a la de Apple Silicon (más rápida y con la IA local).": "Intel 버전이 설치된 Apple 칩 Mac: 업데이트하면 Apple Silicon 버전으로 자동 전환됩니다(더 빠르고 로컬 AI 사용 가능)."
   }
 }

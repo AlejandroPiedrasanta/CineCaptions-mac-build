@@ -26,6 +26,7 @@ en caché. Sin ninguna biblioteca (disponible() = False) GO se queda con los son
 import json
 import math
 import re
+import sys
 import time
 import wave
 from pathlib import Path
@@ -120,7 +121,9 @@ def biblioteca(prefs=None):
     p = (prefs if prefs is not None else _prefs()).get(PREF_LIB)
     if p and (Path(p) / '01_SFX').is_dir():                    # v5.56: una carpeta elegida sin 01_SFX no tapa a las demás
         return Path(p)
-    for lib in (LIB_PROPIA, LIB_AUTOR, lib_incluida()):
+    # v5.88: en la Mac NO se mira ~/Desktop/SFX (solo existe en el equipo del autor, que es Windows): tocar el Escritorio saca el aviso de
+    # macOS «CineCaptions quiere acceder a los archivos de tu carpeta Escritorio» en el primer GO de cada cliente
+    for lib in (LIB_PROPIA, lib_incluida()) if sys.platform == 'darwin' else (LIB_PROPIA, LIB_AUTOR, lib_incluida()):
         if (lib / '01_SFX').is_dir():
             return lib
     import director_sonido_estado as E

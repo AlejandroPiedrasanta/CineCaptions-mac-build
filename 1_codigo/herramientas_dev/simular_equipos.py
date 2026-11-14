@@ -767,9 +767,11 @@ def tel_errores_de_arranque_se_mandan():
                                       (registro, 'ARCHIVO', logs / 'cinecaptions.log'), (registro, 'ARCHIVO_ERRORES', logs / 'errores.log')):
         registro.registro().limpiar()
         registro.error('La sesión anterior se cortó en mitad de «GO» (prueba de arranque)', 'arranque')
-        esperar(tel.iniciar(), 'iniciar() debía arrancar')
-        esperar(tel.esperar_envios(45) and any('se cortó' in x['mensaje'] for x in srv.errores()), f'{srv.errores()}')   # (45 s: la Mac Intel de GitHub es lenta)
-        tel.detener()                                  # (el hilo no debe seguir vivo en los casos siguientes)
+        try:
+            esperar(tel.iniciar(), 'iniciar() debía arrancar')
+            esperar(tel.esperar_envios(45) and any('se cortó' in x['mensaje'] for x in srv.errores()), f'{srv.errores()}')   # (45 s: la Mac Intel de GitHub es lenta)
+        finally:
+            tel.detener()                              # (el hilo no debe seguir vivo en los casos siguientes, ni si esto falla)
     __import__('shutil').rmtree(logs, ignore_errors=True)
 
 
@@ -907,10 +909,17 @@ def tel_hilo_de_punta_a_punta():
     with telemetria() as srv, parches((tel, 'activo', lambda: True), (tel, '_ESTADO', dict(tel._ESTADO, iniciado=False)),
                                       (registro, 'ARCHIVO', logs / 'cinecaptions.log'), (registro, 'ARCHIVO_ERRORES', logs / 'errores.log')):
         registro.registro().limpiar()                 # (iniciar() manda lo que ya haya en el Registro: solo lo de este caso)
-        esperar(tel.iniciar(), 'iniciar() debía arrancar')
-        registro.error('Algo salió mal en la prueba de punta a punta', 'prueba')
-        esperar(tel.esperar_envios(20) and len(srv.errores()) == 1, f'{len(srv.errores())} errores recibidos')
-        tel.detener()                                  # (el hilo no debe seguir vivo en los casos siguientes)
+        try:
+            esperar(tel.iniciar(), 'iniciar() debía arrancar')
+            registro.error('Algo salió mal en la prueba de punta a punta', 'prueba')
+            # v5.88: hasta 60 s (en Windows 11 ARM, todo x64 emulado, 20 s no bastaron) y con lo que vio el servidor si falla
+            t0 = time.time()
+            vacio = tel.esperar_envios(60)
+            esperar(vacio and len(srv.errores()) == 1,
+                    f'{len(srv.errores())} errores recibidos en {time.time() - t0:.0f} s · peticiones {len(srv.peticiones)} · '
+                    f'cola {len(tel._COLA)} · pendientes {len(tel._PENDIENTES)} · estado {dict((k, v) for k, v in tel._ESTADO.items() if k in ("pausa_hasta", "ultimo_codigo", "iniciado"))}')
+        finally:
+            tel.detener()                              # (el hilo no debe seguir vivo en los casos siguientes, ni si esto falla)
     __import__('shutil').rmtree(logs, ignore_errors=True)
 
 
@@ -2800,6 +2809,256 @@ def descargas_viejas_de_actualizacion_se_quitan():
     finally:
         import shutil
         shutil.rmtree(raiz, ignore_errors=True)
+
+
+@caso('Mac: estilos y motores')
+def tipografias_de_los_estilos_viajan_todas():
+    """El usuario (5.87): «en Mac tiene problemas de faltan tipografías». El Estilo 2 usaba Poppins ExtraBold y Light y no venían en fonts/:
+    en una Mac sin Poppins la tarjeta decía «Faltan 2 tipografías» en rojo y no había botón que lo arreglara."""
+    import plantillas
+    import fuentes_sistema as F
+    incluidas = F._indice_incluidas()
+    sin_archivo = sorted({f'{p.nombre}: {fam} {est}' for p in plantillas.packs_incorporados() if p.nombre in plantillas.FABRICA
+                          for fam, est in p.fuentes() if F._buscar(incluidas, fam, est, exacto=True) is None})
+    esperar(not sin_archivo, f'letras de los estilos que no vienen en fonts/: {sin_archivo}')
+    lic = open(os.path.join(RAIZ, '2_recursos', 'fonts', 'LICENCIAS.txt'), encoding='utf-8').read()
+    faltan_lic = sorted({F._buscar(incluidas, fam, est, exacto=True).name for p in plantillas.packs_incorporados()
+                         if p.nombre in plantillas.FABRICA for fam, est in p.fuentes()} - {n for n in lic.split() if '.' in n})
+    esperar(not faltan_lic, f'letras de los estilos sin su licencia en LICENCIAS.txt: {faltan_lic}')
+
+
+@caso('Mac: estilos y motores')
+def tipografias_que_faltan_se_instalan_al_abrir():
+    """Si la tarea «fuentes» del instalador no corrió (o el usuario borró alguna), al abrir el programa se instalan solas las que traemos y
+    faltan en el sistema, sin preguntar ni administrador; lo que no se pudo queda en el Registro."""
+    import vigilancia as V
+    import instalar_fuentes as I
+    pedidas = []
+    r = _RegistroEspia()
+    with parches((I, 'faltantes', lambda pares: ([(('Poppins', 'Light'), pathlib.Path('Poppins-Light.ttf')),
+                                                   (('Poppins', 'ExtraBold'), pathlib.Path('Poppins-ExtraBold.ttf'))], [('Rara', 'Regular')])),
+                 (I, 'instalar', lambda rutas, progreso=None: (pedidas.extend(rutas) or [pathlib.Path('a'), pathlib.Path('b')],
+                                                               [('X.ttf', 'sin permiso')]))):
+        V._tipografias_al_dia(r)
+    esperar(sorted(p.name for p in pedidas) == ['Poppins-ExtraBold.ttf', 'Poppins-Light.ttf'], f'no instala las que faltan: {pedidas}')
+    esperar(any(n == 'info' and 'instalé 2' in m for n, m in r.lineas), f'no lo dice en el Registro: {r.lineas}')
+    esperar(any(n == 'aviso' and 'X.ttf' in m for n, m in r.lineas), f'el fallo no queda en el Registro: {r.lineas}')
+    r2, llamadas = _RegistroEspia(), []
+    with parches((I, 'faltantes', lambda pares: ([], [])), (I, 'instalar', lambda *a, **k: llamadas.append(a) or ([], []))):
+        V._tipografias_al_dia(r2)
+    esperar(not llamadas and not r2.lineas, 'con todo instalado no debe tocar nada ni escribir en el Registro')
+
+
+@caso('Mac: estilos y motores')
+def deslizador_con_trackpad_pasa_una_tarjeta_por_gesto():
+    """El usuario (5.87): «mejor el deslizador, con la Mac va muy rápido». Un deslizamiento del trackpad son ~30 eventos y luego la inercia;
+    antes cada evento pasados 0,16 s movía una tarjeta (un gesto saltaba 5-8). Ahora: trackpad = una tarjeta por gesto, ratón = una por muesca."""
+    _qapp()
+    import estilos_slider as ES
+    from PySide6.QtCore import QPoint, QPointF, Qt as Q
+    from PySide6.QtGui import QWheelEvent
+    reloj = [100.0]
+    c = ES.CarruselPacks(alto=540, flexible=True)
+    c.poner_cartas([ES.Carta(f'p{i}', f'Pack {i}') for i in range(9)], centrar='p0')
+
+    def evento(px, ang, fase):
+        return QWheelEvent(QPointF(10, 10), QPointF(10, 10), QPoint(*px), QPoint(*ang), Q.MouseButton.NoButton,
+                           Q.KeyboardModifier.NoModifier, fase, False)
+
+    def mandar(px, ang, fase, dt=0.012):
+        reloj[0] += dt
+        c.desplazar_con_rueda(evento(px, ang, fase))
+
+    F = Q.ScrollPhase
+    with parches((ES.time, 'perf_counter', lambda: reloj[0])):
+        mandar((0, 0), (0, 0), F.ScrollBegin)                          # Mac: un deslizamiento largo hacia la izquierda + inercia
+        for _ in range(30):
+            mandar((-9, 0), (-18, 0), F.ScrollUpdate)
+        mandar((0, 0), (0, 0), F.ScrollEnd)
+        for _ in range(40):
+            mandar((-6, 0), (-12, 0), F.ScrollMomentum, dt=0.016)
+        esperar(c._obj == 1, f'un gesto del trackpad debe pasar UNA tarjeta, pasó a la {c._obj}')
+        mandar((0, 0), (0, 0), F.ScrollBegin, dt=0.4)                  # otro gesto: otra tarjeta
+        for _ in range(12):
+            mandar((-8, 0), (-16, 0), F.ScrollUpdate)
+        mandar((0, 0), (0, 0), F.ScrollEnd)
+        esperar(c._obj == 2, f'el segundo gesto no pasó a la siguiente: {c._obj}')
+        mandar((0, 0), (0, 0), F.ScrollBegin, dt=0.4)                  # un roce mínimo no mueve
+        mandar((-5, 0), (-10, 0), F.ScrollUpdate)
+        mandar((0, 0), (0, 0), F.ScrollEnd)
+        esperar(c._obj == 2, f'un roce del trackpad no debe mover: {c._obj}')
+        for _ in range(25):                                            # touchpad de Windows: pasos chicos sin fase ni píxeles
+            mandar((0, 0), (0, 15), F.NoScrollPhase)
+        esperar(c._obj == 1, f'el touchpad sin fase debe pasar una (hacia atrás): {c._obj}')
+        for i in range(3):                                             # rueda de ratón: una por muesca
+            mandar((0, 0), (0, -120), F.NoScrollPhase, dt=0.3)
+        esperar(c._obj == 4, f'la rueda del ratón debe pasar una por muesca: {c._obj}')
+    c.deleteLater()
+
+
+@caso('Código')
+def rutas_e_imports_con_las_mayusculas_exactas():
+    """v5.88 (el usuario: «diferentes modelos de Mac y varios entornos»): en una Mac con el disco «APFS (sensible a mayúsculas)» —lo usan
+    muchos editores— `base_recursos() / 'Fonts'` no encuentra `fonts/` e `import Plantillas` no carga plantillas.py; en Windows y en la Mac
+    normal funciona y nadie lo ve. Se revisan las rutas que cuelgan de los recursos y los imports del propio código."""
+    import ast
+    recursos = pathlib.Path(RAIZ) / '2_recursos'
+    exactos, por_minus = set(), {}
+    for p in recursos.rglob('*'):
+        if '__pycache__' in p.parts or 'node_modules' in p.parts:
+            continue
+        rel = p.relative_to(recursos).as_posix()
+        exactos.add(rel)
+        por_minus.setdefault(rel.lower(), rel)
+    modulos = {p.stem for p in pathlib.Path(CODIGO).glob('*.py')} | {p.name for p in pathlib.Path(CODIGO).iterdir() if p.is_dir()}
+    modulos_min = {m.lower(): m for m in modulos}
+    raices = ('base_recursos', 'BASE_RECURSOS', 'RECURSOS', '_carpeta', 'carpeta_recursos', 'recursos')
+
+    def cadena(nodo):
+        partes = []
+        while isinstance(nodo, ast.BinOp) and isinstance(nodo.op, ast.Div):
+            partes.append(nodo.right)
+            nodo = nodo.left
+        partes.reverse()
+        return nodo, partes
+
+    malos = []
+    for py in sorted(pathlib.Path(CODIGO).glob('*.py')):
+        try:
+            arbol = ast.parse(py.read_text(encoding='utf-8'))
+        except (SyntaxError, UnicodeDecodeError):
+            continue
+        for nodo in ast.walk(arbol):
+            if isinstance(nodo, (ast.Import, ast.ImportFrom)):
+                nombres = [a.name for a in nodo.names] if isinstance(nodo, ast.Import) else ([nodo.module] if nodo.module and not nodo.level else [])
+                for n in nombres:
+                    raiz_mod = n.split('.')[0]
+                    if raiz_mod not in modulos and raiz_mod.lower() in modulos_min:
+                        malos.append(f'{py.name}:{nodo.lineno} import {raiz_mod} (el archivo es {modulos_min[raiz_mod.lower()]})')
+            elif isinstance(nodo, ast.BinOp) and isinstance(nodo.op, ast.Div):
+                base, partes = cadena(nodo)
+                fuente = ast.unparse(base)
+                if not any(r in fuente for r in raices) or not partes or not all(isinstance(x, ast.Constant) and isinstance(x.value, str) for x in partes):
+                    continue
+                rel = '/'.join(x.value.replace('\\', '/').strip('/') for x in partes)
+                if rel.lower() in por_minus and rel not in exactos:
+                    malos.append(f'{py.name}:{nodo.lineno} «{rel}» (en disco: «{por_minus[rel.lower()]}»)')
+    esperar(not malos, 'mayúsculas distintas del disco: ' + ' · '.join(sorted(set(malos))[:12]))
+
+
+@caso('Datos del usuario')
+def video_de_nombre_largo_en_carpeta_profunda_sin_rutas_largas():
+    """v5.88: Windows solo deja pasar de 260 caracteres con LongPathsEnabled (viene apagado; en el equipo del autor está encendido y nunca
+    se veía). El MP4 de «Video sin editores», la capa y el proyecto de Premiere van JUNTO al video: con un nombre largo (los de Klickpin
+    pasan de 150 letras) en una carpeta profunda, escribirlos fallaba. Ahora el nombre se recorta con «…» y, si ni así cabe, va a Videos."""
+    import archivos_seguros as AS
+    import render_sin_resolve as RSR
+    import premiere
+    # (absoluta en cada sistema: en la Mac «C:/…» es relativa y .resolve() le pegaba la carpeta de trabajo delante)
+    raiz = 'C:/Users/José Núñez' if sys.platform.startswith('win') else '/Users/José Núñez'
+    carpeta = pathlib.Path(raiz + '/OneDrive - Empresa/Clientes 2026/Boda Ana y Luis/Material del dron/Exportados finales')
+    video = carpeta / (('From Klickpin.com-Video de la boda en la hacienda con los novios bailando ' * 3).strip() + '.mp4')
+    sin = (lambda: False)
+    with parches((AS, 'rutas_largas_permitidas', sin), (RSR, 'rutas_largas_permitidas', sin)):
+        for ruta in (RSR.ruta_de_salida(video), RSR.ruta_de_capa(video), pathlib.Path(premiere._proyecto_junto_al_video(video))):
+            esperar(len(str(ruta)) + AS.MARGEN_TEMPORAL <= AS.TOPE_RUTA_WIN, f'{len(str(ruta))} letras: {ruta.name}')
+            esperar(ruta.parent == carpeta.resolve() or ruta.parent == carpeta, f'no queda junto al video: {ruta.parent}')
+            esperar('…' in ruta.name and ruta.name.startswith('From Klickpin.com-Video'), f'nombre recortado raro: {ruta.name}')
+        hondo = pathlib.Path('C:/' + '/'.join(['carpeta de proyectos muy larga'] * 8)) / 'v.mp4'
+        esperar(not RSR._carpeta_escribible(RSR.ruta_de_salida(hondo)), 'una carpeta donde ni recortando cabe debe mandar el MP4 a Videos')
+    corto = carpeta / 'boda.mp4'
+    with parches((AS, 'rutas_largas_permitidas', sin), (RSR, 'rutas_largas_permitidas', sin)):
+        esperar(RSR.ruta_de_salida(corto).name == 'boda (CineCaptions).mp4', 'un nombre que cabe no se toca')
+    with parches((AS, 'rutas_largas_permitidas', lambda: True), (RSR, 'rutas_largas_permitidas', lambda: True)):
+        esperar('…' not in RSR.ruta_de_salida(video).name, 'con rutas largas (o en Mac) el nombre va entero')
+    # un nombre de más de ~190 letras: sus datos en DaVinciSubtitles tampoco caben → GO lo dice al empezar (antes fallaba a mitad)
+    import queue
+    import emojis
+    M = principal()
+    falso = types.SimpleNamespace(_un_clic=True, _cancelar_go=False, msg_queue=queue.Queue())
+    largo = carpeta / ('Video ' * 45 + '.mp4')
+    with parches((AS, 'rutas_largas_permitidas', sin), (M.licencia, 'vigente', lambda: True), (M, 'guardar_log_de_error', lambda *a: None),
+                 (M.ui, 'prioridad_hilo', lambda *a: None), (emojis, 'precalentar_secuencias', lambda *a, **k: None)):
+        M.SubtitleApp._run_pipeline(falso, largo, 'es', False, 42, 2)
+    msgs = []
+    while not falso.msg_queue.empty():
+        msgs.append(falso.msg_queue.get())
+    esperar(any(t == 'error' and 'demasiado largo' in str(m) for t, m in msgs), f'GO no avisa del nombre largo: {msgs[:3]}')
+
+
+@caso('Equipo y GPU', solo_windows=True)
+def instalador_dice_que_equipos_de_windows_no_sirven():
+    """v5.88 (el usuario: «prueba diferentes modelos de Windows»): el instalador se ponía en Windows 7/8, en Windows de 32 bits y en Windows 10
+    en ARM (solo emula x86) y luego el programa no abría sin decir por qué. Se compila `Programa.Compatibilidad` de Instalador.cs TAL CUAL
+    (csc de .NET Framework) y se prueba con cada equipo."""
+    import re as _re
+    texto = open(os.path.join(RAIZ, '3_compilar', 'Instalador.cs'), encoding='utf-8').read()
+    m = _re.search(r'// INICIO Compatibilidad[^\n]*\n(.*?)// FIN Compatibilidad', texto, _re.S)
+    esperar(m is not None, 'Instalador.cs sin las marcas de Compatibilidad')
+    esperar('Compatibilidad(BuildDeWindows(), Environment.Is64BitOperatingSystem, MaquinaNativa())' in texto,
+            'el instalador ya no revisa el equipo antes de instalar')
+    casos = [(7601, True, 0x8664, 'versión anterior'), (9600, True, 0x8664, 'versión anterior'), (19045, False, 0x014C, '32 bits'),
+             (19045, True, 0xAA64, 'ARM'), (22631, True, 0xAA64, None), (19045, True, 0x8664, None), (26100, True, 0x8664, None),
+             (0, True, 0, None)]
+    llamadas = '\n'.join(f'        Console.WriteLine(Programa.Compatibilidad({b}, {str(x).lower()}, {n}) ?? "OK");' for b, x, n, _ in casos)
+    prueba = ('using System;\nstatic class Programa\n{\n' + m.group(1) + '}\nstatic class P\n{\n    static void Main()\n    {\n' + llamadas +
+              '\n    }\n}\n')
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix='cc_cs_'))
+    try:
+        (tmp / 'p.cs').write_text(prueba, encoding='utf-8')
+        csc = os.path.join(os.environ.get('WINDIR', r'C:\Windows'), 'Microsoft.NET', 'Framework64', 'v4.0.30319', 'csc.exe')
+        r = subprocess.run([csc, '/nologo', '/codepage:65001', f'/out:{tmp / "p.exe"}', str(tmp / 'p.cs')], capture_output=True, text=True,
+                           encoding='utf-8', errors='replace', timeout=120)
+        esperar(r.returncode == 0, f'no compila: {r.stdout[-400:]}')
+        sal = subprocess.run([str(tmp / 'p.exe')], capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30).stdout.splitlines()
+        for (b, x, n, debe), linea in zip(casos, sal):
+            ok = (linea == 'OK') if debe is None else (debe in linea)
+            esperar(ok, f'Windows {b} {"x64" if x else "x86"} máquina {n:#x}: «{linea}» (se esperaba {debe or "OK"})')
+    finally:
+        import shutil
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+@caso('Mac: estilos y motores')
+def intel_con_rosetta_en_chip_apple_se_actualiza_a_apple_silicon():
+    """v5.88: quien instaló por error la versión Intel en una Mac con chip de Apple la abre con Rosetta: platform.machine() dice «x86_64» y
+    cada actualización volvía a traer la Intel (más lenta, sin el motor de IA de Apple Silicon). Con Rosetta (sysctl.proc_translated = 1)
+    le toca la de Apple Silicon; una Mac Intel de verdad sigue en Intel."""
+    import platform as P
+    import actualizaciones as A
+    casos = [('x86_64', '1', 'mac_arm64'), ('x86_64', '0', 'mac_x86_64'), ('x86_64', None, 'mac_x86_64'), ('arm64', '0', 'mac_arm64')]
+    for maquina, traducido, debe in casos:
+        def run(orden, **k):
+            if traducido is None:
+                raise FileNotFoundError('sin sysctl')
+            return types.SimpleNamespace(returncode=0, stdout=traducido + '\n', stderr='')
+        with parches((sys, 'platform', 'darwin'), (P, 'machine', lambda m=maquina: m), (A, '_ROSETTA', {}),
+                     (__import__('subprocess'), 'run', run)):
+            sale = A.clave_plataforma()
+        esperar(sale == debe, f'{maquina} con proc_translated={traducido}: {sale} (debía {debe})')
+
+
+@caso('Mac: estilos y motores')
+def mac_no_toca_escritorio_ni_descargas_por_su_cuenta():
+    """v5.88: macOS pregunta «¿Permitir que CineCaptions acceda a los archivos de tu carpeta Escritorio / Descargas?» en cuanto una app
+    MIRA algo dentro. La biblioteca de sonidos buscaba ~/Desktop/SFX (solo existe en el Windows del autor) en cada GO y la limpieza del
+    arranque buscaba una carpeta vieja en Descargas: dos avisos de permisos que el cliente no entiende."""
+    import sonido_skill as S
+    M = principal()
+    tocadas = []
+    reales = {n: getattr(pathlib.Path, n) for n in ('is_dir', 'exists', 'iterdir', 'is_file', 'stat')}
+
+    def espia(nombre):
+        def f(self, *a, **k):
+            tocadas.append(str(self))
+            return reales[nombre](self, *a, **k)
+        return f
+    protegidas = [str(pathlib.Path.home() / n) for n in ('Desktop', 'Downloads', 'Descargas', 'Documents')]
+    with parches((sys, 'platform', 'darwin'), *[(pathlib.Path, n, espia(n)) for n in reales]):
+        S.biblioteca(prefs={})
+        M.SubtitleApp._podar_renders_viejos(types.SimpleNamespace())
+    malas = sorted({t for t in tocadas if any(t == p or t.startswith(p + os.sep) for p in protegidas)})
+    esperar(not malas, f'en la Mac se tocan carpetas protegidas: {malas[:4]}')
 
 
 @caso('Mac: estilos y motores')

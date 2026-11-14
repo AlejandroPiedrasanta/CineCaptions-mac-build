@@ -13955,5 +13955,80 @@
   "ko": "더 안정적으로: «편집기 없는 동영상»에서 Resolve가 열려 있으면 홈에서 타임라인으로 돌아가는 방법을 알려 줍니다. 업데이트 다운로드는 더 이상 공간을 차지하지 않으며, 디스크 공간이 부족하면 Mac의 AI를 설치하지 않습니다.",
   "zh": "更稳定：在“无编辑器视频”模式下且 Resolve 已打开时，首页会告诉你如何回到时间线；更新下载的文件不再占用空间；磁盘空间不足时不会安装 Mac 的 AI。",
   "ru": "Надёжнее: в режиме «Видео без редакторов» при открытом Resolve «Главная» подскажет, как вернуться к таймлайну; загрузки обновлений больше не занимают место, а ИИ на Mac не устанавливается, если на диске мало места."
+ },
+ "Los ejemplos de los estilos, rehechos en alta calidad: nítidos también en pantallas Retina y 4K.": {
+  "en": "The style examples, remade in high quality: sharp on Retina and 4K screens too.",
+  "pt": "Os exemplos dos estilos, refeitos em alta qualidade: nítidos também em telas Retina e 4K.",
+  "fr": "Les exemples des styles, refaits en haute qualité : nets aussi sur les écrans Retina et 4K.",
+  "de": "Die Beispiele der Stile, neu in hoher Qualität: scharf auch auf Retina- und 4K-Bildschirmen.",
+  "it": "Gli esempi degli stili, rifatti in alta qualità: nitidi anche su schermi Retina e 4K.",
+  "ja": "スタイルのサンプルを高画質で作り直しました：Retina や 4K の画面でもくっきり表示されます。",
+  "ko": "스타일 예시를 고화질로 다시 만들었습니다: Retina와 4K 화면에서도 선명합니다.",
+  "zh": "样式示例以高画质重新制作：在 Retina 和 4K 屏幕上也同样清晰。",
+  "ru": "Примеры стилей переделаны в высоком качестве: чёткие и на экранах Retina и 4K.",
+  "nl": "De voorbeelden van de stijlen, opnieuw gemaakt in hoge kwaliteit: ook scherp op Retina- en 4K-schermen.",
+  "tr": "Stil örnekleri yüksek kalitede yeniden yapıldı: Retina ve 4K ekranlarda da net.",
+  "pl": "Przykłady stylów zrobione od nowa w wysokiej jakości: ostre także na ekranach Retina i 4K."
+ },
+ "El deslizador de estilos va suave con el trackpad de la Mac: cada gesto pasa una sola tarjeta.": {
+  "en": "The styles slider is smooth with the Mac trackpad: each swipe moves just one card.",
+  "pt": "O controle deslizante de estilos fica suave com o trackpad do Mac: cada gesto passa um único cartão.",
+  "fr": "Le carrousel des styles est fluide avec le trackpad du Mac : chaque geste ne fait passer qu’une carte.",
+  "de": "Der Stil-Slider läuft mit dem Mac-Trackpad sanft: Jede Wischbewegung blättert nur eine Karte weiter.",
+  "it": "Lo slider degli stili è fluido con il trackpad del Mac: ogni gesto fa scorrere una sola scheda.",
+  "ja": "スタイルのスライダーが Mac のトラックパッドでなめらかに動きます：1 回のスワイプで 1 枚だけ進みます。",
+  "ko": "스타일 슬라이더가 Mac 트랙패드에서 부드럽게 움직입니다: 한 번 밀 때마다 카드 한 장만 넘어갑니다.",
+  "zh": "样式滑块在 Mac 触控板上更顺滑：每次滑动只切换一张卡片。",
+  "ru": "Слайдер стилей плавно работает с трекпадом Mac: один жест — одна карточка.",
+  "nl": "De stijlslider loopt soepel met het trackpad van de Mac: elk veeggebaar schuift één kaart op.",
+  "tr": "Stil kaydırıcısı Mac izleme dörtgeniyle akıcı: her kaydırma yalnızca bir kart ilerletir.",
+  "pl": "Suwak stylów działa płynnie z gładzikiem Maca: każdy gest przesuwa tylko jedną kartę."
+ },
+ "Mac: se acabó «Faltan tipografías»: las letras de todos los estilos vienen con CineCaptions y se instalan solas al abrirlo.": {
+  "en": "Mac: no more “Missing fonts”: the fonts of every style come with CineCaptions and install themselves when you open it.",
+  "pt": "Mac: acabou o «Faltam fontes»: as fontes de todos os estilos vêm com o CineCaptions e se instalam sozinhas ao abri-lo.",
+  "fr": "Mac : fini « Polices manquantes » : les polices de tous les styles sont fournies avec CineCaptions et s’installent toutes seules à l’ouverture.",
+  "de": "Mac: Schluss mit „Schriften fehlen“: Die Schriften aller Stile sind in CineCaptions enthalten und installieren sich beim Öffnen von selbst.",
+  "it": "Mac: basta con «Mancano dei font»: i font di tutti gli stili sono inclusi in CineCaptions e si installano da soli all’apertura.",
+  "ja": "Mac：「フォントが足りません」はもう出ません。すべてのスタイルのフォントが CineCaptions に含まれ、起動時に自動でインストールされます。",
+  "ko": "Mac: «글꼴이 없습니다»가 더 이상 나오지 않습니다: 모든 스타일의 글꼴이 CineCaptions에 포함되어 있고 열 때 자동으로 설치됩니다.",
+  "zh": "Mac：不再出现“缺少字体”：所有样式的字体都随 CineCaptions 附带，打开时会自动安装。",
+  "ru": "Mac: больше никаких «Не хватает шрифтов»: шрифты всех стилей входят в CineCaptions и устанавливаются сами при запуске.",
+  "nl": "Mac: geen „Lettertypen ontbreken” meer: de lettertypen van alle stijlen zitten in CineCaptions en installeren zichzelf bij het openen.",
+  "tr": "Mac: «Yazı tipleri eksik» artık yok: tüm stillerin yazı tipleri CineCaptions ile gelir ve açılışta kendiliğinden kurulur.",
+  "pl": "Mac: koniec z „Brakuje czcionek”: czcionki wszystkich stylów są w CineCaptions i instalują się same przy otwarciu."
+ },
+ "El nombre del video es demasiado largo para este Windows ({n} letras). Ponle un nombre más corto (menos de {m} letras) y pulsa GO otra vez.": {
+  "en": "The video name is too long for this Windows ({n} characters). Give it a shorter name (under {m} characters) and press GO again.",
+  "pt": "O nome do vídeo é longo demais para este Windows ({n} letras). Dê um nome mais curto (menos de {m} letras) e aperte GO de novo.",
+  "fr": "Le nom de la vidéo est trop long pour ce Windows ({n} caractères). Donnez-lui un nom plus court (moins de {m} caractères) et appuyez à nouveau sur GO.",
+  "de": "Der Videoname ist für dieses Windows zu lang ({n} Zeichen). Gib ihm einen kürzeren Namen (unter {m} Zeichen) und drücke erneut GO.",
+  "it": "Il nome del video è troppo lungo per questo Windows ({n} caratteri). Dagli un nome più corto (meno di {m} caratteri) e premi di nuovo GO.",
+  "ja": "このWindowsでは動画の名前が長すぎます（{n}文字）。短い名前（{m}文字未満）に変えて、もう一度GOを押してください。",
+  "ko": "이 Windows에서는 동영상 이름이 너무 깁니다({n}자). 더 짧은 이름({m}자 미만)으로 바꾸고 GO를 다시 누르세요.",
+  "zh": "视频名称对此 Windows 来说太长了（{n} 个字符）。请改成更短的名称（少于 {m} 个字符），然后再按一次 GO。",
+  "ru": "Имя видео слишком длинное для этой Windows ({n} символов). Дайте ему более короткое имя (меньше {m} символов) и снова нажмите GO."
+ },
+ "Más equipos sin sorpresas: videos con nombres muy largos o en carpetas profundas en Windows, videos con tildes o ñ en Resolve Free, y en Mac ya no pide permiso para el Escritorio ni Descargas.": {
+  "en": "Fewer surprises on more computers: videos with very long names or in deep folders on Windows, videos with accents in the name on Resolve Free, and on Mac it no longer asks for access to Desktop or Downloads.",
+  "pt": "Menos surpresas em mais computadores: vídeos com nomes muito longos ou em pastas profundas no Windows, vídeos com acentos no nome no Resolve Free, e no Mac já não pede permissão para a Mesa ou Transferências.",
+  "fr": "Moins de surprises sur plus d’ordinateurs : vidéos aux noms très longs ou dans des dossiers profonds sous Windows, vidéos avec des accents dans le nom sur Resolve Free, et sur Mac il ne demande plus l’accès au Bureau ni aux Téléchargements.",
+  "de": "Weniger Überraschungen auf mehr Computern: Videos mit sehr langen Namen oder in tiefen Ordnern unter Windows, Videos mit Akzenten im Namen in Resolve Free, und auf dem Mac fragt es nicht mehr nach Zugriff auf Schreibtisch oder Downloads.",
+  "it": "Meno sorprese su più computer: video con nomi molto lunghi o in cartelle profonde su Windows, video con accenti nel nome su Resolve Free, e su Mac non chiede più l’accesso a Scrivania o Download.",
+  "ja": "より多くの環境で安定：Windows での非常に長い名前や深いフォルダーの動画、Resolve Free でのアクセント付きの名前の動画に対応し、Mac ではデスクトップやダウンロードへのアクセス許可を求めなくなりました。",
+  "ko": "더 많은 컴퓨터에서 문제 없이: Windows의 매우 긴 이름이나 깊은 폴더의 동영상, Resolve Free의 악센트가 있는 이름의 동영상을 처리하며, Mac에서는 더 이상 데스크탑이나 다운로드 접근 권한을 묻지 않습니다.",
+  "zh": "更多电脑上更稳定：支持 Windows 上名称很长或位于深层文件夹的视频、Resolve Free 中名称带重音符号的视频；在 Mac 上不再请求访问桌面或下载文件夹。",
+  "ru": "Меньше сюрпризов на разных компьютерах: видео с очень длинными именами или в глубоких папках в Windows, видео с диакритикой в имени в Resolve Free, а на Mac больше не запрашивается доступ к Рабочему столу и Загрузкам."
+ },
+ "Mac con chip de Apple que tenía la versión Intel: al actualizar pasa sola a la de Apple Silicon (más rápida y con la IA local).": {
+  "en": "Macs with an Apple chip that had the Intel version: updating now switches them to the Apple Silicon one (faster and with the local AI).",
+  "pt": "Macs com chip da Apple que tinham a versão Intel: ao atualizar passam sozinhos para a de Apple Silicon (mais rápida e com a IA local).",
+  "fr": "Mac avec puce Apple qui avaient la version Intel : la mise à jour passe d’elle-même à la version Apple Silicon (plus rapide et avec l’IA locale).",
+  "de": "Macs mit Apple-Chip, auf denen die Intel-Version lief: Beim Update wechseln sie von selbst zur Apple-Silicon-Version (schneller und mit der lokalen KI).",
+  "it": "Mac con chip Apple che avevano la versione Intel: aggiornando passano da soli a quella Apple Silicon (più veloce e con l’IA locale).",
+  "ja": "Apple チップの Mac に Intel 版が入っていた場合：アップデートで自動的に Apple Silicon 版に切り替わります（より速く、ローカル AI も使えます）。",
+  "ko": "Intel 버전이 설치된 Apple 칩 Mac: 업데이트하면 Apple Silicon 버전으로 자동 전환됩니다(더 빠르고 로컬 AI 사용 가능).",
+  "zh": "装着 Intel 版本的 Apple 芯片 Mac：更新时会自动切换到 Apple Silicon 版本（更快，并可使用本地 AI）。",
+  "ru": "Mac с чипом Apple, на которых стояла версия для Intel: при обновлении они сами переходят на версию для Apple Silicon (быстрее и с локальным ИИ)."
  }
 }

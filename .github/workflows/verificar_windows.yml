@@ -1,0 +1,94 @@
+# CineCaptions · By Cinema Productions
+# v5.88 (el usuario: «busca problemas en Mac y Windows, muchos casos de uso, diferentes modelos de Mac y Windows, varios entornos»): lo mismo
+# que verificar_mac.yml en Windows de verdad, sin publicar nada: compila el .exe como 3_compilar/Construir_Instalador.ps1 (PyInstaller + la
+# autoprueba del compilado) y corre 1_codigo/herramientas_dev/verificar_mac.py (simulador de equipos, todas las ventanas, cada opción
+# encendida y apagada, GO con los 9 estilos sin editores y con un Premiere simulado). Tres equipos: Windows Server 2022 (la base de
+# Windows 10), Windows Server 2025 (la de Windows 11 24H2) y Windows 11 en ARM (Snapdragon: el programa x64 emulado, como en esos portátiles).
+# Se lanza al subir una rama «verificar-mac-…» o «verificar-win-…» (o a mano). Resultado: el artefacto «Verificacion-<equipo>».
+name: Verificar Windows
+on:
+  workflow_dispatch:
+  push:
+    branches: ['verificar-mac-*', 'verificar-win-*']
+jobs:
+  verificar:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - nombre: Windows-Server-2022
+            runner: windows-2022
+          - nombre: Windows-Server-2025
+            runner: windows-2025
+          - nombre: Windows11-ARM
+            runner: windows-11-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 170
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      PYTHONIOENCODING: utf-8
+      PIP_DISABLE_PIP_VERSION_CHECK: '1'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.15'
+          architecture: x64
+          allow-prereleases: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.13.0'
+          architecture: x64            # (el instalador real lleva Node, el compositor de Remotion y Chrome de x64: en ARM, emulados)
+      - name: Equipo
+        run: |
+          python -c "import platform, sys; print(platform.platform(), platform.machine(), sys.version)"
+          Get-CimInstance Win32_OperatingSystem | Select-Object Caption, Version, OSArchitecture | Format-List
+          Get-CimInstance Win32_Processor | Select-Object Name, NumberOfLogicalProcessors | Format-List
+      - name: Librerías (3_compilar/requirements.txt)
+        run: |
+          python -m pip install -r 3_compilar/requirements.txt
+          python -c "from comtypes.client import GetModule; GetModule('UIAutomationCore.dll')"
+      - name: Remotion (las animaciones de la Edición PRO y el neón del Estilo 1; su runtime no va en Git)
+        run: python 3_compilar/preparar_remotion.py
+      - name: Compilar (PyInstaller, como Construir_Instalador.ps1) y autoprueba del compilado
+        id: compilar
+        run: |
+          $obra = Join-Path $PWD '6_compilacion'
+          $fuentes = Join-Path $obra 'fuentes'
+          New-Item -ItemType Directory -Force $fuentes | Out-Null
+          Copy-Item 1_codigo/*.py $fuentes
+          python -m compileall -q $fuentes
+          if ($LASTEXITCODE -ne 0) { throw 'errores de sintaxis en 1_codigo' }
+          python 3_compilar/empaquetar_sonidos.py
+          $ver = (Select-String -Path 1_codigo/version.py -Pattern "APP_VERSION = '([\d.]+)'").Matches[0].Groups[1].Value
+          $env:CINECAPTIONS_FUENTES = $fuentes
+          $env:CINECAPTIONS_RECURSOS = (Join-Path $PWD '2_recursos')
+          $env:CINECAPTIONS_VERSION = $ver
+          Push-Location 3_compilar
+          python -m PyInstaller --noconfirm --log-level ERROR --distpath (Join-Path $obra 'dist') --workpath (Join-Path $obra 'work') cinecaptions.spec
+          if ($LASTEXITCODE -ne 0) { throw 'PyInstaller falló' }
+          Pop-Location
+          $exe = Join-Path $obra 'dist/CineCaptions/CineCaptions.exe'
+          $estado = Join-Path $obra 'autoprueba.txt'
+          Set-Content -Path $estado -Value '' -Encoding utf8
+          $p = Start-Process -FilePath $exe -ArgumentList '--tarea', 'verificar', ('"' + $estado + '"') -PassThru -Wait
+          Get-Content $estado -Encoding utf8 | Where-Object { $_ -notmatch '^PROGRESO' }
+          if ($p.ExitCode -ne 0) { throw "La autoprueba del compilado falló (código $($p.ExitCode))" }
+      - name: Verificar todo (simulador, ventanas, opciones, GO con los 9 estilos, Premiere simulado)
+        if: always()
+        run: |
+          New-Item -ItemType Directory -Force verificacion | Out-Null
+          python 1_codigo/herramientas_dev/verificar_mac.py verificacion
+          if ($LASTEXITCODE -ne 0) { Add-Content verificacion/resumen.txt 'VERIFICACION_CON_FALLOS' }
+          Get-Content verificacion/resumen.txt -Encoding utf8
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: Verificacion-${{ matrix.nombre }}
+          path: |
+            verificacion/
+            6_compilacion/autoprueba.txt
+          retention-days: 3
+          if-no-files-found: warn
