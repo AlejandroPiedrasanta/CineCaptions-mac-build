@@ -25,12 +25,17 @@ jobs:
       - name: Compilar y probar
         env:
           PYTHON: python3
+          # 2.10: la clave de administrador va dentro de la app (el dueño no quiere pegarla) y por eso el .dmg sale cifrado;
+          # los dos secretos los sube Compilar_Ventas_Mac.ps1 desde la PC del dueño (nunca están en el código del espejo)
+          VENTAS_CLAVE: ${{ secrets.VENTAS_CLAVE }}
+          VENTAS_ARTEFACTO: ${{ secrets.VENTAS_ARTEFACTO }}
         run: bash ventas/mac/construir_ventas_mac.sh
       - uses: actions/upload-artifact@v7
         with:
           name: Ventas-Mac-${{ matrix.nombre }}
           path: |
             ventas/build/CineCaptions_Ventas_Mac_*.dmg
+            ventas/build/CineCaptions_Ventas_Mac_*.dmg.cifrado
             ventas/build/capturas_mac/*.png
           if-no-files-found: error
           retention-days: 1

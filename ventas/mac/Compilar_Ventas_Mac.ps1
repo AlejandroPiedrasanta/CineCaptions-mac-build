@@ -43,6 +43,28 @@ if (-not $SoloDescargar) {
     } else { Write-Host '    (el espejo ya tenía esta versión)' }
     $sha = (git -C $espejo rev-parse HEAD).Trim()
 
+    # 2.10 (el dueño: «quita la contraseña»): la clave de administrador va DENTRO de la app de Mac. Nunca en el código (el espejo
+    # es público): sube como secreto de GitHub desde CineCaptions_claves\admin_ventas.txt, y el .dmg vuelve cifrado con otra
+    # contraseña (ventas_artefacto.txt, se crea la primera vez) que solo está en esta PC y en los secretos.
+    Paso "Secretos de la compilación (la clave incluida y la del .dmg cifrado)"
+    $claves = Join-Path $env:USERPROFILE 'CineCaptions_claves'
+    $archivoClave = Join-Path $claves 'admin_ventas.txt'
+    $archivoArtefacto = Join-Path $claves 'ventas_artefacto.txt'
+    if (Test-Path $archivoClave) {
+        if (-not (Test-Path $archivoArtefacto)) {
+            $bytes = [byte[]]::new(36); [Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+            [IO.File]::WriteAllText($archivoArtefacto, ([Convert]::ToBase64String($bytes) -replace '[+/=]', ''))
+        }
+        $clave = (python -c "import sys; sys.path.insert(0, sys.argv[1]); import ventas; print(ventas.extraer_clave(ventas.leer_texto(sys.argv[2])))" $programa $archivoClave 2>$null | Select-Object -Last 1)
+        if (-not $clave) { throw "No pude leer la clave de $archivoClave" }
+        Nativo { gh secret set VENTAS_CLAVE -R $repo --body $clave | Out-Null }
+        Nativo { gh secret set VENTAS_ARTEFACTO -R $repo --body ([IO.File]::ReadAllText($archivoArtefacto).Trim()) | Out-Null }
+        $clave = $null
+        Write-Host '    (la app de Mac llevará la clave incluida; el .dmg vendrá cifrado)'
+    } else {
+        Write-Host "    (sin $archivoClave : la app pedirá la clave como antes)"
+    }
+
     Paso "Compilando en GitHub (Apple Silicon e Intel)"
     # (recién subido, GitHub tarda unos segundos en conocer el flujo: «workflow not found» se reintenta)
     for ($i = 1; $i -le 12; $i++) {
@@ -69,6 +91,21 @@ Paso "Bajando los .dmg y las capturas"
 $tmp = Join-Path ([IO.Path]::GetTempPath()) "ventas-mac-$id"
 if (Test-Path $tmp) { Remove-Item -Recurse -Force $tmp }
 Nativo { gh run download $id -R $repo -D $tmp }
+# Los .dmg con la clave incluida vienen cifrados (.dmg.cifrado): se descifran aquí con ventas_artefacto.txt
+$cifrados = @(Get-ChildItem $tmp -Recurse -Filter '*.dmg.cifrado')
+if ($cifrados) {
+    $artefacto = Join-Path $env:USERPROFILE 'CineCaptions_claves\ventas_artefacto.txt'
+    if (-not (Test-Path $artefacto)) { throw "Los .dmg vienen cifrados y falta $artefacto" }
+    $ossl = (Get-Command openssl -ErrorAction SilentlyContinue).Source
+    if (-not $ossl) { $ossl = @('C:\Program Files\Git\ucrt64\bin\openssl.exe', 'C:\Program Files\Git\usr\bin\openssl.exe', 'C:\Program Files\Git\mingw64\bin\openssl.exe') | Where-Object { Test-Path $_ } | Select-Object -First 1 }
+    if (-not $ossl) { throw 'Falta openssl (viene con Git para Windows) para descifrar los .dmg' }
+    foreach ($c in $cifrados) {
+        $plano = $c.FullName -replace '\.cifrado$', ''
+        & $ossl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -md sha256 -in $c.FullName -out $plano -pass "file:$artefacto"
+        if ($LASTEXITCODE -ne 0) { throw "No pude descifrar $($c.Name)" }
+        Remove-Item $c.FullName -Force
+    }
+}
 Get-ChildItem $programa -Filter 'CineCaptions_Ventas_Mac_*.dmg' | Remove-Item -Force      # la versión anterior se quita
 Get-ChildItem $tmp -Recurse -Filter '*.dmg' | ForEach-Object { Copy-Item $_.FullName $programa; Write-Host "    $($_.Name)" }
 $capturas = Join-Path $programa 'capturas_mac'

@@ -32,12 +32,17 @@ PY_SOBRA = ['tkinter', '_tkinter', 'unittest', 'doctest', 'pydoc', 'pydoc_data',
             'turtledemo', 'curses', 'ensurepip', 'venv', 'distutils', 'setuptools', 'pip', 'sqlite3', 'numpy', 'PIL',
             'pytest', 'IPython']
 
+# La clave de administrador incluida (2.10, «quita la contraseña»): la escribe construir_ventas_mac.sh desde el secreto
+# VENTAS_CLAVE de GitHub, solo en la Mac que compila. Nunca está en el código ni en el espejo (es público).
+CLAVE_INCLUIDA = AQUI / 'build' / 'clave_incluida.txt'
+EXTRA = [(str(CLAVE_INCLUIDA), '.')] if CLAVE_INCLUIDA.is_file() else []
+
 a = Analysis(
     [str(AQUI / 'ventas.py')],
     pathex=[str(AQUI)],
     binaries=[],
     # certifi: los certificados para el HTTPS de cinecaptions.shop (sin ellos, en otra Mac no se conecta; ventas.contexto_ssl)
-    datas=[(str(AQUI / 'fuentes' / 'Inter.ttf'), 'fuentes')] + copy_metadata('keyring') + collect_data_files('certifi'),
+    datas=[(str(AQUI / 'fuentes' / 'Inter.ttf'), 'fuentes')] + copy_metadata('keyring') + collect_data_files('certifi') + EXTRA,
     hiddenimports=collect_submodules('keyring.backends') + ['keyring.backends.macOS', 'certifi'],
     hookspath=[],
     hooksconfig={},

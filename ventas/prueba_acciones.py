@@ -3495,6 +3495,50 @@ def prueba_clave_estreno():
                 == servidor_prueba.CLAVE and v.extraer_clave(f'﻿{servidor_prueba.CLAVE}\r\n') == servidor_prueba.CLAVE,
                 'el archivo admin_ventas.txt (con encabezado, BOM o fin de línea de Windows) da la clave')
 
+        # 4b) La clave incluida en la app de Mac (2.10, «quita la contraseña»): va primero y no pide nada; si el dueño pega
+        #     otra (la incluida ya no servía), manda la suya
+        archivo = TEMPORAL / 'clave_incluida.txt'
+        archivo.write_text(servidor_prueba.CLAVE + '\n', encoding='utf-8')
+        os.environ['CC_VENTAS_PRUEBA_INCLUIDA'] = str(archivo)
+        try:
+            cfg = config_nueva('incluida')
+            revisar(v.clave_incluida() == servidor_prueba.CLAVE and cfg.leer_clave() == servidor_prueba.CLAVE
+                    and v.aviso_sin_clave(cfg) == '', 'clave incluida: la app recién instalada la usa sin pedir nada')
+            w = ventana_real(cfg, url)
+            w.usar_clave(cfg.leer_clave())
+            w.actualizar_todo()
+            esperar(lambda: w.intento_listo and quieto(w), 'primera carga con la clave incluida')
+            revisar(w.modelo_v.rowCount() > 0 and not w.banda.isVisible() and not w.mensajes,
+                    'clave incluida: carga las ventas sin el cuadro de la clave')
+            w.close()
+            cfg.guardar_clave('otra-clave-propia-123')
+            revisar(v.Configuracion().leer_clave() == 'otra-clave-propia-123',
+                    'clave incluida: si el dueño pega otra, manda la suya')
+            archivo.write_text('corta\n', encoding='utf-8')
+            revisar(v.clave_incluida() is None, 'una clave incluida que no se ve bien no se usa')
+        finally:
+            os.environ.pop('CC_VENTAS_PRUEBA_INCLUIDA', None)
+        revisar(v.clave_incluida() is None and v.volumen_del_dmg() is None,
+                'sin compilar: ni clave incluida ni «corre desde el .dmg»')
+        if en_mac:   # instalarse sola desde el .dmg: con un .dmg de mentira (una carpeta con la app y el acceso)
+            dmg = TEMPORAL / 'dmg_falso'
+            (dmg / f'{v.APP}.app' / 'Contents' / 'MacOS').mkdir(parents=True)
+            (dmg / f'{v.APP}.app' / 'Contents' / 'MacOS' / v.APP).write_text('#!/bin/sh\n', encoding='utf-8')
+            (dmg / 'Aplicaciones').symlink_to('/Applications')
+            apps = TEMPORAL / 'Aplicaciones_prueba'
+            apps.mkdir()
+            os.environ['CC_VENTAS_APLICACIONES'] = str(apps)
+            try:
+                copia = v.instalar_desde_dmg(dmg)
+                revisar(v.es_volumen_ventas(dmg) and copia == apps / f'{v.APP}.app'
+                        and (copia / 'Contents' / 'MacOS' / v.APP).is_file(),
+                        'Mac: doble clic en la app del .dmg la copia a Aplicaciones')
+                (copia / 'vieja.txt').write_text('x', encoding='utf-8')
+                v.instalar_desde_dmg(dmg)
+                revisar(not (copia / 'vieja.txt').exists(), 'Mac: si ya estaba, la reemplaza entera')
+            finally:
+                os.environ.pop('CC_VENTAS_APLICACIONES', None)
+
         # 5) Las reglas del Llavero de Mac, también desde Windows (con un Llavero de mentira que se porta igual)
         llavero, os_real, llavero_real = LlaveroFalso(), v.os, v._llavero
         v.os, v._llavero = OsComoMac(), (lambda: llavero)

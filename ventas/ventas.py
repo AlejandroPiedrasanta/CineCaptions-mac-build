@@ -732,6 +732,11 @@ class Configuracion:
         return None
 
     def leer_clave(self):
+        # La clave que trae dentro la app de Mac va primero (sin pedirla ni tocar el Llavero, que con cada versión nueva
+        # pedía la contraseña de la Mac), salvo que el dueño haya pegado otra («clave_propia»: la incluida ya no servía)
+        incluida = clave_incluida()
+        if incluida and not self.datos.get('clave_propia'):
+            return incluida
         guardada = self.datos.get('clave')
         if not guardada or not isinstance(guardada, str):
             return None
@@ -748,6 +753,7 @@ class Configuracion:
             return None
 
     def guardar_clave(self, clave):
+        self.datos['clave_propia'] = True   # (la pegó el dueño: manda sobre la que trae la app de Mac)
         if os.name == 'nt':
             self.datos['clave'] = cifrar_clave(clave)
         else:
@@ -769,6 +775,25 @@ class Configuracion:
                     pass
             self.datos['clave'] = f'{EN_LLAVERO}:{cuenta}'
         self.guardar()
+
+
+def clave_incluida():
+    """La clave de administrador que trae dentro la app de Mac (2.10, el dueño: «quita la contraseña»), o None.
+    mac/construir_ventas_mac.sh la escribe en clave_incluida.txt desde el secreto VENTAS_CLAVE de GitHub: nunca va en el
+    código (el espejo de compilación es público) y el .dmg sale de GitHub cifrado. En Windows y sin compilar, None
+    (las pruebas la simulan con CC_VENTAS_PRUEBA_INCLUIDA, la ruta de un archivo)."""
+    prueba = os.environ.get('CC_VENTAS_PRUEBA_INCLUIDA')
+    if prueba:
+        ruta = Path(prueba)
+    elif getattr(sys, 'frozen', False) and sys.platform == 'darwin':
+        ruta = recurso('clave_incluida.txt')
+    else:
+        return None
+    try:
+        clave = ruta.read_text(encoding='utf-8').strip()
+    except OSError:
+        return None
+    return clave if clave and not problema_clave(clave) else None
 
 
 def aviso_sin_clave(config):
@@ -12673,6 +12698,90 @@ def crear_app(argumentos_qt):
     return app
 
 
+# ---------------------------------------------------------------- Mac: instalarse sola desde el .dmg (2.10)
+# El dueño: «que al mover a Aplicaciones se cierre y abra el programa». Arrastrar a Aplicaciones no avisa a nadie (macOS no
+# deja que un .dmg haga algo al copiar), así que: doble clic en la app DEL .dmg → se copia a Aplicaciones, abre la copia y
+# se cierra; la copia expulsa el .dmg (con eso se cierra su ventana). Si se arrastró, al abrirla la primera vez expulsa el
+# .dmg que siga montado.
+
+def es_volumen_ventas(volumen):
+    """¿Es el .dmg de Ventas montado? (trae la app y el acceso a Aplicaciones)."""
+    return (volumen / f'{APP}.app').is_dir() and (volumen / 'Aplicaciones').is_symlink()
+
+
+def volumen_del_dmg():
+    """Si la app corre desde su .dmg (o desde la copia «trasladada» que macOS hace de una app en cuarentena), el volumen
+    montado; si no, None. Solo en la app de Mac armada."""
+    if sys.platform != 'darwin' or not getattr(sys, 'frozen', False):
+        return None
+    app = Path(sys.executable).resolve().parents[2]          # …/CineCaptions Ventas.app
+    if app.parts[1:2] == ('Volumes',) and len(app.parts) >= 4:
+        volumen = Path(*app.parts[:3])
+        return volumen if es_volumen_ventas(volumen) else None
+    if '/AppTranslocation/' in str(app):                      # (macOS no dice el original: el .dmg de Ventas montado)
+        return next((v for v in volumenes_ventas()), None)
+    return None
+
+
+def volumenes_ventas():
+    try:
+        return [v for v in sorted(Path('/Volumes').iterdir()) if es_volumen_ventas(v)]
+    except OSError:
+        return []
+
+
+def instalar_desde_dmg(volumen):
+    """Copia la app del .dmg a Aplicaciones (o ~/Aplicaciones si no se puede escribir ahí) y devuelve la copia.
+    Primero a una carpeta aparte y después se cambia: una copia a medias nunca reemplaza a la buena."""
+    import shutil
+    import subprocess
+    destino_dir = Path(os.environ.get('CC_VENTAS_APLICACIONES') or '/Applications')
+    if not os.access(destino_dir, os.W_OK):
+        destino_dir = Path.home() / 'Applications'
+        destino_dir.mkdir(exist_ok=True)
+    destino = destino_dir / f'{APP}.app'
+    nueva = destino_dir / f'.{APP}.app.nueva'
+    shutil.rmtree(nueva, ignore_errors=True)
+    subprocess.run(['ditto', str(volumen / f'{APP}.app'), str(nueva)], check=True, timeout=180,
+                   stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    # El dueño ya la abrió (aceptó a macOS que la abra): la copia no vuelve a preguntar
+    subprocess.run(['xattr', '-dr', 'com.apple.quarantine', str(nueva)], timeout=60,
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if destino.exists():
+        shutil.rmtree(destino)
+    os.replace(nueva, destino)
+    return destino
+
+
+def expulsar_luego(volumen, segundos=2):
+    """Expulsa el .dmg en otro proceso, cuando esta app (o la del .dmg, que se está cerrando) ya lo soltó; si el Finder
+    lo tiene ocupado, lo vuelve a intentar a la fuerza. No espera: la ventana sigue a lo suyo."""
+    import subprocess
+    orden = f'sleep {int(segundos)}; hdiutil detach "$1" -quiet || {{ sleep 3; hdiutil detach "$1" -force -quiet; }}'
+    try:
+        subprocess.Popen(['/bin/sh', '-c', orden, 'expulsar', str(volumen)], stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL, start_new_session=True)
+    except OSError:
+        pass
+
+
+def comprobar_clave_incluida():
+    """--comprobar-clave-incluida (lo usa mac/construir_ventas_mac.sh): ¿la app trae la clave y el servidor la acepta?
+    Una consulta de solo lectura; nunca imprime la clave."""
+    preparar_consola()
+    clave = clave_incluida()
+    if not clave:
+        print('La app no trae una clave incluida.', file=sys.stderr, flush=True)
+        return 1
+    try:
+        ClienteApi(API_POR_DEFECTO, clave, solo_lectura=True).llamar('resumen')
+    except ApiError as e:
+        print(f'La clave incluida no sirve: {e.mensaje}', file=sys.stderr, flush=True)
+        return 1
+    print('Clave incluida: el servidor la acepta', flush=True)
+    return 0
+
+
 def main(argv=None):
     argv = list(sys.argv if argv is None else argv)
     parser = argparse.ArgumentParser(prog='CineCaptions Ventas', description='Ventas y licencias de CineCaptions.')
@@ -12683,9 +12792,33 @@ def main(argv=None):
                         help='con --captura: el ancho de la ventana (1100 como mínimo; si no se dice, 1440)')
     parser.add_argument('--comprobar-https', nargs='?', const=SITIO, metavar='URL',
                         help='prueba la conexión segura con la web (sin clave) y sale')
+    parser.add_argument('--comprobar-clave-incluida', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument('--expulsar', metavar='VOLUMEN', help=argparse.SUPPRESS)   # (Mac: lo pasa la app del .dmg a su copia)
     args, resto = parser.parse_known_args(argv[1:])
+    if args.expulsar:
+        expulsar_luego(Path(args.expulsar))
     if args.comprobar_https:
         return comprobar_https(args.comprobar_https)
+    if args.comprobar_clave_incluida:
+        return comprobar_clave_incluida()
+    if sys.platform == 'darwin' and not (args.importar_clave or args.captura):
+        volumen = volumen_del_dmg()
+        if volumen is not None:   # doble clic en la app del .dmg: se instala, abre la copia y se cierra
+            try:
+                copia = instalar_desde_dmg(volumen)
+            except Exception as e:   # (no se pudo: sigue abriéndose desde el .dmg, como antes)
+                print(f'No se pudo copiar a Aplicaciones: {e}', file=sys.stderr, flush=True)
+            else:
+                if os.environ.get('CC_VENTAS_NO_ABRIR'):   # (la prueba de la compilación: solo copia)
+                    print(f'Instalada en {copia}', flush=True)
+                    return 0
+                import subprocess
+                subprocess.Popen(['open', '-n', str(copia), '--args', '--expulsar', str(volumen)],
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                return 0
+        elif getattr(sys, 'frozen', False) and not args.expulsar:   # se arrastró y se abrió: el .dmg montado se expulsa
+            for v in volumenes_ventas():
+                expulsar_luego(v, 1)
     if args.importar_clave or args.captura:
         preparar_consola()
     if args.importar_clave:

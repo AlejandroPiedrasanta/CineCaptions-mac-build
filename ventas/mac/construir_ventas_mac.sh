@@ -39,6 +39,16 @@ QT_QPA_PLATFORM=offscreen $PY mac/icono_mac.py build/ventas.icns
 
 paso "PyInstaller"
 rm -rf build/dist_mac build/work_mac
+# La clave de administrador incluida (2.10, el dueño: «quita la contraseña»): del secreto VENTAS_CLAVE, solo aquí. Como el
+# espejo es público, si va la clave el .dmg SOLO sale cifrado (VENTAS_ARTEFACTO): sin esa contraseña no se compila con clave.
+rm -f build/clave_incluida.txt
+if [ -n "${VENTAS_CLAVE:-}" ]; then
+    [ -n "${VENTAS_ARTEFACTO:-}" ] || falla "hay VENTAS_CLAVE pero no VENTAS_ARTEFACTO: el .dmg con la clave saldría sin cifrar"
+    mkdir -p build
+    ( umask 077; printf '%s\n' "$VENTAS_CLAVE" > build/clave_incluida.txt )
+    echo "    (con la clave de administrador incluida)"
+fi
+trap 'rm -f build/clave_incluida.txt' EXIT
 $PY -m PyInstaller --noconfirm --distpath build/dist_mac --workpath build/work_mac mac/ventas_mac.spec
 APP="build/dist_mac/CineCaptions Ventas.app"
 BIN="$APP/Contents/MacOS/CineCaptions Ventas"
@@ -53,11 +63,15 @@ SSL_CERT_FILE=/nada/cert.pem SSL_CERT_DIR=/nada "$BIN" --comprobar-https https:/
     || falla "la .app no pudo abrir https://cinecaptions.shop sin los certificados de esta Mac"
 SSL_CERT_FILE=/nada/cert.pem SSL_CERT_DIR=/nada "$BIN" --comprobar-https https://github.com/ \
     || falla "la .app no pudo abrir https://github.com sin los certificados de esta Mac"
+if [ -f build/clave_incluida.txt ]; then   # (una consulta de solo lectura al servidor de verdad; nunca imprime la clave)
+    SSL_CERT_FILE=/nada/cert.pem SSL_CERT_DIR=/nada "$BIN" --comprobar-clave-incluida \
+        || falla "la .app no trae la clave incluida o el servidor no la acepta (¿cambió la clave? Compilar_Ventas_Mac.ps1 la sube)"
+fi
 
 paso "Autoprueba de la .app armada (Llavero + capturas contra el servidor de prueba)"
 $PY servidor_prueba.py --puerto 8799 > /tmp/servidor_ventas.log 2>&1 &
 SRV=$!
-trap 'kill $SRV 2>/dev/null || true' EXIT
+trap 'kill $SRV 2>/dev/null || true; rm -f build/clave_incluida.txt' EXIT
 for _ in $(seq 1 50); do
     curl -s -o /dev/null http://127.0.0.1:8799/ && break
     sleep 0.2
@@ -89,15 +103,29 @@ for intento in 1 2 3 4 5; do     # (en las Mac de GitHub hdiutil a veces dice «
     rm -f "$DMG"; sleep 15
 done
 # Que el .dmg traiga lo que se ve: la app, el acceso a Aplicaciones y el fondo; y que la app de dentro abra
-MONTE=$(mktemp -d)
-hdiutil attach -nobrowse -readonly -mountpoint "$MONTE" "$DMG" > /dev/null || falla "no pude abrir el .dmg recién hecho"
-[ -x "$MONTE/CineCaptions Ventas.app/Contents/MacOS/CineCaptions Ventas" ] || falla "el .dmg no trae la app"
-[ "$(readlink "$MONTE/Aplicaciones")" = /Applications ] || falla "el .dmg no trae el acceso a Aplicaciones"
-[ -f "$MONTE/.DS_Store" ] && ls -a "$MONTE" | grep -q '^\.background' || falla "el .dmg no trae la ventana con fondo"
-SSL_CERT_FILE=/nada/cert.pem SSL_CERT_DIR=/nada "$MONTE/CineCaptions Ventas.app/Contents/MacOS/CineCaptions Ventas" \
-    --comprobar-https https://cinecaptions.shop/ || falla "la app del .dmg no se conecta a cinecaptions.shop"
-hdiutil detach "$MONTE" -quiet || hdiutil detach "$MONTE" -force -quiet || true
+VOL="/Volumes/CineCaptions Ventas $VMS"
+hdiutil attach -nobrowse -readonly "$DMG" > /dev/null || falla "no pude abrir el .dmg recién hecho"
+[ -d "$VOL" ] || falla "el .dmg no se montó en $VOL"
+DENTRO="$VOL/CineCaptions Ventas.app/Contents/MacOS/CineCaptions Ventas"
+[ -x "$DENTRO" ] || falla "el .dmg no trae la app"
+[ "$(readlink "$VOL/Aplicaciones")" = /Applications ] || falla "el .dmg no trae el acceso a Aplicaciones"
+[ -f "$VOL/.DS_Store" ] && ls -a "$VOL" | grep -q '^\.background' || falla "el .dmg no trae la ventana con fondo"
+SSL_CERT_FILE=/nada/cert.pem SSL_CERT_DIR=/nada "$DENTRO" --comprobar-https https://cinecaptions.shop/ \
+    || falla "la app del .dmg no se conecta a cinecaptions.shop"
 echo "    OK: el .dmg trae la app, Aplicaciones y el fondo; la app de dentro se conecta"
+# Doble clic en la app del .dmg (2.10, «que se cierre y abra»): se copia a Aplicaciones (aquí, a una carpeta de prueba) …
+APPS=$(mktemp -d)
+SALIDA=$(CC_VENTAS_APLICACIONES="$APPS" CC_VENTAS_NO_ABRIR=1 "$DENTRO" 2>&1) || falla "la app del .dmg falló al copiarse: $SALIDA"
+echo "$SALIDA" | grep -q '^Instalada en' || falla "la app del .dmg no se copió sola a Aplicaciones: $SALIDA"
+[ -x "$APPS/CineCaptions Ventas.app/Contents/MacOS/CineCaptions Ventas" ] || falla "la copia en Aplicaciones no trae la app"
+[ -z "$(xattr -p com.apple.quarantine "$APPS/CineCaptions Ventas.app" 2>/dev/null)" ] || falla "la copia quedó en cuarentena"
+# … y la copia, al abrirse, expulsa el .dmg (con eso se cierra su ventana)
+"$APPS/CineCaptions Ventas.app/Contents/MacOS/CineCaptions Ventas" --expulsar "$VOL" --comprobar-https https://cinecaptions.shop/ \
+    > /dev/null || falla "la copia de Aplicaciones no abre"
+for _ in $(seq 1 30); do [ -d "$VOL" ] || break; sleep 1; done
+[ -d "$VOL" ] && { hdiutil detach "$VOL" -force -quiet || true; falla "la copia no expulsó el .dmg"; }
+rm -rf "$APPS"
+echo "    OK: doble clic en la app del .dmg la copia a Aplicaciones y la copia expulsa el .dmg"
 # Solo para mirarla: la pantalla de esta Mac con el .dmg abierto en el Finder (sin AppleScript). Si la Mac de GitHub no deja, nada.
 (
     hdiutil attach "$DMG" > /dev/null 2>&1 || exit 0
@@ -107,5 +135,17 @@ echo "    OK: el .dmg trae la app, Aplicaciones y el fondo; la app de dentro se 
     screencapture -x build/capturas_mac/00_dmg_ventana.png 2> /dev/null && echo "    (captura de la ventana del .dmg guardada)"
     hdiutil detach "$VOL" -force -quiet 2> /dev/null || true
 ) || true
+if [ -f build/clave_incluida.txt ]; then
+    # Con la clave dentro, el .dmg sale de aquí SOLO cifrado (el espejo es público: cualquiera podría bajar el artefacto).
+    # Compilar_Ventas_Mac.ps1 lo descifra en la PC del dueño con la misma contraseña (CineCaptions_claves/ventas_artefacto.txt).
+    OSSL="$(brew --prefix openssl@3 2>/dev/null)/bin/openssl"; [ -x "$OSSL" ] || OSSL=openssl
+    "$OSSL" enc -aes-256-cbc -pbkdf2 -iter 200000 -md sha256 -salt -in "$DMG" -out "$DMG.cifrado" -pass env:VENTAS_ARTEFACTO \
+        || falla "no pude cifrar el .dmg"
+    "$OSSL" enc -d -aes-256-cbc -pbkdf2 -iter 200000 -md sha256 -in "$DMG.cifrado" -out /tmp/vuelta.dmg -pass env:VENTAS_ARTEFACTO \
+        && cmp -s "$DMG" /tmp/vuelta.dmg || falla "el .dmg cifrado no se descifra igual"
+    rm -f "$DMG" /tmp/vuelta.dmg
+    DMG="$DMG.cifrado"
+    echo "    (el .dmg trae la clave: sale cifrado)"
+fi
 echo
 echo "Listo: $DMG ($(du -h "$DMG" | cut -f1))"
