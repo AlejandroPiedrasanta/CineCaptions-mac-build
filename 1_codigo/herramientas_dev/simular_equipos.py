@@ -3019,6 +3019,75 @@ def instalador_dice_que_equipos_de_windows_no_sirven():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+@caso('Actualizaciones con el programa cerrado')
+def mac_cerrar_con_la_descarga_a_medias_la_encarga_al_servicio():
+    """v5.88 (el usuario: «en Mac no está descargando la actualización»): al encontrar la 5.88 la app empieza a bajarla sola (745 MB); si
+    se cerraba antes de acabar, _instalar_al_cerrar no hacía nada y la Mac esperaba hasta 4 h al servicio. Ahora se le encarga al cerrar
+    (sin reabrir); en Windows sigue igual (la tarea programada)."""
+    import actualizar_fondo as F
+    M = principal()
+    pedidos = []
+    hilo = threading.Thread(target=lambda: time.sleep(0.5))
+    hilo.start()
+    for plataforma, debe in (('darwin', True), ('win32', False)):
+        falso = types.SimpleNamespace(_predescarga={'version': '9.99', 'ruta': None, 'hilo': hilo}, _instalador_lanzado=False)
+        pedidos.clear()
+        with parches((sys, 'platform', plataforma), (F, 'pedir_al_servicio', lambda reabrir=True, dmg=None: pedidos.append((reabrir, dmg)) or True)):
+            ok = M.SubtitleApp._instalar_al_cerrar(falso)
+        esperar(bool(ok) == debe and (pedidos == [(False, None)]) == debe and falso._instalador_lanzado == debe,
+                f'{plataforma}: ok={ok} pedidos={pedidos} lanzado={falso._instalador_lanzado}')
+    falso = types.SimpleNamespace(_predescarga={'version': M.APP_VERSION, 'ruta': None}, _instalador_lanzado=False)
+    pedidos.clear()
+    with parches((sys, 'platform', 'darwin'), (F, 'pedir_al_servicio', lambda reabrir=True, dmg=None: pedidos.append((reabrir, dmg)) or True)):
+        esperar(not M.SubtitleApp._instalar_al_cerrar(falso) and not pedidos, 'la misma versión que la instalada no se encarga')
+    hilo.join()
+
+
+@caso('Actualizaciones con el programa cerrado')
+def ventana_de_actualizar_ensena_la_descarga_de_fondo():
+    """v5.88: «Actualizar» con la descarga de fondo en marcha esperaba a que acabara con la ventana en 0 % y 0 MB (parecía parada: «en
+    Mac no está descargando»). Ahora enseña su avance y Cancelar deja de esperar."""
+    app = _qapp()
+    import actualizaciones as A
+    import actualizar_ui
+    from PySide6.QtWidgets import QWidget
+    M = principal()
+    vistos = []
+    real_poner = actualizar_ui.PanelActualizacion.poner_descarga
+
+    def espia(self, h, t, *a, **k):
+        vistos.append((h, t))
+        return real_poner(self, h, t, *a, **k)
+    pre = {'version': '9.99', 'ruta': None, 'hechos': 0, 'total': 1000}
+
+    def bajando():
+        for i in range(1, 11):
+            pre['hechos'] = i * 100
+            time.sleep(0.12)
+    hilo = threading.Thread(target=bajando, daemon=True)
+    pre['hilo'] = hilo
+    ventana = QWidget()
+    ventana._predescarga = pre
+    ventana._descargando_actualizacion = False
+    ventana._instalador_lanzado = False
+    r = {'version': '9.99', 'archivo': {'url': 'https://x/CineCaptions_9.99.dmg', 'sha256': '0' * 64, 'tam': 1000}, 'notas': ''}
+    with parches((actualizar_ui.PanelActualizacion, 'poner_descarga', espia),
+                 (A, 'descargar', lambda *a, **k: (_ for _ in ()).throw(RuntimeError('prueba: sin red'))),
+                 (M.messagebox, 'askyesno', lambda *a, **k: False), (M.registro, 'error', lambda *a, **k: None)):
+        hilo.start()
+        M.SubtitleApp._descargar_actualizacion(ventana, r)
+        t0 = time.time()
+        while time.time() - t0 < 4 and (hilo.is_alive() or getattr(ventana, '_descargando_actualizacion', False)):
+            app.processEvents()
+            time.sleep(0.03)
+        for _ in range(20):
+            app.processEvents()
+            time.sleep(0.02)
+    intermedios = sorted({h for h, _t in vistos if 0 < h < 1000})
+    esperar(len(intermedios) >= 3, f'la ventana no enseñó el avance de la descarga de fondo: {sorted(set(vistos))[:12]}')
+    ventana.deleteLater()
+
+
 @caso('Mac: estilos y motores')
 def intel_con_rosetta_en_chip_apple_se_actualiza_a_apple_silicon():
     """v5.88: quien instaló por error la versión Intel en una Mac con chip de Apple la abre con Rosetta: platform.machine() dice «x86_64» y

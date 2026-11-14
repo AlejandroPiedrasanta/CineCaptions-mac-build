@@ -592,6 +592,9 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.89', [
+        'Actualizar: la ventana enseña cómo avanza la descarga desde el primer momento, y si cierras CineCaptions antes de que termine, en Mac se instala igual sola.',
+    ]),
     ('5.88', [
         'Los ejemplos de los estilos, rehechos en alta calidad: nítidos también en pantallas Retina y 4K.',
         'El deslizador de estilos va suave con el trackpad de la Mac: cada gesto pasa una sola tarjeta.',

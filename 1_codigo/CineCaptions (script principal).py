@@ -8221,12 +8221,15 @@ class SubtitleApp(QWidget):
             return
         if pre.get('version') == r['version'] and time.time() - pre.get('fallo_ts', 0) < 1800:
             return
-        est = {'version': r['version'], 'ruta': None, 'fallo_ts': 0}
+        est = {'version': r['version'], 'ruta': None, 'fallo_ts': 0, 'hechos': 0, 'total': int(archivo.get('tam') or 0)}
+
+        def avance(h, t):                       # v5.88: lo lee la ventana de «Actualizar» si se abre mientras esto baja
+            est['hechos'], est['total'] = h, (t or est['total'] or h)
 
         def trabajo():
             import actualizaciones
             try:
-                est['ruta'] = actualizaciones.descargar(archivo, APP_VERSION)
+                est['ruta'] = actualizaciones.descargar(archivo, APP_VERSION, progreso=avance)
                 registro.info(f"Versión {r['version']} descargada y comprobada: se instala sola al cerrar CineCaptions.", 'actualizaciones')
             except Exception as e:
                 est['fallo_ts'] = time.time()
@@ -8240,7 +8243,24 @@ class SubtitleApp(QWidget):
         en silencio; Mac: el servicio del sistema, sin contraseña). Nada si ya se lanzó un instalador o la descarga no terminó."""
         pre = getattr(self, '_predescarga', None) or {}
         ruta = pre.get('ruta')
-        if not ruta or getattr(self, '_instalador_lanzado', False) or not Path(ruta).is_file():
+        if getattr(self, '_instalador_lanzado', False):
+            return False
+        if not ruta or not Path(ruta).is_file():
+            # v5.88 (el usuario: «en Mac no está descargando la actualización»): cerrar antes de que acabara la descarga de fondo (745 MB)
+            # no dejaba nada encargado y la Mac esperaba hasta 4 h a la siguiente pasada del servicio. Ahora se le encarga YA: el servicio
+            # del sistema se despierta (QueueDirectories), espera a que este programa se cierre, la descarga e instala sin contraseña.
+            version = pre.get('version') or (getattr(self, '_actualizacion', None) or {}).get('version') or ''
+            if sys.platform == 'darwin' and version:
+                try:
+                    import actualizaciones
+                    import actualizar_fondo
+                    if actualizaciones.es_mas_nueva(version, APP_VERSION) and actualizar_fondo.pedir_al_servicio(reabrir=False):
+                        self._instalador_lanzado = True
+                        registro.info(f'Actualización a {version}: la descarga no había terminado; el servicio del sistema la baja e '
+                                      'instala ahora que se cerró CineCaptions.', 'actualizaciones')
+                        return True
+                except Exception:
+                    pass
             return False
         try:
             import actualizaciones
@@ -8376,11 +8396,19 @@ class SubtitleApp(QWidget):
             try:
                 # v5.87: la que se bajó sola en segundo plano (_predescargar_actualizacion): se espera a que acabe y se usa (dos descargas a la
                 # vez en la misma carpeta se borrarían una a la otra)
+                # v5.88 (el usuario: «en Mac no está descargando la actualización»): mientras se esperaba, la ventana se quedaba en 0 % y 0 MB
+                # durante TODA la descarga de fondo (745 MB en la Mac): parecía parada. Ahora enseña su avance y «Cancelar» deja de esperar
+                # (la de fondo sigue y se instala al cerrar).
                 pre = getattr(self, '_predescarga', None) or {}
                 if pre.get('version') == r.get('version') and pre.get('hilo') is not None:
-                    pre['hilo'].join()
+                    while pre['hilo'].is_alive():
+                        est['hechos'], est['total'] = pre.get('hechos', 0), pre.get('total', 0)
+                        if est['cancelado']:
+                            return
+                        pre['hilo'].join(0.2)
                     if pre.get('ruta') and Path(pre['ruta']).is_file():
                         est['ruta'], est['fase'] = pre['ruta'], 1
+                        est['hechos'] = est['total'] = pre.get('total') or pre.get('hechos') or 0
                 if not est['ruta']:
                     est['ruta'] = actualizaciones.descargar(archivo, APP_VERSION, progreso=progreso, cancelado=lambda: est['cancelado'])
             except BaseException as e:

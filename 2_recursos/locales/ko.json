@@ -4672,6 +4672,7 @@
     "Mac: se acabó «Faltan tipografías»: las letras de todos los estilos vienen con CineCaptions y se instalan solas al abrirlo.": "Mac: «글꼴이 없습니다»가 더 이상 나오지 않습니다: 모든 스타일의 글꼴이 CineCaptions에 포함되어 있고 열 때 자동으로 설치됩니다.",
     "El nombre del video es demasiado largo para este Windows ({n} letras). Ponle un nombre más corto (menos de {m} letras) y pulsa GO otra vez.": "이 Windows에서는 동영상 이름이 너무 깁니다({n}자). 더 짧은 이름({m}자 미만)으로 바꾸고 GO를 다시 누르세요.",
     "Más equipos sin sorpresas: videos con nombres muy largos o en carpetas profundas en Windows, videos con tildes o ñ en Resolve Free, y en Mac ya no pide permiso para el Escritorio ni Descargas.": "더 많은 컴퓨터에서 문제 없이: Windows의 매우 긴 이름이나 깊은 폴더의 동영상, Resolve Free의 악센트가 있는 이름의 동영상을 처리하며, Mac에서는 더 이상 데스크탑이나 다운로드 접근 권한을 묻지 않습니다.",
-    "Mac con chip de Apple que tenía la versión Intel: al actualizar pasa sola a la de Apple Silicon (más rápida y con la IA local).": "Intel 버전이 설치된 Apple 칩 Mac: 업데이트하면 Apple Silicon 버전으로 자동 전환됩니다(더 빠르고 로컬 AI 사용 가능)."
+    "Mac con chip de Apple que tenía la versión Intel: al actualizar pasa sola a la de Apple Silicon (más rápida y con la IA local).": "Intel 버전이 설치된 Apple 칩 Mac: 업데이트하면 Apple Silicon 버전으로 자동 전환됩니다(더 빠르고 로컬 AI 사용 가능).",
+    "Actualizar: la ventana enseña cómo avanza la descarga desde el primer momento, y si cierras CineCaptions antes de que termine, en Mac se instala igual sola.": "업데이트: 창에 처음부터 다운로드 진행 상황이 표시되며, 끝나기 전에 CineCaptions를 닫아도 Mac에서는 알아서 설치됩니다."
   }
 }

@@ -14030,5 +14030,16 @@
   "ko": "Intel 버전이 설치된 Apple 칩 Mac: 업데이트하면 Apple Silicon 버전으로 자동 전환됩니다(더 빠르고 로컬 AI 사용 가능).",
   "zh": "装着 Intel 版本的 Apple 芯片 Mac：更新时会自动切换到 Apple Silicon 版本（更快，并可使用本地 AI）。",
   "ru": "Mac с чипом Apple, на которых стояла версия для Intel: при обновлении они сами переходят на версию для Apple Silicon (быстрее и с локальным ИИ)."
+ },
+ "Actualizar: la ventana enseña cómo avanza la descarga desde el primer momento, y si cierras CineCaptions antes de que termine, en Mac se instala igual sola.": {
+  "en": "Update: the window shows the download progress right from the start, and if you close CineCaptions before it finishes, on Mac it still installs by itself.",
+  "pt": "Atualizar: a janela mostra o avanço do download desde o primeiro momento, e se você fechar o CineCaptions antes de terminar, no Mac ele se instala sozinho do mesmo jeito.",
+  "fr": "Mettre à jour : la fenêtre montre la progression du téléchargement dès le début, et si vous fermez CineCaptions avant la fin, sur Mac il s’installe quand même tout seul.",
+  "de": "Aktualisieren: Das Fenster zeigt den Download-Fortschritt von Anfang an, und wenn du CineCaptions vorher schließt, installiert es sich auf dem Mac trotzdem von selbst.",
+  "it": "Aggiorna: la finestra mostra l’avanzamento del download fin dal primo momento, e se chiudi CineCaptions prima che finisca, su Mac si installa comunque da solo.",
+  "ja": "アップデート：最初からダウンロードの進み具合が表示され、完了前に CineCaptions を閉じても、Mac ではそのまま自動でインストールされます。",
+  "ko": "업데이트: 창에 처음부터 다운로드 진행 상황이 표시되며, 끝나기 전에 CineCaptions를 닫아도 Mac에서는 알아서 설치됩니다.",
+  "zh": "更新：窗口从一开始就显示下载进度；即使在完成前关闭 CineCaptions，在 Mac 上也会自动完成安装。",
+  "ru": "Обновление: окно с самого начала показывает ход загрузки, а если закрыть CineCaptions раньше, на Mac обновление всё равно установится само."
  }
 }

@@ -4672,6 +4672,7 @@
     "Mac: se acabó «Faltan tipografías»: las letras de todos los estilos vienen con CineCaptions y se instalan solas al abrirlo.": "Mac：「フォントが足りません」はもう出ません。すべてのスタイルのフォントが CineCaptions に含まれ、起動時に自動でインストールされます。",
     "El nombre del video es demasiado largo para este Windows ({n} letras). Ponle un nombre más corto (menos de {m} letras) y pulsa GO otra vez.": "このWindowsでは動画の名前が長すぎます（{n}文字）。短い名前（{m}文字未満）に変えて、もう一度GOを押してください。",
     "Más equipos sin sorpresas: videos con nombres muy largos o en carpetas profundas en Windows, videos con tildes o ñ en Resolve Free, y en Mac ya no pide permiso para el Escritorio ni Descargas.": "より多くの環境で安定：Windows での非常に長い名前や深いフォルダーの動画、Resolve Free でのアクセント付きの名前の動画に対応し、Mac ではデスクトップやダウンロードへのアクセス許可を求めなくなりました。",
-    "Mac con chip de Apple que tenía la versión Intel: al actualizar pasa sola a la de Apple Silicon (más rápida y con la IA local).": "Apple チップの Mac に Intel 版が入っていた場合：アップデートで自動的に Apple Silicon 版に切り替わります（より速く、ローカル AI も使えます）。"
+    "Mac con chip de Apple que tenía la versión Intel: al actualizar pasa sola a la de Apple Silicon (más rápida y con la IA local).": "Apple チップの Mac に Intel 版が入っていた場合：アップデートで自動的に Apple Silicon 版に切り替わります（より速く、ローカル AI も使えます）。",
+    "Actualizar: la ventana enseña cómo avanza la descarga desde el primer momento, y si cierras CineCaptions antes de que termine, en Mac se instala igual sola.": "アップデート：最初からダウンロードの進み具合が表示され、完了前に CineCaptions を閉じても、Mac ではそのまま自動でインストールされます。"
   }
 }
