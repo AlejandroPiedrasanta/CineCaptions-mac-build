@@ -1130,6 +1130,37 @@ class _SinRedirecciones(urllib.request.HTTPRedirectHandler):
         return None
 
 
+def contexto_ssl():
+    """El TLS para hablar con cinecaptions.shop. Windows usa los certificados del sistema. En Mac, el Python que va dentro
+    de la .app los busca en la carpeta de la Mac donde se armó (la de GitHub), que no existe en otra Mac: sin los de
+    certifi (que van dentro de la app), toda conexión daba «No se pudo comprobar la conexión segura» (2.10)."""
+    contexto = ssl.create_default_context()
+    if sys.platform != 'win32':
+        try:
+            import certifi
+            contexto.load_verify_locations(cafile=certifi.where())
+        except (ImportError, OSError, ssl.SSLError):
+            pass   # (sin certifi quedan los del sistema, si los encuentra)
+    return contexto
+
+
+def comprobar_https(url=SITIO):
+    """--comprobar-https: abre la página de la web con el mismo TLS que la API (sin clave) y dice si se pudo.
+    La usa mac/construir_ventas_mac.sh con la .app armada, sin los certificados de la Mac donde se arma."""
+    preparar_consola()
+    pedido = urllib.request.Request(url, method='HEAD', headers={'User-Agent': f'CineCaptionsVentas/{VERSION}'})
+    try:
+        with urllib.request.build_opener(urllib.request.HTTPSHandler(context=contexto_ssl())).open(pedido, timeout=30) as r:
+            print(f'HTTPS bien: {url} respondió {r.status}', flush=True)
+            return 0
+    except urllib.error.HTTPError as e:   # (un 4xx/5xx también prueba que el certificado se comprobó)
+        print(f'HTTPS bien: {url} respondió {e.code}', flush=True)
+        return 0
+    except (urllib.error.URLError, OSError) as e:
+        print(f'HTTPS MAL: {_mensaje_red(getattr(e, "reason", e))} ({e})', file=sys.stderr, flush=True)
+        return 1
+
+
 class ClienteApi:
     """Cliente de pagos/admin.php. Cada método hace un POST y devuelve los datos ya revisados, o lanza ApiError.
     No toca nada de la ventana: se puede usar desde un hilo o desde las pruebas.
@@ -1137,7 +1168,7 @@ class ClienteApi:
 
     def __init__(self, url, clave, tiempo=25, solo_lectura=False):
         self.url, self.clave, self.tiempo, self.solo_lectura = url, clave, tiempo, solo_lectura
-        manejadores = [urllib.request.HTTPSHandler(context=ssl.create_default_context()), _SinRedirecciones()]
+        manejadores = [urllib.request.HTTPSHandler(context=contexto_ssl()), _SinRedirecciones()]
         if es_local(urllib.parse.urlsplit(url).hostname):
             manejadores.append(urllib.request.ProxyHandler({}))   # el servidor de prueba nunca pasa por un proxy
         self._abridor = urllib.request.build_opener(*manejadores)
@@ -12650,7 +12681,11 @@ def main(argv=None):
     parser.add_argument('--captura', metavar='CARPETA', help='guarda capturas PNG de la ventana y sale')
     parser.add_argument('--ancho', metavar='PX', type=int, default=1440,
                         help='con --captura: el ancho de la ventana (1100 como mínimo; si no se dice, 1440)')
+    parser.add_argument('--comprobar-https', nargs='?', const=SITIO, metavar='URL',
+                        help='prueba la conexión segura con la web (sin clave) y sale')
     args, resto = parser.parse_known_args(argv[1:])
+    if args.comprobar_https:
+        return comprobar_https(args.comprobar_https)
     if args.importar_clave or args.captura:
         preparar_consola()
     if args.importar_clave:

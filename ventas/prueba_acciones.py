@@ -195,6 +195,22 @@ def prueba_funciones():
     canje = {'licencia': {'correo': None}, 'pedido': None, 'canje': {'correo': 'luis@example.com'}}
     revisar(v.correo_reenvio(mala) == v.correo_aviso(mala) == 'ana@example.com' and v.correo_reenvio(canje) == 'luis@example.com',
             'sin un correo válido en la licencia: el de la compra pagada o el del canje')
+    # El TLS de la API: comprueba certificado y nombre, y trae certificados aunque falten los de la máquina donde se armó
+    # (en Mac, los de certifi: sin ellos la 2.10 armada no se conectaba en otra Mac)
+    guardado = {k: os.environ.get(k) for k in ('SSL_CERT_FILE', 'SSL_CERT_DIR')}
+    os.environ.update(SSL_CERT_FILE=str(TEMPORAL / 'no-hay' / 'cert.pem'), SSL_CERT_DIR=str(TEMPORAL / 'no-hay'))
+    try:
+        contexto = v.contexto_ssl()
+    finally:
+        for k, valor in guardado.items():
+            if valor is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = valor
+    revisar(contexto.verify_mode == v.ssl.CERT_REQUIRED and contexto.check_hostname
+            and contexto.cert_store_stats()['x509_ca'] > 20,
+            f'TLS: comprueba el certificado y tiene los de las autoridades sin los de esta máquina '
+            f'({contexto.cert_store_stats()["x509_ca"]})')
     if os.name == 'nt':
         cifrada = v.cifrar_clave('clave-de-prueba')
         revisar(cifrada != 'clave-de-prueba' and v.descifrar_clave(cifrada) == 'clave-de-prueba', 'DPAPI cifra y descifra')

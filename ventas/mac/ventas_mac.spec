@@ -10,7 +10,7 @@
 import re
 from pathlib import Path
 
-from PyInstaller.utils.hooks import collect_submodules, copy_metadata
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules, copy_metadata
 
 AQUI = Path(SPECPATH).parent          # programa/
 NOMBRE = 'CineCaptions Ventas'
@@ -36,8 +36,9 @@ a = Analysis(
     [str(AQUI / 'ventas.py')],
     pathex=[str(AQUI)],
     binaries=[],
-    datas=[(str(AQUI / 'fuentes' / 'Inter.ttf'), 'fuentes')] + copy_metadata('keyring'),
-    hiddenimports=collect_submodules('keyring.backends') + ['keyring.backends.macOS'],
+    # certifi: los certificados para el HTTPS de cinecaptions.shop (sin ellos, en otra Mac no se conecta; ventas.contexto_ssl)
+    datas=[(str(AQUI / 'fuentes' / 'Inter.ttf'), 'fuentes')] + copy_metadata('keyring') + collect_data_files('certifi'),
+    hiddenimports=collect_submodules('keyring.backends') + ['keyring.backends.macOS', 'certifi'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

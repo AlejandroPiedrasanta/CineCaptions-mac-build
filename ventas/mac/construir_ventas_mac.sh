@@ -43,6 +43,16 @@ APP="build/dist_mac/CineCaptions Ventas.app"
 BIN="$APP/Contents/MacOS/CineCaptions Ventas"
 [ -x "$BIN" ] || falla "no se armó la .app"
 
+paso "HTTPS de verdad desde la .app armada (sin los certificados de esta Mac, como en la Mac del dueño)"
+# El Python de la .app busca los certificados en carpetas de ESTA Mac de GitHub; en otra Mac no existen y la 2.10 no se
+# conectaba («No se pudo comprobar la conexión segura»). Con SSL_CERT_FILE/DIR a la nada solo quedan los de certifi.
+# (Primero, solo para el registro: el TLS de siempre, sin certifi, en esas condiciones; se espera que falle.)
+SSL_CERT_FILE=/nada/cert.pem SSL_CERT_DIR=/nada $PY -c "import ssl, urllib.request as u; u.urlopen(u.Request('https://cinecaptions.shop/', method='HEAD'), context=ssl.create_default_context(), timeout=30); print('    (sin certifi también se conecta)')" 2>&1 | tail -1 || true
+SSL_CERT_FILE=/nada/cert.pem SSL_CERT_DIR=/nada "$BIN" --comprobar-https https://cinecaptions.shop/ \
+    || falla "la .app no pudo abrir https://cinecaptions.shop sin los certificados de esta Mac"
+SSL_CERT_FILE=/nada/cert.pem SSL_CERT_DIR=/nada "$BIN" --comprobar-https https://github.com/ \
+    || falla "la .app no pudo abrir https://github.com sin los certificados de esta Mac"
+
 paso "Autoprueba de la .app armada (Llavero + capturas contra el servidor de prueba)"
 $PY servidor_prueba.py --puerto 8799 > /tmp/servidor_ventas.log 2>&1 &
 SRV=$!
