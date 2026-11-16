@@ -654,7 +654,11 @@ def _motor_ia_en_mac():
             if time.time() - float(ultimo.get('fallo') or 0) < MAC_IA_REINTENTO_S:
                 return
             time.sleep(MAC_IA_ESPERA_S)
-            if motor_voz.instalando() or motor_voz.instalado():       # (ya la pidió Ajustes en este rato)
+            if motor_voz.instalado():
+                return
+            if motor_voz.instalando():                                # (ya la pidió Ajustes en este rato, o v5.92: la dejó bajando el instalador)
+                r.info('Motor de voz e IA: se está bajando en segundo plano; mientras, la voz va con Whisper. El avance se ve en Ajustes › '
+                       'General.', 'arranque')
                 return
             libre = _gb_libres(Path.home())
             if libre is not None and libre < MAC_IA_DISCO_GB:

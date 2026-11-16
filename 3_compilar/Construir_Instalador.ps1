@@ -227,7 +227,11 @@ try {
 } finally { $zip.Dispose() }
 # v5.3.2: el instalador lleva la VERSION en el nombre (como los de Mac) y los anteriores se borran: asi se ve de un vistazo cual es el ultimo y nunca queda uno viejo
 # haciendose pasar por el actual. Se arma con otro nombre y solo al verificarlo se quitan los demas.
-$salida = Join-Path $raiz 'INSTALADORES\Windows'
+# 2026-11-16 (el usuario: «deja 2 carpetas: el programa y los instaladores»): el programa vive en PROGRAMA\ y los instaladores en
+# ..\INSTALADORES (junto a PROGRAMA, en la raíz de CineCaptions); en el espejo de Mac siguen dentro
+$INST = Join-Path (Split-Path $raiz -Parent) 'INSTALADORES'
+if ((Split-Path $raiz -Leaf) -ne 'PROGRAMA' -or -not (Test-Path -LiteralPath $INST)) { $INST = Join-Path $raiz 'INSTALADORES' }
+$salida = Join-Path $INST 'Windows'
 New-Item -ItemType Directory -Force -Path $salida | Out-Null
 $exe = Join-Path $salida ("Instalar_CineCaptions_{0}.exe" -f $version)
 $parcial = $exe + '.parcial'

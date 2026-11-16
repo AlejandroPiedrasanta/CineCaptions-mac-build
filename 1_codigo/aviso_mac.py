@@ -7,7 +7,10 @@
 # permisos de notificaciones y deja elegir.
 """
 Una tarjeta arriba a la derecha (donde salen las notificaciones de macOS), siempre encima:
-  preguntar   «Nueva versión de CineCaptions» · 5.89 → 5.90 · sus novedades · «Más tarde» / «Actualizar ahora»; si nadie elige nada en
+  bajando     (v5.92: el usuario «que cuando hay una actualización la notifique incluso si está cerrado») «Nueva versión de
+              CineCaptions» · «la estoy preparando: 35 %» con su barra · «Ocultar»; sale en cuanto el servicio la encuentra (antes, al
+              TERMINAR de bajar ~750 MB: minutos sin enterarse) y la sustituye la de preguntar
+  preguntar  «Nueva versión de CineCaptions» · 5.89 → 5.90 · sus novedades · «Más tarde» / «Actualizar ahora»; si nadie elige nada en
               `espera_s` se instala sola (pedido de la 5.87: «que se descarguen e instalen solas»)
   instalando  la barra que avanza mientras el servicio instala; se cierra sola cuando el servicio termina (lo lee en su estado.json)
   hecha       «CineCaptions se actualizó a la 5.90» · «Abrir CineCaptions»
@@ -28,6 +31,7 @@ ESTADO_SERVICIO = Path('/Library/Application Support/CineCaptions/actualizar/est
 APP_MAC = '/Applications/CineCaptions.app'
 TOPE_S = 6 * 3600                              # una tarjeta olvidada no se queda abierta para siempre
 TOPE_INSTALANDO_S = 20 * 60                    # «instalando» sin noticias del servicio: se cierra (el servicio abre la del final)
+TOPE_BAJANDO_S = 5 * 60                        # «bajando» sin que el servicio diga nada en ese rato (se cortó): se cierra
 ANCHO = 392
 LINEAS_NOVEDAD = 2
 
@@ -65,12 +69,14 @@ def leer(ruta):
         return {}
 
 
-def responder(accion, ident, carpeta=None):
+def responder(accion, ident, carpeta=None, sola=False):
     """Deja la respuesta al servicio (lo despierta si no estaba esperando). True si quedó. v5.91: en la carpeta que dice el aviso (la del
-    servicio de root o la del usuario)."""
+    servicio de root o la del usuario). v5.92: `sola` = nadie eligió (acabó la cuenta atrás): se instala sin abrir CineCaptions."""
     try:
         carpeta = Path(carpeta) if carpeta else actualizar_fondo.PEDIDOS_MAC
         datos = {'accion': accion, 'id': str(ident), 'pid': os.getpid(), 'ts': time.time()}
+        if sola:
+            datos['sola'] = True
         tmp = carpeta / f'.respuesta_{os.getpid()}.tmp'
         tmp.write_text(json.dumps(datos), encoding='utf-8')
         tmp.rename(carpeta / f'respuesta_{os.getpid()}_{int(time.time() * 1000)}.json')
@@ -88,10 +94,31 @@ def resultado(estado, version, desde):
     return None
 
 
+def _sin_icono_en_el_dock():
+    """v5.92 (MEDIDO en Macs de GitHub: cada tarjeta ponía otro icono de CineCaptions en el Dock): la tarjeta es un aviso, no el programa
+    abierto: NSApplicationActivationPolicyAccessory (sin icono en el Dock ni barra de menús; la ventana se ve igual). Por ctypes: sin PyObjC."""
+    if sys.platform != 'darwin':
+        return
+    try:
+        import ctypes
+        objc = ctypes.cdll.LoadLibrary('/usr/lib/libobjc.A.dylib')
+        objc.objc_getClass.restype = ctypes.c_void_p
+        objc.objc_getClass.argtypes = [ctypes.c_char_p]
+        objc.sel_registerName.restype = ctypes.c_void_p
+        objc.sel_registerName.argtypes = [ctypes.c_char_p]
+        enviar = ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p)(('objc_msgSend', objc))
+        politica = ctypes.CFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_long)(('objc_msgSend', objc))
+        app = enviar(objc.objc_getClass(b'NSApplication'), objc.sel_registerName(b'sharedApplication'))
+        if app:
+            politica(app, objc.sel_registerName(b'setActivationPolicy:'), 1)          # 1 = Accessory
+    except Exception:
+        pass
+
+
 def mostrar(ruta_aviso):
     """La tarjeta (bloquea hasta que se cierra). Devuelve lo que pasó, para el registro de la tarea."""
     aviso = leer(ruta_aviso)
-    if not aviso.get('version') or aviso.get('modo') not in ('preguntar', 'instalando', 'hecha', 'fallo'):
+    if not aviso.get('version') or aviso.get('modo') not in ('bajando', 'preguntar', 'instalando', 'hecha', 'fallo'):
         return 'aviso vacío'
     from PySide6.QtCore import QPointF, QRectF, Qt, QTimer
     from PySide6.QtGui import QFontMetricsF, QGuiApplication, QLinearGradient, QPainter, QPen, QPixmap
@@ -107,6 +134,7 @@ def mostrar(ruta_aviso):
     except Exception:
         recursos = Path(__file__).resolve().parent.parent / '2_recursos'
     app = ui.crear_app(sys.argv[:1], carpeta_fuentes=recursos / 'fonts')
+    _sin_icono_en_el_dock()
     logo = QPixmap(str(recursos / 'logo_cinecaptions.png'))
     try:
         ui.poner_icono_app(str(recursos / 'logo_cinecaptions.png'))
@@ -127,6 +155,8 @@ def mostrar(ruta_aviso):
     novedades = [partir(n, fm12, ancho_nov) for n in novedades]
     textos = {                                                       # (traducidos AHORA: luego la app puede estar a medio reemplazar)
         'titulo': tr('Nueva versión de CineCaptions'), 'hecha': tr('CineCaptions se actualizó'), 'fallo': tr('No se pudo actualizar'),
+        'bajando': tr('Nueva versión de CineCaptions'), 'ocultar': tr('Ocultar'),       # (el mismo título que al preguntar: el largo no cabía)
+        'nota_bajando': tr('La estoy preparando: {p} %. Cuando esté lista te pregunto si la instalo.'),
         'instalando': tr('Actualizando CineCaptions…'), 'luego': tr('Más tarde'), 'ahora': tr('Actualizar ahora'),
         'abrir': tr('Abrir CineCaptions'), 'cerrar': tr('Cerrar'), 'descargar': tr('Descargar'),
         'cuenta': tr('Se instala sola en {t} si no eliges nada.'),
@@ -146,6 +176,8 @@ def mostrar(ruta_aviso):
             self.t = 0.0
             self.ult = time.perf_counter()
             self.motivo = str(aviso.get('motivo') or '')
+            self.avance = max(0.0, min(1.0, float(aviso.get('avance') or 0)))
+            self.visto = time.time()                                 # (bajando: cuándo dijo algo el servicio por última vez)
             self._arrastre = None
             v = QVBoxLayout(self)
             v.setContentsMargins(18, 16, 18, 16)
@@ -178,7 +210,7 @@ def mostrar(ruta_aviso):
                 if self.isVisible() and not self.reloj.isActive():
                     self.ult = time.perf_counter()
                     self.reloj.start()
-            botones = {'preguntar': (textos['ahora'], textos['luego']), 'instalando': (None, None),
+            botones = {'bajando': (None, textos['ocultar']), 'preguntar': (textos['ahora'], textos['luego']), 'instalando': (None, None),
                        'hecha': (textos['abrir'], textos['cerrar']), 'fallo': (textos['descargar'], textos['cerrar'])}[modo]
             for b, texto in zip((self.b1, self.b2), botones):
                 b.setVisible(bool(texto))
@@ -188,8 +220,8 @@ def mostrar(ruta_aviso):
             nota = self._nota()
             alto_nota = fm.boundingRect(QRectF(0, 0, ANCHO - 36 - 52, 1000), int(Qt.TextFlag.TextWordWrap), nota).height() if nota else 0
             alto_nov = sum(len(n) * 17 + 6 for n in novedades) if modo == 'preguntar' and novedades else 0
-            alto = int(16 + 64 + (alto_nov + 8 if alto_nov else 0) + (alto_nota + 10 if nota else 0) + (24 if modo == 'instalando' else 0)
-                       + (50 if botones[0] else 6) + 12)
+            alto = int(16 + 64 + (alto_nov + 8 if alto_nov else 0) + (alto_nota + 10 if nota else 0)
+                       + (24 if modo in ('instalando', 'bajando') else 0) + (50 if (botones[0] or botones[1]) else 6) + 12)
             self.setFixedSize(ANCHO, alto)
             self._colocar()
             self.update()
@@ -197,6 +229,8 @@ def mostrar(ruta_aviso):
         def _nota(self):
             if self.modo == 'preguntar':
                 return textos['cuenta'].format(t=self._quedan())
+            if self.modo == 'bajando':
+                return textos['nota_bajando'].format(p=int(self.avance * 100))
             return {'instalando': textos['nota_inst'], 'hecha': textos['nota_hecha'],
                     'fallo': (self.motivo + '\n' if self.motivo else '') + textos['nota_fallo']}[self.modo]
 
@@ -212,7 +246,9 @@ def mostrar(ruta_aviso):
             self.move(g.right() - self.width() - 14, g.top() + 12)
 
         def _pulsar(self, k):
-            if self.modo == 'preguntar':
+            if self.modo == 'bajando':                               # «Ocultar»: la descarga sigue; al acabar, la tarjeta de preguntar
+                self.close()
+            elif self.modo == 'preguntar':
                 if k == 1:
                     responder('instalar', aviso.get('id'), aviso.get('pedidos'))
                     self._poner_modo('instalando')
@@ -221,8 +257,8 @@ def mostrar(ruta_aviso):
                     self.close()
             elif self.modo == 'hecha':
                 if k == 1:
-                    try:
-                        subprocess.Popen(['/usr/bin/open', str(actualizar_fondo.app_instalada())], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                    try:                                             # (-n: esta tarjeta ES CineCaptions; sin -n, `open` solo la traía al frente)
+                        subprocess.Popen(['/usr/bin/open', '-n', str(actualizar_fondo.app_instalada())], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                                          stderr=subprocess.DEVNULL, env=actualizar_fondo.entorno_para_abrir())
                     except OSError:
                         pass
@@ -244,9 +280,16 @@ def mostrar(ruta_aviso):
             if otro.get('id') and otro.get('id') != aviso.get('id'):
                 self.close()
                 return
-            if self.modo == 'preguntar':
+            if self.modo == 'bajando':
+                nuevo = max(0.0, min(1.0, float(otro.get('avance') or 0)))
+                if nuevo != self.avance:
+                    self.avance, self.visto = nuevo, time.time()
+                    self.update()
+                elif time.time() - self.visto > TOPE_BAJANDO_S:      # (el servicio dejó de contar: se cortó)
+                    self.close()
+            elif self.modo == 'preguntar':
                 if time.time() >= self.limite:                       # nadie eligió: se instala sola (el servicio también lo decide al acabar el plazo)
-                    responder('instalar', aviso.get('id'), aviso.get('pedidos'))
+                    responder('instalar', aviso.get('id'), aviso.get('pedidos'), sola=True)
                     self._poner_modo('instalando')
                 else:
                     self.update()
@@ -294,7 +337,8 @@ def mostrar(ruta_aviso):
                 p.drawPixmap(QRectF(x0, y0, 44, 44), logo, QRectF(logo.rect()))
             xt = x0 + 56
             ancho_t = r.right() - xt - 12
-            titulo = {'preguntar': textos['titulo'], 'instalando': textos['instalando'], 'hecha': textos['hecha'], 'fallo': textos['fallo']}[self.modo]
+            titulo = {'bajando': textos['bajando'], 'preguntar': textos['titulo'], 'instalando': textos['instalando'], 'hecha': textos['hecha'],
+                      'fallo': textos['fallo']}[self.modo]
             p.setFont(fuente(14, True))
             p.setPen(QColor(ui.TEXT_COLOR))
             fmt = QFontMetricsF(fuente(14, True))
@@ -338,6 +382,20 @@ def mostrar(ruta_aviso):
                         y += 17
                     y += 6
                 y += 8
+            # barra con el avance de la descarga (bajando)
+            if self.modo == 'bajando':
+                barra = QRectF(x0, y + 4, r.right() - x0 - 14, 6)
+                p.setPen(Qt.PenStyle.NoPen)
+                p.setBrush(QColor('#18233A'))
+                p.drawRoundedRect(barra, 3, 3)
+                if self.avance > 0:
+                    lleno = QRectF(barra.left(), barra.top(), max(6.0, barra.width() * self.avance), barra.height())
+                    gb = QLinearGradient(lleno.topLeft(), lleno.topRight())
+                    gb.setColorAt(0.0, QColor(ui.VERDE))
+                    gb.setColorAt(1.0, QColor('#7AF0C2'))
+                    p.setBrush(gb)
+                    p.drawRoundedRect(lleno, 3, 3)
+                y += 24
             # barra mientras instala
             if self.modo == 'instalando':
                 barra = QRectF(x0, y + 4, r.right() - x0 - 14, 6)

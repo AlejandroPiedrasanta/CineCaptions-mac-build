@@ -4691,6 +4691,14 @@
     "Mac: cuando sale una versión nueva aparece un aviso de CineCaptions arriba a la derecha, aunque el programa esté cerrado: eliges «Actualizar ahora» o «Más tarde», ves cómo se instala y te dice cuándo terminó.": "Mac：有新版本时，即使程序已关闭，右上角也会出现 CineCaptions 提示：可选择“立即更新”或“稍后”，能看到安装过程，完成时会告诉你。",
     "Con una versión nueva, el icono de CineCaptions rebota en el Dock (en Windows parpadea en la barra de tareas) para que no se te pase.": "有新版本时，CineCaptions 图标会在程序坞中跳动（Windows 上在任务栏闪烁），不会错过。",
     "Mac: se instala arrastrando CineCaptions a Aplicaciones, sin contraseña. Al abrirlo pone solo los scripts de Resolve, las tipografías y sus actualizaciones.": "Mac：把 CineCaptions 拖到“应用程序”即可安装，无需密码。打开后会自动设置 Resolve 脚本、字体和更新。",
-    "Actualizar es inmediato: la ventana de progreso se ve todo el rato y en Mac CineCaptions se cambia por la nueva y se vuelve a abrir solo.": "更新即刻开始：进度窗口全程可见；在 Mac 上，CineCaptions 会替换为新版本并自动重新打开。"
+    "Actualizar es inmediato: la ventana de progreso se ve todo el rato y en Mac CineCaptions se cambia por la nueva y se vuelve a abrir solo.": "更新即刻开始：进度窗口全程可见；在 Mac 上，CineCaptions 会替换为新版本并自动重新打开。",
+    "Mac: nuevo instalador. Doble clic en «Instalar CineCaptions» y en un minuto queda todo listo, sin contraseña: la app en Aplicaciones y en el Dock, los scripts de Resolve, las tipografías y las actualizaciones.": "Mac：全新安装程序。双击“安装 CineCaptions”，一分钟内全部就绪，无需密码：应用程序和 Dock 中的应用、Resolve 脚本、字体和更新。",
+    "Su ventana enseña cada paso y el porcentaje; al terminar abre CineCaptions sola.": "窗口会显示每一步和百分比；完成后自动打开 CineCaptions。",
+    "Su ventana enseña el porcentaje y cuánto falta; al terminar abre CineCaptions sola, y el motor de voz e IA se sigue bajando aparte para que el primer GO no lo espere.": "窗口显示百分比和剩余时间；完成后自动打开 CineCaptions，语音和 AI 引擎会在后台继续下载，第一次 GO 无需等待。",
+    "Mac: al elegir «Actualizar ahora» en el aviso de una versión nueva, CineCaptions se instala y se vuelve a abrir con ella.": "Mac：在新版本提示中选择“立即更新”，CineCaptions 会安装并以新版本重新打开。",
+    "Instalando en segundo plano": "正在后台安装",
+    "Mac: el aviso de una versión nueva sale en cuanto se encuentra, aunque CineCaptions esté cerrado; con «Actualizar ahora» se instala y se vuelve a abrir con ella.": "Mac：一发现新版本就会立即提示，即使 CineCaptions 已关闭；选择“立即更新”即可安装并以新版本重新打开。",
+    "Hay una versión nueva de CineCaptions": "CineCaptions 有新版本",
+    "La estoy preparando: {p} %. Cuando esté lista te pregunto si la instalo.": "正在准备：{p} %。准备好后会询问你是否安装。"
   }
 }

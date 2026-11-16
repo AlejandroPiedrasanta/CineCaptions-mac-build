@@ -239,6 +239,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         copia los scripts de CineCaptions al menú de DaVinci Resolve y comprueba que estén al día.
     instalar_fuentes.py
         instala en el sistema las tipografías de las plantillas (para que Resolve/Fusion las vea).
+    instalar_mac.py
+        los pasos 3-7 del instalador de la Mac («Instalar CineCaptions.app», 7_mac/instalador) con la app ya copiada.
     intros_gancho.py
         v5.33: el «Gancho del inicio» de la Edición PRO = una INTRO en el primer segundo: un destello de luz (los overlays
     isla_ui.py

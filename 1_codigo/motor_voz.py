@@ -1101,29 +1101,123 @@ def _pip(argumentos, aviso):
 
 _INSTALANDO = {'activo': False, 'f': 0.0, 'texto': ''}
 _LOCK_INSTALAR = threading.Lock()
+# v5.92 (el usuario: «que el motor de voz e IA empiece a bajarse desde el instalador»): el instalador de la Mac lo deja bajando en un
+# proceso APARTE (`--tarea motor_fondo`) que sigue aunque se cierre. Una sola instalación ENTRE procesos (flock sobre .instalando.lock) y su
+# avance en .instalando.json: el programa abierto lo enseña en Ajustes y no empieza otra. (Windows: sin flock, como antes.)
+_CANDADO = {'fd': None, 't': 0.0}
+
+
+def _ruta_candado():
+    return carpeta() / '.instalando.lock'
+
+
+def _ruta_avance():
+    return carpeta() / '.instalando.json'
+
+
+def _tomar_candado_procesos():
+    """True si este proceso queda como el único que instala (o no hay flock); False si ya instala otro proceso."""
+    if os.name != 'posix':
+        return True
+    import fcntl
+    try:
+        _ruta_candado().parent.mkdir(parents=True, exist_ok=True)
+        fd = os.open(_ruta_candado(), os.O_RDWR | os.O_CREAT, 0o644)
+    except OSError:
+        return True
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        os.close(fd)
+        return False
+    _CANDADO['fd'] = fd
+    return True
+
+
+def _soltar_candado_procesos():
+    fd, _CANDADO['fd'] = _CANDADO['fd'], None
+    try:
+        _ruta_avance().unlink(missing_ok=True)
+    except OSError:
+        pass
+    if fd is not None:
+        import fcntl
+        try:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+        finally:
+            os.close(fd)
+
+
+def _guardar_avance(f, texto):
+    """El avance para los otros procesos (como mucho dos veces por segundo; escritura atómica: nunca se lee a medias)."""
+    if _CANDADO['fd'] is None or time.time() - _CANDADO['t'] < 0.5:
+        return
+    _CANDADO['t'] = time.time()
+    try:
+        tmp = _ruta_avance().with_suffix('.tmp')
+        tmp.write_text(json.dumps({'f': f, 'texto': texto, 'pid': os.getpid(), 'ts': time.time()}), encoding='utf-8')
+        os.replace(tmp, _ruta_avance())
+    except OSError:
+        pass
+
+
+def _instalando_en_otro_proceso():
+    """(fracción, texto) si OTRO proceso tiene el candado de la instalación (p. ej. el que dejó el instalador de la Mac), o None."""
+    if os.name != 'posix':
+        return None
+    try:
+        ruta = _ruta_candado()
+        if not ruta.exists():
+            return None
+        fd = os.open(ruta, os.O_RDONLY)
+    except OSError:
+        return None
+    import fcntl
+    try:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_SH | fcntl.LOCK_NB)
+        except OSError:
+            try:
+                d = json.loads(_ruta_avance().read_text(encoding='utf-8'))
+            except Exception:
+                d = {}
+            return (max(0.0, min(1.0, float(d.get('f') or 0))), str(d.get('texto') or tr('Instalando en segundo plano')))
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        return None
+    finally:
+        os.close(fd)
 
 
 def instalando():
-    """v5.86: (fracción, texto) de una instalación del motor en marcha en este programa (la automática de la Mac o la de Ajustes), o None."""
-    return (_INSTALANDO['f'], _INSTALANDO['texto']) if _INSTALANDO['activo'] else None
+    """v5.86: (fracción, texto) de una instalación del motor en marcha en este programa (la automática de la Mac o la de Ajustes), o None.
+    v5.92: también la de otro proceso (la que deja en marcha el instalador de la Mac)."""
+    if _INSTALANDO['activo']:
+        return (_INSTALANDO['f'], _INSTALANDO['texto'])
+    return _instalando_en_otro_proceso()
 
 
 def instalar(progreso=None, aviso=None, modelo='auto'):
     """Instala (o repara) el motor. progreso(0..1, texto), aviso(texto).
     Lanza excepcion si no se pudo; deja listo.json solo si TODO salio bien.
-    v5.86: una sola a la vez (en la Mac el programa la lanza solo al abrir y Ajustes podría pedir otra): la segunda falla al momento."""
+    v5.86: una sola a la vez (en la Mac el programa la lanza solo al abrir y Ajustes podría pedir otra): la segunda falla al momento.
+    v5.92: también entre procesos (el instalador de la Mac la deja corriendo aparte)."""
     if not _LOCK_INSTALAR.acquire(blocking=False):
+        raise RuntimeError(tr('El motor ya se está instalando.'))
+    if not _tomar_candado_procesos():
+        _LOCK_INSTALAR.release()
         raise RuntimeError(tr('El motor ya se está instalando.'))
     _INSTALANDO.update(activo=True, f=0.0, texto='')
 
     def pr(f, texto):
         _INSTALANDO.update(f=max(0.0, min(1.0, f)), texto=texto)
+        _guardar_avance(max(0.0, min(1.0, f)), texto)
         if progreso:
             progreso(max(0.0, min(1.0, f)), texto)
     try:
         return _instalar(pr, aviso, modelo)
     finally:
         _INSTALANDO.update(activo=False)
+        _soltar_candado_procesos()
         _LOCK_INSTALAR.release()
 
 

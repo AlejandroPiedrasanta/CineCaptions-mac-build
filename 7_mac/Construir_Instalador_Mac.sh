@@ -1,11 +1,11 @@
 #!/bin/bash
 # CineCaptions · By Cinema Productions
-# 7_mac/Construir_Instalador_Mac.sh — arma el .dmg (la app para arrastrar a Aplicaciones) en una Mac; compila para la arquitectura de ESA Mac.
+# 7_mac/Construir_Instalador_Mac.sh — arma el .dmg («Instalar CineCaptions», v5.92) en una Mac; compila para la arquitectura de ESA Mac.
 # ============================================================================
 #   bash 7_mac/Construir_Instalador_Mac.sh            todo de principio a fin
 #   bash 7_mac/Construir_Instalador_Mac.sh --solo-instalador   reusa la app ya compilada
 #
-# Hace: venv -> PyInstaller (CineCaptions.app) -> autoprueba -> paquete oculto para las Mac ya instaladas -> .dmg
+# Hace: venv -> PyInstaller (CineCaptions.app) -> autoprueba -> paquete oculto para las Mac ya instaladas -> Instalar CineCaptions.app -> .dmg
 #   Apple Silicon (arm64):  Python 3.14, CineCaptions_Mac_AppleSilicon_<version>.dmg
 #   Intel (x86_64):         Python 3.13 + onnxruntime 1.23.2 (la ultima con version Intel), CineCaptions_Mac_Intel_<version>.dmg
 # Deja el .dmg en INSTALADORES/Mac (o en $CINECAPTIONS_SALIDA); 6_compilacion_mac/ se puede borrar.
@@ -173,27 +173,96 @@ SELLO_PKG=(); [ -n "${FIRMA_PKG:-}" ] && SELLO_PKG=(--sign "$FIRMA_PKG")
 pkgbuild --nopayload --scripts "$AQUI/pkg/scripts" --identifier com.cinemaproductions.cinecaptions --version "$VERSION" \
     ${SELLO_PKG[@]+"${SELLO_PKG[@]}"} "$PKG" >/dev/null || falla "pkgbuild no pudo armar el paquete de las Mac ya instaladas"
 
+# 6b) «Instalar CineCaptions.app», la ventana del instalador ------------------------------------------------------------------------------
+# v5.92 (el usuario: «necesito que funcione el instalador como el de CineSlide»): una app nativa (Swift: su ventana sale al instante) que copia
+# la app oculta del disco a Aplicaciones y le pide a esa app el resto (7_mac/instalador). Sin contraseña. La compila swiftc de esta Mac.
+paso "Instalar CineCaptions.app (la ventana del instalador)"
+command -v swiftc >/dev/null 2>&1 || falla "Falta swiftc: instala Xcode o las Command Line Tools (xcode-select --install)"
+INSTALADOR="$OBRA/Instalar CineCaptions.app"; rm -rf "$INSTALADOR"
+mkdir -p "$INSTALADOR/Contents/MacOS" "$INSTALADOR/Contents/Resources"
+# UNIVERSAL (Apple Silicon + Intel; revisión independiente): con solo la de esta Mac, en la otra macOS decía «no compatible» (o pedía
+# instalar Rosetta, con contraseña) en vez del aviso claro de instalar.sh «este instalador es para…»
+for A in arm64 x86_64; do
+    swiftc -O -parse-as-library -target "$A-apple-macos14.0" -o "$OBRA/instalar_$A" "$AQUI/instalador/instalador_mac.swift" \
+        || falla "swiftc no pudo compilar la ventana del instalador para $A (7_mac/instalador/instalador_mac.swift)"
+done
+lipo -create "$OBRA/instalar_arm64" "$OBRA/instalar_x86_64" -output "$INSTALADOR/Contents/MacOS/instalar" || falla "lipo no pudo unir el instalador universal"
+rm -f "$OBRA/instalar_arm64" "$OBRA/instalar_x86_64"
+cp "$AQUI/instalador/instalar.sh" "$INSTALADOR/Contents/Resources/instalar.sh"
+chmod +x "$INSTALADOR/Contents/Resources/instalar.sh"
+cp "$OBRA/CineCaptions.icns" "$INSTALADOR/Contents/Resources/CineCaptions.icns"
+sips -z 256 256 "$RECURSOS/logo_cinecaptions.png" --out "$INSTALADOR/Contents/Resources/logo_cinecaptions.png" >/dev/null
+du -sk "$APP" | cut -f1 > "$INSTALADOR/Contents/Resources/tamano_kb"          # (para el «Copiando… X de Y MB» sin medir el disco)
+cat > "$INSTALADOR/Contents/Info.plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key><string>instalar</string>
+    <key>CFBundleIdentifier</key><string>com.cinemaproductions.cinecaptions.instalar</string>
+    <key>CFBundleName</key><string>Instalar CineCaptions</string>
+    <key>CFBundleDisplayName</key><string>Instalar CineCaptions</string>
+    <key>CFBundleIconFile</key><string>CineCaptions</string>
+    <key>CFBundlePackageType</key><string>APPL</string>
+    <key>CFBundleShortVersionString</key><string>$VERSION</string>
+    <key>CFBundleVersion</key><string>$VERSION</string>
+    <key>CFBundleDevelopmentRegion</key><string>es</string>
+    <key>CFBundleLocalizations</key><array><string>es</string><string>en</string></array>
+    <key>LSMinimumSystemVersion</key><string>14.0</string>
+    <key>NSHighResolutionCapable</key><true/>
+    <key>NSPrincipalClass</key><string>NSApplication</string>
+</dict>
+</plist>
+PLIST
+if [ -n "${FIRMA_APP:-}" ]; then
+    codesign --force --options runtime --timestamp --sign "$FIRMA_APP" "$INSTALADOR"
+else
+    codesign --force --sign - "$INSTALADOR"
+fi
+codesign --verify --strict "$INSTALADOR" || falla "La firma de Instalar CineCaptions.app no es valida"
+echo "    $(du -sh "$INSTALADOR" | cut -f1) · $(lipo -archs "$INSTALADOR/Contents/MacOS/instalar")"
+
 # 7) .dmg -------------------------------------------------------------------------------------------------------
 paso "Imagen de disco .dmg"
 STAGE="$OBRA/dmg"; rm -rf "$STAGE"; mkdir -p "$STAGE"
-# v5.91: «Arrástralo a Aplicaciones» (la app y el enlace a Aplicaciones) + el paquete oculto. Lo arma dmgbuild (7_mac/dmg/ajustes_dmg.py)
-# escribiendo el .DS_Store él mismo: sin el Finder ni AppleScript, que en las Mac de GitHub no son de fiar.
-ditto "$APP" "$STAGE/CineCaptions.app"
+# v5.92: «Doble clic para instalar»: el instalador + la app OCULTA («.CineCaptions.app»: el instalador la copia; fuera de él para que macOS no
+# verifique 1,4 GB antes de abrir su ventana) + el paquete oculto. Lo arma dmgbuild (7_mac/dmg/ajustes_dmg.py) escribiendo el .DS_Store él
+# mismo: sin el Finder ni AppleScript, que en las Mac de GitHub no son de fiar.
+ditto "$INSTALADOR" "$STAGE/Instalar CineCaptions.app"
+ditto "$APP" "$STAGE/.CineCaptions.app"
 cp "$PKG" "$STAGE/.Actualizar CineCaptions.pkg"
 "$VPY" -m pip install --progress-bar off -q 'dmgbuild==1.6.7' || falla "No pude instalar dmgbuild (la ventana del .dmg)"
 FONDO="$OBRA/fondo_dmg.tiff"
 tiffutil -cathidpicheck "$AQUI/dmg/fondo.png" "$AQUI/dmg/fondo@2x.png" -out "$FONDO" >/dev/null || falla "No pude preparar el fondo del .dmg"
-SALIDA="${CINECAPTIONS_SALIDA:-$RAIZ/INSTALADORES/Mac}"; mkdir -p "$SALIDA"
+# (en la PC del autor el programa vive en PROGRAMA/ y los instaladores junto a él; en el espejo de GitHub, dentro)
+INST="$RAIZ/INSTALADORES"; [ "$(basename "$RAIZ")" = "PROGRAMA" ] && [ -d "$RAIZ/../INSTALADORES" ] && INST="$RAIZ/../INSTALADORES"
+SALIDA="${CINECAPTIONS_SALIDA:-$INST/Mac}"; mkdir -p "$SALIDA"
 rm -f "$SALIDA"/CineCaptions_Mac_${NOMBRE_ARQ}_*.dmg          # la version anterior de esta arquitectura se quita
 DMG="$SALIDA/CineCaptions_Mac_${NOMBRE_ARQ}_$VERSION.dmg"
 # v5.5.0: en las Mac de GitHub hdiutil a veces falla con «Resource busy» (el disco lo está mirando el sistema): hasta 5 intentos
+# v5.92: primero ESCRIBIBLE (UDRW) para esconder el enlace «CineCaptions.app» de las Mac con la 5.91 (`chflags -h hidden`: el enlace, no la
+# app; dmgbuild no sabe), y luego a LZFSE (ULFO)
+DMG_RW="$OBRA/disco_escribible.dmg"
 for intento in 1 2 3 4 5; do
-    "$VPY" -m dmgbuild -s "$AQUI/dmg/ajustes_dmg.py" -D stage="$STAGE" -D fondo="$FONDO" -D icono="$OBRA/CineCaptions.icns" \
-        "CineCaptions $VERSION" "$DMG" >/dev/null && break
+    rm -f "$DMG_RW"
+    "$VPY" -m dmgbuild -s "$AQUI/dmg/ajustes_dmg.py" -D stage="$STAGE" -D fondo="$FONDO" -D icono="$OBRA/CineCaptions.icns" -D formato=UDRW \
+        "CineCaptions $VERSION" "$DMG_RW" >/dev/null && break
     [ "$intento" = 5 ] && falla "dmgbuild no pudo crear la imagen de disco"
     echo "    hdiutil ocupado (intento $intento de 5): reintento en 15 s"
-    rm -f "$DMG"; sleep 15
+    sleep 15
 done
+MONTADO="$OBRA/disco_montado"; mkdir -p "$MONTADO"
+hdiutil attach -nobrowse -noverify -noautoopen -mountpoint "$MONTADO" "$DMG_RW" >/dev/null || falla "No pude montar el disco escribible"
+chflags -h hidden "$MONTADO/CineCaptions.app" && [ -L "$MONTADO/CineCaptions.app" ] || { hdiutil detach "$MONTADO" -force -quiet; falla "No pude esconder el enlace de la 5.91"; }
+echo "    enlace para la 5.91: $(ls -lOd "$MONTADO/CineCaptions.app" | awk '{print $5, $9, $10, $11}')"
+for intento in 1 2 3 4 5; do hdiutil detach "$MONTADO" -quiet && break; sleep 5; [ "$intento" = 5 ] && hdiutil detach "$MONTADO" -force -quiet; done
+for intento in 1 2 3 4 5; do
+    rm -f "$DMG"
+    hdiutil convert "$DMG_RW" -format ULFO -o "$DMG" -quiet && break
+    [ "$intento" = 5 ] && falla "hdiutil no pudo comprimir la imagen de disco"
+    echo "    hdiutil ocupado (intento $intento de 5): reintento en 15 s"; sleep 15
+done
+rm -f "$DMG_RW"
 [ -n "${FIRMA_APP:-}" ] && codesign --sign "$FIRMA_APP" "$DMG"
 if [ -n "${NOTARIO_PERFIL:-}" ] && [ -n "${FIRMA_APP:-}" ]; then
     xcrun notarytool submit "$DMG" --keychain-profile "$NOTARIO_PERFIL" --wait && xcrun stapler staple "$DMG"

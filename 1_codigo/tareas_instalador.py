@@ -18,6 +18,8 @@ Y una para soporte (no la usa el instalador): transcribe un audio de punta a
 punta con el .exe compilado, sin tocar la ventana ni Resolve:
 
     "CineCaptions.exe" --tarea transcribir <estado.txt> <audio> [idioma]
+    CineCaptions (Mac) --tarea pasos_mac <estado.txt> es|en   (v5.92: los pasos 3-7 del instalador de la Mac, instalar_mac.py)
+    CineCaptions (Mac) --tarea motor_fondo <estado.txt>       (v5.92: Whisper y el motor Qwen3 bajándose aparte, lo lanza pasos_mac)
 
 Por que el instalador no lo hace por su cuenta
 ==============================================
@@ -51,7 +53,7 @@ import traceback
 from pathlib import Path
 
 TAREAS = ('verificar', 'scripts', 'quitar_scripts', 'fuentes', 'modelo', 'motor_ia', 'motor_compat', 'transcribir', 'sonda_resolve',
-          'equipo', 'equipo_admin', 'actualizar_fondo', 'aviso_mac', 'instalar_dmg')
+          'equipo', 'equipo_admin', 'actualizar_fondo', 'aviso_mac', 'instalar_dmg', 'pasos_mac', 'motor_fondo')
 # v5.1: Whisper queda de respaldo (el motor principal es Qwen3-ASR, motor_ia)
 MODELO_WHISPER = 'large-v3-turbo'
 MODELO_BYTES_APROX = 1_620_000_000
@@ -129,6 +131,18 @@ def _tarea_instalar_dmg(estado, dmg='', modo='', *_resto):
         return
     import actualizar_fondo
     estado.ok('instalada' if actualizar_fondo._instalar_mac(dmg) else 'no se instaló')
+
+
+def _tarea_pasos_mac(estado, idioma='es', *_resto):
+    """v5.92: los pasos 3-7 del instalador de la Mac (scripts, tipografías, servicio, Dock, motor de voz e IA) en una sola pasada: instalar_mac.pasos."""
+    import instalar_mac
+    instalar_mac.pasos(estado, idioma)
+
+
+def _tarea_motor_fondo(estado, *_resto):
+    """v5.92: el motor de voz e IA bajándose aparte desde el instalador de la Mac (instalar_mac.motor_de_fondo)."""
+    import instalar_mac
+    instalar_mac.motor_de_fondo(estado)
 
 
 def _tarea_aviso_mac(estado, ruta_aviso='', *_resto):

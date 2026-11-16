@@ -14,13 +14,21 @@ BIN="$APP/Contents/MacOS/CineCaptions"
 # *.pkg en el disco y corre `installer -target /`). La app se copia aquí del mismo disco: el paquete está junto al disco (el servicio y el
 # programa lo sacan a «<disco>.pkg» junto a «<disco>.dmg») o dentro del disco montado (si alguien lo abre a mano). De root y sin escribible
 # por otros: el servicio de root la ejecuta.
+# v5.92: en los discos con «Instalar CineCaptions.app» la app va OCULTA, «.CineCaptions.app» (se busca primero; luego la de la 5.91).
 copiar_app_del_disco() {
-    local PAQUETE="${1:-}" ORIGEN="" MONTADO=""
-    if [ -n "$PAQUETE" ] && [ -d "$(dirname "$PAQUETE")/CineCaptions.app" ]; then
-        ORIGEN="$(dirname "$PAQUETE")/CineCaptions.app"
-    elif [ -n "$PAQUETE" ] && [ -f "${PAQUETE%.pkg}.dmg" ]; then
+    local PAQUETE="${1:-}" ORIGEN="" MONTADO="" N
+    if [ -n "$PAQUETE" ]; then
+        for N in .CineCaptions.app CineCaptions.app; do
+            [ -d "$(dirname "$PAQUETE")/$N" ] && { ORIGEN="$(dirname "$PAQUETE")/$N"; break; }
+        done
+    fi
+    if [ -z "$ORIGEN" ] && [ -n "$PAQUETE" ] && [ -f "${PAQUETE%.pkg}.dmg" ]; then
         MONTADO="$(mktemp -d /tmp/cinecaptions_disco.XXXXXX)"
-        hdiutil attach -nobrowse -readonly -noautoopen -mountpoint "$MONTADO" "${PAQUETE%.pkg}.dmg" >/dev/null 2>&1 && ORIGEN="$MONTADO/CineCaptions.app"
+        if hdiutil attach -nobrowse -readonly -noautoopen -mountpoint "$MONTADO" "${PAQUETE%.pkg}.dmg" >/dev/null 2>&1; then
+            for N in .CineCaptions.app CineCaptions.app; do
+                [ -d "$MONTADO/$N" ] && { ORIGEN="$MONTADO/$N"; break; }
+            done
+        fi
     fi
     if [ ! -x "$ORIGEN/Contents/MacOS/CineCaptions" ]; then
         echo "CineCaptions: no encontré la app junto al paquete ($PAQUETE)" >&2

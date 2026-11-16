@@ -2766,10 +2766,12 @@ def mac_avisa_con_la_tarjeta_de_cinecaptions_y_deja_elegir():
     CineCaptions (sin notificaciones invisibles): «Actualizar ahora» instala y abre la tarjeta del final; «Más tarde» la aplaza (la pasada
     siguiente no vuelve a preguntar ni a descargar); sin respuesta se instala sola; si se abre el programa mientras pregunta, se cierra la
     tarjeta y no instala; «Actualizar» desde el programa enseña «instalando» y lo vuelve a abrir; un fallo lo dice en palabras claras."""
+    # v5.92 (el usuario: «que si la recibe se instale y se vuelva a abrir con la versión nueva»): «Actualizar ahora» abre CineCaptions al
+    # terminar (sin la tarjeta del final); si nadie elige, se instala sola y queda la tarjeta «Abrir CineCaptions»
     with _fondo_falso('nueva', plataforma='darwin', root=True, usuario=True, respuesta='instalar') as (F, hecho, _c):
         r = F.correr()
-    esperar(r == 'instalada' and hecho['tarjetas'] == ['preguntar', 'hecha'] and hecho['instalaciones'] and not hecho['notificaciones'],
-            f'«Actualizar ahora»: {r} {hecho}')
+    esperar(r == 'instalada' and hecho['tarjetas'] == ['preguntar'] and hecho['instalaciones'] and hecho['abiertos'] == 1
+            and not hecho['notificaciones'], f'«Actualizar ahora»: {r} {hecho}')
     with _fondo_falso('nueva', plataforma='darwin', root=True, usuario=True, respuesta='luego') as (F, hecho, _c):
         r1 = F.correr()
         r2 = F.correr()
@@ -2779,7 +2781,32 @@ def mac_avisa_con_la_tarjeta_de_cinecaptions_y_deja_elegir():
     t0 = time.time()
     with _fondo_falso('nueva', plataforma='darwin', root=True, usuario=True) as (F, hecho, _c):
         r = F.correr()
-    esperar(r == 'instalada' and hecho['tarjetas'] == ['preguntar', 'hecha'] and time.time() - t0 < 15, f'sin respuesta: {r} {hecho}')
+    esperar(r == 'instalada' and hecho['tarjetas'] == ['preguntar', 'hecha'] and hecho['abiertos'] == 0 and time.time() - t0 < 15,
+            f'sin respuesta: {r} {hecho}')
+    with _fondo_falso('nueva', plataforma='darwin', root=True, usuario=True) as (F, hecho, _c):
+        hecho['pedidos'] = []
+        F.tarjeta_mac = lambda modo, r, vieja='', **k: (hecho['tarjetas'].append(modo),
+                                                         hecho.__setitem__('pedidos', [{'accion': 'instalar', 'id': 'c1', 'sola': True}]) if modo == 'preguntar' else None,
+                                                         'c1')[-1]
+        r = F.correr()
+    esperar(r == 'instalada' and hecho['tarjetas'] == ['preguntar', 'hecha'] and hecho['abiertos'] == 0,
+            f'la cuenta atrás de la tarjeta acabó (sola): {r} {hecho}')
+    # v5.92 (MEDIDO en Macs de GitHub: instalada, pero CineCaptions no se abría): la tarjeta ES CineCaptions; `open` sin -n solo la traía
+    # al frente. Se cierra la tarjeta y se abre una instancia nueva; el botón «Abrir CineCaptions» de la tarjeta, igual
+    import actualizar_fondo as F2
+    ordenes, cerradas = [], []
+    viejo_plat = sys.platform
+    with parches((F2, 'es_root', lambda: False), (F2, 'cerrar_tarjeta_mac', lambda: cerradas.append(1)),
+                 (F2, 'app_instalada', lambda: pathlib.PurePosixPath('/Applications/CineCaptions.app')),
+                 (F2.subprocess, 'run', lambda orden, **k: ordenes.append(list(orden)))):
+        sys.platform = 'darwin'
+        try:
+            F2._abrir_como_usuario()
+        finally:
+            sys.platform = viejo_plat
+    esperar(cerradas and ordenes == [['/usr/bin/open', '-n', '/Applications/CineCaptions.app']], f'reabrir: {ordenes} {cerradas}')
+    fuente_aviso = open(os.path.join(CODIGO, 'aviso_mac.py'), encoding='utf-8').read()
+    esperar("['/usr/bin/open', '-n', str(actualizar_fondo.app_instalada())]" in fuente_aviso, '«Abrir CineCaptions» de la tarjeta sin -n')
     vistas = []
     with _fondo_falso('nueva', plataforma='darwin', root=True, usuario=True, abierto=lambda: vistas.append(1) or len(vistas) > 1) as (F, hecho, _c):
         r = F.correr()
@@ -2830,23 +2857,29 @@ def la_misma_version_ya_bajada_no_se_vuelve_a_bajar():
 
 
 @caso('Actualizaciones con el programa cerrado')
-def mac_se_instala_arrastrando_sin_contrasena():
-    """v5.91 (el usuario: «omite que pida contraseña para poderse instalar»; eligió «arrastrar a Aplicaciones» y la propuesta C): el disco
-    trae la app y el enlace a Aplicaciones (sin .pkg que abrir: en /Applications un .pkg SIEMPRE pide contraseña) y un paquete OCULTO, sin
-    la app, para el servicio de root de las 5.87-5.90 (busca *.pkg con pathlib, que ve los ocultos); su postinstall copia la app del disco
-    que queda junto a él antes de lo de siempre. Fondo C a 600 × 360 (y al doble)."""
+def mac_se_instala_sin_contrasena():
+    """v5.91 (el usuario: «omite que pida contraseña para poderse instalar»): sin .pkg que abrir (en /Applications un .pkg SIEMPRE pide
+    contraseña) y un paquete OCULTO, sin la app, para el servicio de root de las 5.87-5.90 (busca *.pkg con pathlib, que ve los ocultos); su
+    postinstall copia la app del disco que queda junto a él antes de lo de siempre. Fondo a 600 × 360 (y al doble).
+    v5.92 (el usuario: «necesito que funcione el instalador como el de CineSlide»): el disco trae «Instalar CineCaptions.app» (sin enlace a
+    Aplicaciones) y la app OCULTA, «.CineCaptions.app»."""
     import importlib.util as iu
     from PIL import Image
     sh = open(os.path.join(RAIZ, '7_mac', 'Construir_Instalador_Mac.sh'), encoding='utf-8').read()
-    esperar('pkgbuild --nopayload --scripts' in sh and 'productbuild' not in sh and 'ditto "$APP" "$STAGE/CineCaptions.app"' in sh
-            and 'cp "$PKG" "$STAGE/.Actualizar CineCaptions.pkg"' in sh, 'el disco no se arma con la app + el paquete oculto')
+    esperar('pkgbuild --nopayload --scripts' in sh and 'productbuild' not in sh and 'ditto "$APP" "$STAGE/.CineCaptions.app"' in sh
+            and 'ditto "$INSTALADOR" "$STAGE/Instalar CineCaptions.app"' in sh
+            and 'cp "$PKG" "$STAGE/.Actualizar CineCaptions.pkg"' in sh, 'el disco no se arma con el instalador + la app y el paquete ocultos')
     espec = iu.spec_from_file_location('ajustes_dmg_prueba', os.path.join(RAIZ, '7_mac', 'dmg', 'ajustes_dmg.py'))
     mod = iu.module_from_spec(espec)
     mod.__dict__['defines'] = {'stage': '/tmp/stage', 'fondo': '/tmp/fondo.tiff', 'icono': None}
     espec.loader.exec_module(mod)
     nombres = [os.path.basename(f) for f in mod.files]
-    esperar(nombres == ['CineCaptions.app', '.Actualizar CineCaptions.pkg'] and mod.symlinks == {'Aplicaciones': '/Applications'}
-            and set(mod.icon_locations) == {'CineCaptions.app', 'Aplicaciones', '.Actualizar CineCaptions.pkg'}, f'ajustes del disco: {nombres}')
+    esperar(nombres == ['Instalar CineCaptions.app', '.CineCaptions.app', '.Actualizar CineCaptions.pkg']
+            and mod.symlinks == {'CineCaptions.app': '.CineCaptions.app'} and mod.format == 'ULFO'
+            and set(mod.icon_locations) == set(nombres) | {'CineCaptions.app'} and mod.icon_locations['Instalar CineCaptions.app'] == (300, 168),
+            f'ajustes del disco: {nombres} {getattr(mod, "symlinks", None)}')
+    esperar('-D formato=UDRW' in sh and 'chflags -h hidden "$MONTADO/CineCaptions.app"' in sh and 'hdiutil convert "$DMG_RW" -format ULFO' in sh,
+            'el enlace de la 5.91 no se esconde antes de comprimir el disco')
     carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_oculto_'))
     try:
         (carpeta / '.Actualizar CineCaptions.pkg').write_bytes(b'x')
@@ -2861,6 +2894,180 @@ def mac_se_instala_arrastrando_sin_contrasena():
             and 'chown -R root:wheel "$APP.nuevo"' in post and post.index('copiar_app_del_disco "${1') < post.index('ETIQUETA="com.'),
             'el postinstall no copia la app del disco antes de lo demás')
     esperar('\r' not in post, 'el postinstall tiene CRLF (bash en la Mac no lo corre)')
+    esperar('for N in .CineCaptions.app CineCaptions.app' in post, 'el postinstall no busca la app oculta del disco nuevo')
+
+
+@caso('Actualizaciones con el programa cerrado')
+def mac_instalador_deja_el_motor_bajando():
+    """v5.92 (el usuario: «que el motor de voz e IA empiece a bajarse desde el instalador, para que el primer GO no tenga que esperarlo»):
+    el paso 7 lanza `--tarea motor_fondo` APARTE (nueva sesión, sin ventana: QT offscreen) salvo que el motor ya esté o ya se baje; la tarea
+    baja Whisper y, en Apple Silicon, el motor Qwen3 (sin sitio, o si falla, deja la marca para que CineCaptions no lo reintente hoy); una
+    sola instalación ENTRE procesos: con el candado en otro proceso, `instalando()` da su avance y una segunda `instalar()` no empieza."""
+    import shutil
+    import archivos_seguros
+    import instalar_mac as IM
+    import motor_voz as MV
+    import vigilancia as V
+    casa = pathlib.Path(tempfile.mkdtemp(prefix='cc_motor_fondo_'))
+    lanzados = []
+    try:
+        with parches((MV, 'carpeta', lambda: casa / 'motor_qwen')):
+            # lanzar: sin compilar no; ya instalado (Apple Silicon) no; si no, aparte y sin ventana
+            with parches((MV, 'instalando', lambda: None), (MV, 'SOPORTADO', True), (MV, 'instalado', lambda: True)):
+                esperar(IM.lanzar_motor_de_fondo() == 'ya', 'con el motor instalado lo vuelve a bajar')
+            with parches((MV, 'instalando', lambda: (0.3, 'x'))):
+                esperar(IM.lanzar_motor_de_fondo() == 'lanzado' and not lanzados, 'con otro bajándolo lanza un segundo')
+            with parches((MV, 'instalando', lambda: None), (MV, 'SOPORTADO', False), (subprocess, 'Popen', lambda orden, **k: lanzados.append((orden, k)))):
+                esperar(not hasattr(sys, 'frozen'), 'el banco corre compilado')
+                try:
+                    IM.lanzar_motor_de_fondo()
+                    esperar(False, 'sin compilar lanzó el motor')
+                except RuntimeError:
+                    pass
+                sys.frozen = True
+                try:
+                    esperar(IM.lanzar_motor_de_fondo() == 'lanzado', 'no lo lanzó')
+                finally:
+                    del sys.frozen
+            orden, k = lanzados[0]
+            esperar(orden[1:3] == ['--tarea', 'motor_fondo'] and k.get('start_new_session') and k['env'].get('QT_QPA_PLATFORM') == 'offscreen'
+                    and 'CINECAPTIONS_AVANCE' not in k['env'], f'lanzado mal: {orden} {sorted(k)}')
+            # la instalación del motor Qwen3: sin sitio, con fallo y bien (la marca la lee vigilancia._motor_ia_en_mac)
+            est = IM._Recoge()
+            marca = casa / 'motor_qwen' / 'instalacion_auto.json'
+            base = ((MV, 'SOPORTADO', True), (MV, 'asegurar_listo', lambda: None), (MV, 'instalando', lambda: None))
+            with parches(*base, (V, '_gb_libres', lambda c: 3.0)):
+                esperar(IM._instalar_qwen(est).startswith('sin sitio') and 'disco' in (archivos_seguros.leer_json(marca, {}) or {}).get('motivo', ''),
+                        'sin sitio no deja la marca')
+
+            def falla(**k):
+                raise RuntimeError('sin red')
+            with parches(*base, (V, '_gb_libres', lambda c: 80.0), (MV, 'instalar', falla)):
+                esperar(IM._instalar_qwen(est).startswith('falló') and 'sin red' in archivos_seguros.leer_json(marca, {}).get('motivo', ''), 'el fallo no deja la marca')
+            with parches(*base, (V, '_gb_libres', lambda c: 80.0), (MV, 'instalar', lambda **k: '1.7B'),
+                         (MV, 'info_instalado', lambda: {'modelo_texto': 'gemma4'})):
+                esperar(IM._instalar_qwen(est).startswith('Qwen3-ASR 1.7B') and archivos_seguros.leer_json(marca, {}).get('listo'), 'bien y sin la marca de listo')
+            with parches((MV, 'SOPORTADO', False)):
+                esperar(IM._instalar_qwen(est) == 'no_aplica', 'en una Intel intenta el motor Qwen3')
+            # una sola instalación entre procesos (solo donde hay flock: la Mac)
+            if os.name == 'posix':
+                listo = casa / 'tomado'
+                codigo = (f'import sys, time, pathlib\nsys.path.insert(0, {CODIGO!r})\nimport motor_voz as MV\n'
+                          f'MV.carpeta = lambda: pathlib.Path({str(casa / "motor_qwen")!r})\nassert MV._tomar_candado_procesos()\n'
+                          'MV._CANDADO["t"] = 0\nMV._guardar_avance(0.42, "Bajando la voz")\n'
+                          f'pathlib.Path({str(listo)!r}).write_text("1")\ntime.sleep(6)\n')
+                hijo = subprocess.Popen([sys.executable, '-c', codigo])
+                try:
+                    for _ in range(100):
+                        if listo.exists():
+                            break
+                        time.sleep(0.1)
+                    esperar(MV.instalando() == (0.42, 'Bajando la voz'), f'no ve la instalación del otro proceso: {MV.instalando()}')
+                    try:
+                        MV.instalar()
+                        esperar(False, 'empezó una segunda instalación')
+                    except RuntimeError:
+                        pass
+                finally:
+                    hijo.wait(timeout=20)
+                esperar(MV.instalando() is None, 'el candado sigue tomado al acabar el otro proceso')
+            else:
+                esperar(MV._tomar_candado_procesos() is True and MV.instalando() is None, 'Windows: el candado entre procesos estorba')
+    finally:
+        shutil.rmtree(casa, ignore_errors=True)
+
+
+@caso('Actualizaciones con el programa cerrado')
+def mac_instalador_como_cineslide():
+    """v5.92 (el usuario: «necesito que funcione el instalador como el de CineSlide»): «Instalar CineCaptions.app» (ventana nativa en Swift)
+    copia la app oculta del disco y le pide el resto en UNA pasada (`--tarea pasos_mac`): pasos 3-7 con su texto en el idioma de la Mac,
+    lo que falla queda de aviso y sigue; el Dock queda con UNA CineCaptions (la de otras rutas se quita); la actualización encuentra la app
+    oculta; los scripts de bash y Swift sin CRLF."""
+    import plistlib
+    import shutil
+    import actualizaciones as A
+    import actualizar_fondo as F
+    import instalador_scripts as INS
+    import instalar_mac as IM
+    import tareas_instalador as TI
+    esperar('pasos_mac' in TI.TAREAS, 'falta la tarea pasos_mac')
+    for nombre in ('instalador/instalar.sh', 'instalador/instalador_mac.swift', 'Construir_Instalador_Mac.sh'):
+        esperar(b'\r' not in open(os.path.join(RAIZ, '7_mac', *nombre.split('/')), 'rb').read(), f'{nombre} tiene CRLF')
+    sh = open(os.path.join(RAIZ, '7_mac', 'instalador', 'instalar.sh'), encoding='utf-8').read()
+    esperar('--tarea pasos_mac' in sh and 'mv "$NUEVO" "$APP"' in sh and 'xattr -dr com.apple.quarantine "$APP"' in sh
+            and 'avance FIN' in sh and 'sudo' not in sh and 'osascript' not in sh, 'instalar.sh no hace los pasos sin contraseña')
+    # v5.92 (revisión independiente): solo herramientas de macOS (`lipo` es de las Command Line Tools: en una Mac sin ellas saltaba «¿instalar
+    # las herramientas?»), versiones sin la caché de cfprefsd, las tarjetas del aviso cerradas antes de abrir y FIN con la ruta instalada
+    codigo_sh = '\n'.join(l for l in sh.splitlines() if not l.lstrip().startswith('#'))
+    for herramienta in ('lipo', 'otool', 'codesign', 'xcrun', 'python3', 'defaults read'):
+        esperar(herramienta not in codigo_sh, f'instalar.sh usa {herramienta} (no está en todas las Mac o tiene caché)')
+    esperar('file -b "$ORIGEN/Contents/MacOS/CineCaptions"' in sh and 'pkill -f -- "--tarea aviso_mac"' in sh and 'avance FIN "$VERSION\t$APP"' in sh
+            and 'PROPIA="$HOME/Applications/CineCaptions.app"' in sh and "trap '" in sh, 'instalar.sh sin los arreglos de la revisión')
+    sw = open(os.path.join(RAIZ, '7_mac', 'instalador', 'instalador_mac.swift'), encoding='utf-8').read()
+    esperar('av.appFinal ?? appInstalada()' in sw and 'cerrarTarjetasDelAviso()' in sw and 'where v.hasPrefix("CineCaptions")' in sw
+            and '.terminateCancel' not in sw, 'la ventana sin los arreglos de la revisión')
+    cons = open(os.path.join(RAIZ, '7_mac', 'Construir_Instalador_Mac.sh'), encoding='utf-8').read()
+    esperar('for A in arm64 x86_64' in cons and 'lipo -create' in cons, 'el instalador no se compila universal')
+    # la app oculta del disco nuevo (y la del de la 5.91)
+    raiz = pathlib.Path(tempfile.mkdtemp(prefix='cc_disco92_'))
+    try:
+        for disco, nombre in (('nuevo', '.CineCaptions.app'), ('v591', 'CineCaptions.app')):
+            (raiz / disco / nombre / 'Contents' / 'MacOS').mkdir(parents=True)
+            (raiz / disco / nombre / 'Contents' / 'MacOS' / 'CineCaptions').write_text('x')
+        (raiz / 'vacio').mkdir()
+        esperar(A.app_en_montajes([str(raiz / 'vacio'), str(raiz / 'nuevo')]) == raiz / 'nuevo' / '.CineCaptions.app', 'no encuentra la app oculta')
+        esperar(A.app_en_montajes([str(raiz / 'v591')]) == raiz / 'v591' / 'CineCaptions.app', 'ya no encuentra la de la 5.91')
+        esperar(A.app_en_montajes([str(raiz / 'vacio')]) is None, 'encuentra una app donde no hay')
+    finally:
+        shutil.rmtree(raiz, ignore_errors=True)
+    # el Dock: una sola CineCaptions, la de /Applications; las demás apps se quedan
+    dock = {'persistent-apps': [
+        {'tile-data': {'file-data': {'_CFURLString': 'file:///Applications/Safari.app/'}}},
+        {'tile-data': {'file-data': {'_CFURLString': 'file:///Users/ana/Applications/CineCaptions.app/'}}}]}
+    ordenes = []
+
+    def run(orden, **k):
+        ordenes.append(list(orden))
+        if orden[:2] == ['/usr/bin/defaults', 'export']:
+            return types.SimpleNamespace(returncode=0, stdout=plistlib.dumps(dock), stderr=b'')
+        if orden[:2] == ['/usr/bin/defaults', 'import']:
+            dock.clear()
+            dock.update(plistlib.loads(k['input']))
+        return types.SimpleNamespace(returncode=0, stdout=b'', stderr=b'')
+    with parches((IM.subprocess, 'run', run)):
+        r1 = IM.fijar_en_dock('/Applications/CineCaptions.app')
+        rutas = [IM._ruta_tile(t) for t in dock['persistent-apps']]
+        esperar(r1 == 'fijada' and rutas == ['/Applications/Safari.app', '/Applications/CineCaptions.app']
+                and ['/usr/bin/killall', 'Dock'] in ordenes, f'Dock: {r1} {rutas}')
+        ordenes.clear()
+        esperar(IM.fijar_en_dock('/Applications/CineCaptions.app') == 'ya_estaba' and not any(o[:2] == ['/usr/bin/defaults', 'import'] for o in ordenes),
+                'la segunda vez la vuelve a poner')
+    # los pasos 3-7: el avance en el archivo de la ventana, en el idioma de la Mac; un fallo queda de aviso y sigue
+    avance = pathlib.Path(tempfile.mkdtemp(prefix='cc_avance_')) / 'avance.txt'
+    try:
+        def fuentes(est):
+            raise OSError('sin permiso')
+        for idioma, esperado in (('es', ['PASO\t3/7', 'OK\t14 scripts en el menú de Resolve', 'PASO\t4/7', 'AVISO\tCineCaptions las ofrece al abrirse',
+                                          'PASO\t5/7', 'OK\tCada hora, sin contraseña', 'PASO\t6/7', 'OK\tFijada en el Dock',
+                                          'PASO\t7/7', 'OK\tBajando en segundo plano']),
+                                 ('en', ['PASO\t3/7', 'OK\t14 scripts in the Resolve menu', 'PASO\t4/7', 'AVISO\tCineCaptions offers them when it opens',
+                                         'PASO\t5/7', 'OK\tEvery hour, no password', 'PASO\t6/7', 'OK\tPinned to the Dock',
+                                         'PASO\t7/7', 'OK\tDownloading in the background'])):
+            avance.write_text('', encoding='utf-8')
+            est = IM._Recoge()
+            with parches((TI, '_tarea_scripts', lambda e: e.ok('14 scripts listos')), (TI, '_tarea_fuentes', fuentes),
+                         (INS, 'resolve_esta_instalado', lambda: True), (INS, '_nuestros_scripts', lambda: list(range(14))),
+                         (F, 'asegurar_programada', lambda exe=None: 'creada'), (F, 'app_instalada', lambda: pathlib.Path('/Applications/CineCaptions.app')),
+                         (IM, 'fijar_en_dock', lambda app, reiniciar=True: 'fijada'), (IM, 'lanzar_motor_de_fondo', lambda: 'lanzado')):
+                os.environ['CINECAPTIONS_AVANCE'] = str(avance)
+                try:
+                    IM.pasos(est, idioma)
+                finally:
+                    os.environ.pop('CINECAPTIONS_AVANCE', None)
+            lineas = avance.read_text(encoding='utf-8').splitlines()
+            esperar(lineas == esperado and est.final == 0, f'{idioma}: {lineas} {est.texto}')
+    finally:
+        shutil.rmtree(avance.parent, ignore_errors=True)
 
 
 @caso('Actualizaciones con el programa cerrado')
@@ -3043,10 +3250,11 @@ def tarjeta_de_la_mac_se_ve_responde_y_se_cierra_sola():
         esperar(len(leidos) == 1 and leidos[0].get('accion') == 'luego' and leidos[0].get('id') == 'abc', f'respuesta mal leída: {leidos}')
         _qapp()
         tamanos = {}
-        for modo in ('preguntar', 'instalando', 'hecha', 'fallo'):
+        for modo in ('bajando', 'preguntar', 'instalando', 'hecha', 'fallo'):
             ruta = carpeta / f'aviso_{modo}.json'
             ruta.write_text(json.dumps({'id': 'x', 'modo': modo, 'version': '9.99', 'vieja': '9.98', 'notas': 'Uno. Dos más largo que el primero. Tres.',
-                                        'url': 'https://x', 'espera_s': 120, 'motivo': 'Se cortó la descarga (revisa internet).'}), encoding='utf-8')
+                                        'url': 'https://x', 'espera_s': 120, 'motivo': 'Se cortó la descarga (revisa internet).',
+                                        'avance': 0.35}), encoding='utf-8')
 
             def mirar(modo=modo, ruta=ruta):
                 from PySide6.QtWidgets import QApplication
@@ -3061,8 +3269,29 @@ def tarjeta_de_la_mac_se_ve_responde_y_se_cierra_sola():
             QTimer.singleShot(400, mirar)
             with parches((F, 'PEDIDOS_MAC', pedidos)):
                 AV.mostrar(str(ruta))
-        esperar(set(tamanos) == {'preguntar', 'instalando', 'hecha', 'fallo'} and all(w == AV.ANCHO and 120 < h < 400 for w, h in tamanos.values()),
+        esperar(set(tamanos) == {'bajando', 'preguntar', 'instalando', 'hecha', 'fallo'} and all(w == AV.ANCHO and 120 < h < 400 for w, h in tamanos.values()),
                 f'tarjetas: {tamanos}')
+        # v5.92 (el usuario: «que la notifique incluso si está cerrado»): el aviso sale MIENTRAS baja (si va para largo), con su porcentaje;
+        # una versión ya bajada (100 % de golpe) no la saca
+        import archivos_seguros
+        reloj = {'t': 1000.0}
+        sacadas = []
+        aviso = carpeta / 'aviso_bajando_servicio.json'
+        archivos_seguros.escribir_json(aviso, {'id': 'idB', 'modo': 'bajando', 'version': '9.99'})
+        reloj_falso = types.SimpleNamespace(time=lambda: reloj['t'], sleep=time.sleep, strftime=time.strftime)
+        with parches((F, 'time', reloj_falso), (F, 'archivo_aviso', lambda: aviso),
+                     (F, 'tarjeta_mac', lambda modo, r, vieja='', **k: sacadas.append((modo, k.get('avance'))) or 'idB')):
+            pr = F._avisar_mientras_baja({'version': '9.99'}, '9.98')
+            pr(10, 100)
+            esperar(not sacadas, 'el aviso salió antes de saber si la descarga va para largo')
+            reloj['t'] += 3
+            pr(30, 100)
+            reloj['t'] += 1.5
+            pr(60, 100)
+            ya = F._avisar_mientras_baja({'version': '9.99'}, '9.98')
+            reloj['t'] += 5
+            ya(100, 100)
+        esperar(sacadas == [('bajando', 0.3)] and archivos_seguros.leer_json(aviso, {}).get('avance') == 0.6, f'aviso mientras baja: {sacadas} {archivos_seguros.leer_json(aviso, {})}')
     finally:
         import shutil
         shutil.rmtree(carpeta, ignore_errors=True)

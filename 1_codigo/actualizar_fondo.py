@@ -45,7 +45,9 @@ CADA_H_MAC = 1                             # v5.90 (StartInterval del plist que 
 REINTENTO_S = 6 * 3600
 ESPERA_CIERRE_S = 90                       # lo que se espera a que se cierre el programa que hizo el pedido
 ESPERA_RESPUESTA_S = 120                   # v5.90: lo que la tarjeta espera a que elijas antes de instalarse sola
-MARGEN_RESPUESTA_S = 30                    # v5.90: lo que el servicio espera de más (la tarjeta tarda en abrirse)
+MARGEN_RESPUESTA_S = 90                    # v5.90: lo que el servicio espera de más (la tarjeta tarda en abrirse). v5.92: 30 → 90 (revisión:
+                                           # si la tarjeta tardaba más de 30 s en salir, el servicio decidía «sola» antes de que acabara su
+                                           # cuenta atrás y un «Actualizar ahora» en ese hueco ya no abría CineCaptions)
 POSPONER_S = 4 * 3600                      # v5.90: «Más tarde»
 SIN_VENTANA = 0x08000000 if sys.platform.startswith('win') else 0
 
@@ -101,7 +103,17 @@ def app_de_paso(app=None):
 
 
 def servicio_root_mac():
-    return sys.platform == 'darwin' and PLIST_MAC.is_file() and PEDIDOS_MAC.is_dir() and os.access(PEDIDOS_MAC, os.W_OK)
+    """El servicio de root de las 5.87-5.90 sirve a ESTA app. v5.92 (revisión independiente): solo si su app está (/Applications, de root)
+    y es la que corre; con el servicio pero la app en ~/Applications (el instalador nuevo no deja en /Applications una app del usuario que
+    root ejecutaría), esa copia usa su servicio del usuario: si no, nunca se actualizaría con el programa cerrado."""
+    if not (sys.platform == 'darwin' and PLIST_MAC.is_file() and PEDIDOS_MAC.is_dir() and os.access(PEDIDOS_MAC, os.W_OK)):
+        return False
+    try:
+        if os.stat(APP_MAC).st_uid != 0:
+            return False
+    except OSError:
+        return False
+    return not getattr(sys, 'frozen', False) or str(app_instalada()) == APP_MAC
 
 
 def servicio_mac():
@@ -511,13 +523,18 @@ def entorno_para_abrir():
 
 
 def _abrir_como_usuario():
+    """v5.92 (MEDIDO en Macs de GitHub: tras «Actualizar ahora» la versión nueva quedaba instalada pero CineCaptions no se abría): la tarjeta
+    del aviso ES CineCaptions (`--tarea aviso_mac`) y sigue viva unos instantes; `open` sin -n veía «ya está abierta» y solo la traía al
+    frente. Se cierra la tarjeta y se abre con -n (aquí el programa está cerrado: el servicio esperó a que se cerrara)."""
+    if sys.platform == 'darwin':
+        cerrar_tarjeta_mac()
     if not es_root():
-        subprocess.run(['/usr/bin/open', str(app_instalada())], capture_output=True, timeout=60, env=entorno_para_abrir())
+        subprocess.run(['/usr/bin/open', '-n', str(app_instalada())], capture_output=True, timeout=60, env=entorno_para_abrir())
         return
     u = usuario_de_la_mac()
     if not u:
         return
-    subprocess.run(['/bin/launchctl', 'asuser', str(u[1]), '/usr/bin/sudo', '-u', u[0], '/usr/bin/open', APP_MAC], capture_output=True, timeout=60)
+    subprocess.run(['/bin/launchctl', 'asuser', str(u[1]), '/usr/bin/sudo', '-u', u[0], '/usr/bin/open', '-n', APP_MAC], capture_output=True, timeout=60)
 
 
 def _hay_quien_mire():
@@ -573,6 +590,37 @@ def tarjeta_mac(modo, r, vieja='', **extra):
         return None
 
 
+def _avisar_mientras_baja(r, vieja):
+    """v5.92 (el usuario: «que cuando hay una actualización la notifique incluso si está cerrado»): la tarjeta salía al TERMINAR de bajar
+    (~750 MB: minutos sin enterarse). Ahora, si la descarga va para largo (más de 2 s y menos del 90 %), sale enseguida la de «bajando» con
+    su porcentaje (aviso.json, una vez por segundo); al acabar la sustituye la de preguntar (otro id: esta se cierra sola).
+    Devuelve el progreso(hecho, total) para actualizaciones.descargar."""
+    estado = {'id': None, 't0': time.time(), 'ult': 0.0}
+
+    def progreso(hecho, total):
+        if not total or estado['id'] == '':
+            return
+        f = max(0.0, min(1.0, hecho / total))
+        ahora = time.time()
+        if estado['id'] is None:
+            if ahora - estado['t0'] < 2 or f > 0.9:
+                return
+            estado['id'] = tarjeta_mac('bajando', r, vieja, avance=round(f, 3)) or ''
+            estado['ult'] = ahora
+            return
+        if ahora - estado['ult'] >= 1:
+            estado['ult'] = ahora
+            try:
+                import archivos_seguros
+                datos = archivos_seguros.leer_json(archivo_aviso(), {}) or {}
+                if datos.get('id') == estado['id']:
+                    datos.update(avance=round(f, 3), ts=ahora)
+                    os.chmod(archivos_seguros.escribir_json(archivo_aviso(), datos), 0o644)
+            except Exception:
+                pass
+    return progreso
+
+
 def cerrar_tarjeta_mac():
     """Cualquier tarjeta abierta se cierra sola al ver que cambió el id de aviso.json."""
     try:
@@ -584,19 +632,20 @@ def cerrar_tarjeta_mac():
 
 
 def _esperar_respuesta(ident, tope_s=None):
-    """'instalar' | 'luego' | 'abierto' (alguien abrió CineCaptions mientras: decide el programa). Sin respuesta en el plazo: 'instalar'
-    (la tarjeta también se instala sola al acabar su cuenta atrás)."""
+    """'instalar' («Actualizar ahora») | 'luego' | 'abierto' (alguien abrió CineCaptions mientras: decide el programa). Sin respuesta en el
+    plazo: 'sola' (la tarjeta también se instala sola al acabar su cuenta atrás y lo dice con «sola»).
+    v5.92 (el usuario: «que si la recibe se instale y se vuelva a abrir con la versión nueva»): 'instalar' abre CineCaptions al terminar."""
     limite = time.time() + (tope_s if tope_s is not None else ESPERA_RESPUESTA_S + MARGEN_RESPUESTA_S)
     while time.time() < limite:
         if programa_abierto():
             return 'abierto'
         for d in _tomar_pedidos():
             if d.get('accion') in ('instalar', 'luego') and str(d.get('id')) == str(ident):
-                return d['accion']
+                return 'sola' if d.get('sola') else d['accion']
             if not d.get('accion'):                                 # un pedido del programa («Actualizar» o al cerrarlo): instalar ya
                 return 'instalar'
         time.sleep(1)
-    return 'instalar'
+    return 'sola'
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------------
@@ -630,6 +679,44 @@ class _Candado:
         return False
 
 
+def _sin_freno():
+    """v5.92 (MEDIDO en Macs de GitHub: con «Actualizar ahora» el servicio del usuario llevaba más de 4 min copiando 1,2 GB y CineCaptions
+    no se volvía a abrir): launchd corre el servicio como proceso de FONDO (ProcessType Background + LowPriorityIO: CPU y disco al mínimo),
+    bien para mirar cada hora, no para instalar. Antes de instalar (o de bajar lo que el usuario pidió) este proceso vuelve a prioridad
+    normal; ditto e installer, que lanza después, la heredan. (El plist nuevo ya no lo pide de fondo; esto cubre los servicios cargados
+    con el plist de la 5.91 hasta que CineCaptions lo rehace al abrirse.)"""
+    if sys.platform != 'darwin':
+        return
+    try:
+        os.setpriority(getattr(os, 'PRIO_DARWIN_PROCESS', 4), 0, 0)      # (0 = fuera del modo «darwin background»)
+    except (OSError, AttributeError):
+        pass
+    try:
+        import ctypes
+        libc = ctypes.CDLL('/usr/lib/libSystem.B.dylib')
+        libc.setiopolicy_np(0, 0, 1)                                     # IOPOL_TYPE_DISK, IOPOL_SCOPE_PROCESS, IOPOL_IMPORTANT
+    except Exception:
+        pass
+
+
+def _limpiar_restos_root(info):
+    """v5.92: el instalador sin contraseña («Instalar CineCaptions.app») aparta la app de root de las 5.87-5.90 como «/Applications/.CineCaptions
+    anterior N.app» porque el usuario no puede borrarla: aquí (root) se borra. Y la app nueva, que quedó del usuario, pasa a root:wheel sin
+    escritura para otros, como deja _reemplazar_app las de este servicio: lo que root ejecuta solo lo cambia root."""
+    import shutil
+    for viejo in Path('/Applications').glob('.CineCaptions anterior*.app'):
+        shutil.rmtree(viejo, ignore_errors=True)
+        info(f'borrada la app anterior apartada por el instalador ({viejo.name})')
+    app = Path(APP_MAC)
+    try:
+        if app.is_dir() and app.stat().st_uid != 0:
+            subprocess.run(['/usr/sbin/chown', '-R', 'root:wheel', str(app)], capture_output=True, timeout=300)
+            subprocess.run(['/bin/chmod', '-R', 'go-w', str(app)], capture_output=True, timeout=300)
+            info('la app instalada por el usuario pasa a root (la ejecuta este servicio)')
+    except (OSError, subprocess.SubprocessError) as e:
+        info(f'no pude pasar la app a root: {e}')
+
+
 def correr(info=None):
     """Una pasada. Devuelve qué pasó: 'ocupado' | 'espera' | 'al_dia' | 'sin_red' | 'abierto' | 'instalando' (Windows: el instalador ya
     corre aparte) | 'instalada' (Mac) | 'fallo'."""
@@ -638,6 +725,8 @@ def correr(info=None):
         if not tomado:
             return 'ocupado'
         import actualizaciones
+        if sys.platform == 'darwin' and es_root():
+            _limpiar_restos_root(info)
         pedidos = _tomar_pedidos()
         # v5.90: las respuestas de la tarjeta que llegan tarde (el servicio ya no esperaba): «Actualizar ahora» cuenta como pedido; «Más tarde»
         # no pide nada (y nunca se espera a su PID: es el de la tarjeta)
@@ -671,9 +760,12 @@ def correr(info=None):
         if con_tarjeta and pedidos:
             tarjeta = tarjeta_mac('instalando', r, vieja)                  # «Actualizar ahora» o al cerrar el programa: que se vea, desde ya
         try:
+            if pedidos:
+                _sin_freno()                                                # (lo pidió el usuario: «Actualizar» o al cerrar el programa)
             ruta = _dmg_del_pedido(pedidos, r['archivo']) if sys.platform == 'darwin' else None
             if ruta is None:
-                ruta = actualizaciones.descargar(r['archivo'], vieja)
+                # v5.92: con alguien frente a la Mac, el aviso sale YA (mientras baja), no al terminar la descarga
+                ruta = actualizaciones.descargar(r['archivo'], vieja, progreso=_avisar_mientras_baja(r, vieja) if con_tarjeta and not pedidos else None)
             _log(f'{version}: descargada y comprobada ({ruta})')
             if sys.platform.startswith('win'):
                 _instalar_windows(ruta)
@@ -695,9 +787,12 @@ def correr(info=None):
                         _guardar_estado({'pospuesta': {'version': version, 'hasta': time.time() + POSPONER_S}})
                         info(f'{version}: «Más tarde» (se vuelve a ofrecer en {POSPONER_S // 3600} h)')
                         return 'pospuesta'
+                    if respuesta == 'instalar':
+                        reabrir = True                                      # v5.92: «Actualizar ahora» → CineCaptions se abre ya con la nueva
                 else:
                     notificar(tr('Hay una versión nueva de CineCaptions ({v}): se está instalando sola.', v=version))
             _guardar_estado({'instalando': version, 'ts': time.time()})
+            _sin_freno()                                                    # v5.92: instalar a velocidad normal (copiar 1,2 GB con freno: > 4 min)
             if not _instalar_mac(ruta):
                 raise RuntimeError('installer no terminó bien')
             _guardar_estado({'instalada': version, 'ts': time.time()})
@@ -803,8 +898,12 @@ def plist_agente(binario, plist, pedidos, registro):
               '    <key>EnvironmentVariables</key><dict><key>QT_QPA_PLATFORM</key><string>offscreen</string></dict>',
               f'    <key>StandardOutPath</key><string>{escape(str(registro))}</string>',
               f'    <key>StandardErrorPath</key><string>{escape(str(registro))}</string>',
-              '    <key>ProcessType</key><string>Background</string>',
-              '    <key>Nice</key><integer>5</integer>', '    <key>LowPriorityIO</key><true/>',
+              # v5.92: sin ProcessType Background ni LowPriorityIO (MEDIDO: con «Actualizar ahora» copiaba 1,2 GB en más de 4 min; mirar
+              # cada hora es una petición pequeña). Nice 5: la CPU sigue cediendo a lo que use el usuario
+              '    <key>Nice</key><integer>5</integer>',
+              # v5.92 (revisión): el servicio arranca /bin/sh y en Ajustes › Elementos de inicio salía como «sh» (si alguien lo desactivaba por
+              # desconocido, se quedaba sin actualizaciones): así sale con el nombre y el icono de CineCaptions
+              '    <key>AssociatedBundleIdentifiers</key><array><string>com.cinemaproductions.cinecaptions</string></array>',
               '</dict>', '</plist>', '']
     return '\n'.join(partes)
 
@@ -832,6 +931,10 @@ def _asegurar_agente_mac(exe=None):
         if cargado:
             subprocess.run(['/bin/launchctl', 'bootout', objetivo], capture_output=True, timeout=30)
         r = subprocess.run(['/bin/launchctl', 'bootstrap', f'gui/{os.getuid()}', str(plist)], capture_output=True, text=True, timeout=30)
+        if r.returncode != 0 and cargado:
+            # v5.92 (revisión): justo tras un bootout, launchctl a veces responde «Bootstrap failed: 5»: un reintento corto
+            time.sleep(1.5)
+            r = subprocess.run(['/bin/launchctl', 'bootstrap', f'gui/{os.getuid()}', str(plist)], capture_output=True, text=True, timeout=30)
     except (OSError, subprocess.SubprocessError) as e:
         return f'fallo: {type(e).__name__}: {e}'
     if r.returncode == 0:

@@ -592,6 +592,11 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.92', [
+        'Mac: nuevo instalador. Doble clic en «Instalar CineCaptions» y en un minuto queda todo listo, sin contraseña: la app en Aplicaciones y en el Dock, los scripts de Resolve, las tipografías y las actualizaciones.',
+        'Su ventana enseña el porcentaje y cuánto falta; al terminar abre CineCaptions sola, y el motor de voz e IA se sigue bajando aparte para que el primer GO no lo espere.',
+        'Mac: el aviso de una versión nueva sale en cuanto se encuentra, aunque CineCaptions esté cerrado; con «Actualizar ahora» se instala y se vuelve a abrir con ella.',
+    ]),
     ('5.91', [
         'Mac: se instala arrastrando CineCaptions a Aplicaciones, sin contraseña. Al abrirlo pone solo los scripts de Resolve, las tipografías y sus actualizaciones.',
         'Actualizar es inmediato: la ventana de progreso se ve todo el rato y en Mac CineCaptions se cambia por la nueva y se vuelve a abrir solo.',

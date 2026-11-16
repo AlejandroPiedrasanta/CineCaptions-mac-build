@@ -861,7 +861,8 @@ def generar(escribir=True):
     for a in sin_tema():
         avisos.append(f'«{a}» no está en ningún tema de mapa.json (añádelo a `archivos` de un tema o crea uno)')
     bloque = MARCA_INICIO + '\n' + '\n'.join(lineas) + '\n' + MARCA_FIN
-    ruta = RAIZ / 'CLAUDE.md'
+    # 2026-11-16: el programa vive en PROGRAMA\ y CLAUDE.md sigue en la raíz de CineCaptions (allí lo lee Claude Code)
+    ruta = RAIZ.parent / 'CLAUDE.md' if RAIZ.name == 'PROGRAMA' and (RAIZ.parent / 'CLAUDE.md').is_file() else RAIZ / 'CLAUDE.md'
     t = ruta.read_text(encoding='utf-8')
     if MARCA_INICIO in t and MARCA_FIN in t:
         nuevo = t[:t.index(MARCA_INICIO)] + bloque + t[t.index(MARCA_FIN) + len(MARCA_FIN):]

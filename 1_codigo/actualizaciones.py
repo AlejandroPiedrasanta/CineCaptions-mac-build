@@ -465,11 +465,13 @@ def desmontar(montajes):
 
 
 def app_en_montajes(montajes):
-    """v5.91: la CineCaptions.app que trae el disco (arrastrar a Aplicaciones) o None (los discos de antes solo traen un .pkg)."""
+    """v5.91: la CineCaptions.app que trae el disco (arrastrar a Aplicaciones) o None (los discos de antes solo traen un .pkg).
+    v5.92: en los discos con «Instalar CineCaptions.app» va OCULTA junto a ella, «.CineCaptions.app»."""
     for m in montajes:
-        app = Path(m) / 'CineCaptions.app'
-        if (app / 'Contents' / 'MacOS' / 'CineCaptions').is_file():
-            return app
+        for nombre in ('.CineCaptions.app', 'CineCaptions.app'):
+            app = Path(m) / nombre
+            if (app / 'Contents' / 'MacOS' / 'CineCaptions').is_file():
+                return app
     return None
 
 
@@ -563,7 +565,8 @@ def instalar_aqui_mac(dmg):
         viejo = F._reemplazar_app(nueva, borrar_viejo=False)
     finally:
         desmontar(montajes)
-    guion = 'while kill -0 "$1" 2>/dev/null; do sleep 0.2; done; rm -rf "$2"; /usr/bin/open "$3"'
+    # (v5.92, revisión: una tarjeta del aviso abierta ES CineCaptions y `open` solo la traería al frente: se cierra antes)
+    guion = 'while kill -0 "$1" 2>/dev/null; do sleep 0.2; done; rm -rf "$2"; /usr/bin/pkill -f -- "--tarea aviso_mac"; /usr/bin/open "$3"'
     subprocess.Popen(['/bin/sh', '-c', guion, 'sh', str(os.getpid()), str(viejo), str(app)], close_fds=True, start_new_session=True,
                      stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=F.entorno_para_abrir())
     return True
