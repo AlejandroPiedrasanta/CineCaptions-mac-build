@@ -4922,6 +4922,8 @@
     "El instalador de macOS no pudo terminar.": "The macOS installer could not finish.",
     "Algo falló al instalarla.": "Something failed while installing it.",
     "Mac: cuando sale una versión nueva aparece un aviso de CineCaptions arriba a la derecha, aunque el programa esté cerrado: eliges «Actualizar ahora» o «Más tarde», ves cómo se instala y te dice cuándo terminó.": "Mac: when a new version comes out, a CineCaptions notice appears at the top right, even with the program closed: choose \"Update now\" or \"Later\", watch it install and it tells you when it is done.",
-    "Con una versión nueva, el icono de CineCaptions rebota en el Dock (en Windows parpadea en la barra de tareas) para que no se te pase.": "When there is a new version, the CineCaptions icon bounces in the Dock (on Windows it flashes in the taskbar) so you don't miss it."
+    "Con una versión nueva, el icono de CineCaptions rebota en el Dock (en Windows parpadea en la barra de tareas) para que no se te pase.": "When there is a new version, the CineCaptions icon bounces in the Dock (on Windows it flashes in the taskbar) so you don't miss it.",
+    "Mac: se instala arrastrando CineCaptions a Aplicaciones, sin contraseña. Al abrirlo pone solo los scripts de Resolve, las tipografías y sus actualizaciones.": "Mac: install it by dragging CineCaptions to Applications, no password needed. When you open it, it sets up the Resolve scripts, the fonts and its updates by itself.",
+    "Actualizar es inmediato: la ventana de progreso se ve todo el rato y en Mac CineCaptions se cambia por la nueva y se vuelve a abrir solo.": "Updating is immediate: the progress window stays visible the whole time, and on Mac CineCaptions swaps itself for the new version and reopens by itself."
   }
 }

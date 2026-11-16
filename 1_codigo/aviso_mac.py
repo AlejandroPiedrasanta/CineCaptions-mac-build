@@ -65,10 +65,11 @@ def leer(ruta):
         return {}
 
 
-def responder(accion, ident):
-    """Deja la respuesta al servicio (lo despierta si no estaba esperando). True si quedó."""
+def responder(accion, ident, carpeta=None):
+    """Deja la respuesta al servicio (lo despierta si no estaba esperando). True si quedó. v5.91: en la carpeta que dice el aviso (la del
+    servicio de root o la del usuario)."""
     try:
-        carpeta = actualizar_fondo.PEDIDOS_MAC
+        carpeta = Path(carpeta) if carpeta else actualizar_fondo.PEDIDOS_MAC
         datos = {'accion': accion, 'id': str(ident), 'pid': os.getpid(), 'ts': time.time()}
         tmp = carpeta / f'.respuesta_{os.getpid()}.tmp'
         tmp.write_text(json.dumps(datos), encoding='utf-8')
@@ -213,22 +214,24 @@ def mostrar(ruta_aviso):
         def _pulsar(self, k):
             if self.modo == 'preguntar':
                 if k == 1:
-                    responder('instalar', aviso.get('id'))
+                    responder('instalar', aviso.get('id'), aviso.get('pedidos'))
                     self._poner_modo('instalando')
                 else:
-                    responder('luego', aviso.get('id'))
+                    responder('luego', aviso.get('id'), aviso.get('pedidos'))
                     self.close()
             elif self.modo == 'hecha':
                 if k == 1:
                     try:
-                        subprocess.Popen(['/usr/bin/open', APP_MAC], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        subprocess.Popen(['/usr/bin/open', str(actualizar_fondo.app_instalada())], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                         stderr=subprocess.DEVNULL, env=actualizar_fondo.entorno_para_abrir())
                     except OSError:
                         pass
                 self.close()
             elif self.modo == 'fallo':
                 if k == 1 and aviso.get('url'):
                     try:
-                        subprocess.Popen(['/usr/bin/open', str(aviso['url'])], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        subprocess.Popen(['/usr/bin/open', str(aviso['url'])], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                         env=actualizar_fondo.entorno_para_abrir())
                     except OSError:
                         pass
                 self.close()
@@ -243,12 +246,12 @@ def mostrar(ruta_aviso):
                 return
             if self.modo == 'preguntar':
                 if time.time() >= self.limite:                       # nadie eligió: se instala sola (el servicio también lo decide al acabar el plazo)
-                    responder('instalar', aviso.get('id'))
+                    responder('instalar', aviso.get('id'), aviso.get('pedidos'))
                     self._poner_modo('instalando')
                 else:
                     self.update()
             elif self.modo == 'instalando':
-                if resultado(leer(ESTADO_SERVICIO), aviso['version'], self.inicio) or time.time() - self.inicio_inst > TOPE_INSTALANDO_S:
+                if resultado(leer(aviso.get('estado') or ESTADO_SERVICIO), aviso['version'], self.inicio) or time.time() - self.inicio_inst > TOPE_INSTALANDO_S:
                     self.close()                                     # el servicio abre la tarjeta del final (con la versión NUEVA)
 
         # ── dibujo

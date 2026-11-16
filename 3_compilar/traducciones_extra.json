@@ -14217,5 +14217,27 @@
   "ko": "새 버전이 있으면 Dock의 CineCaptions 아이콘이 튀어 오릅니다(Windows에서는 작업 표시줄에서 깜박임). 놓치지 않습니다.",
   "zh": "有新版本时，CineCaptions 图标会在程序坞中跳动（Windows 上在任务栏闪烁），不会错过。",
   "ru": "Когда есть новая версия, значок CineCaptions подпрыгивает в Dock (в Windows мигает на панели задач), чтобы вы её не пропустили."
+ },
+ "Mac: se instala arrastrando CineCaptions a Aplicaciones, sin contraseña. Al abrirlo pone solo los scripts de Resolve, las tipografías y sus actualizaciones.": {
+  "en": "Mac: install it by dragging CineCaptions to Applications, no password needed. When you open it, it sets up the Resolve scripts, the fonts and its updates by itself.",
+  "pt": "Mac: instala-se arrastando o CineCaptions para Aplicativos, sem senha. Ao abri-lo, ele mesmo instala os scripts do Resolve, as fontes e as atualizações.",
+  "fr": "Mac : il s'installe en glissant CineCaptions dans Applications, sans mot de passe. À l'ouverture, il installe lui-même les scripts de Resolve, les polices et ses mises à jour.",
+  "de": "Mac: Installation durch Ziehen von CineCaptions in „Programme“, ohne Passwort. Beim Öffnen richtet es die Resolve-Skripte, die Schriften und seine Updates selbst ein.",
+  "it": "Mac: si installa trascinando CineCaptions in Applicazioni, senza password. All'apertura installa da solo gli script di Resolve, i font e i suoi aggiornamenti.",
+  "ja": "Mac：CineCaptions を「アプリケーション」にドラッグするだけでインストールでき、パスワードは不要です。開くと Resolve のスクリプト、フォント、アップデートを自動で設定します。",
+  "ko": "Mac: CineCaptions를 응용 프로그램으로 끌어다 놓으면 암호 없이 설치됩니다. 열면 Resolve 스크립트, 글꼴, 업데이트를 알아서 설정합니다.",
+  "zh": "Mac：把 CineCaptions 拖到“应用程序”即可安装，无需密码。打开后会自动设置 Resolve 脚本、字体和更新。",
+  "ru": "Mac: устанавливается перетаскиванием CineCaptions в «Программы», без пароля. При открытии сам настраивает скрипты Resolve, шрифты и обновления."
+ },
+ "Actualizar es inmediato: la ventana de progreso se ve todo el rato y en Mac CineCaptions se cambia por la nueva y se vuelve a abrir solo.": {
+  "en": "Updating is immediate: the progress window stays visible the whole time, and on Mac CineCaptions swaps itself for the new version and reopens by itself.",
+  "pt": "Atualizar é imediato: a janela de progresso fica visível o tempo todo e, no Mac, o CineCaptions se troca pela nova versão e reabre sozinho.",
+  "fr": "La mise à jour est immédiate : la fenêtre de progression reste visible tout le temps et, sur Mac, CineCaptions se remplace par la nouvelle version et se rouvre tout seul.",
+  "de": "Aktualisieren geht sofort: Das Fortschrittsfenster bleibt die ganze Zeit sichtbar, und auf dem Mac ersetzt sich CineCaptions durch die neue Version und öffnet sich von selbst wieder.",
+  "it": "L'aggiornamento è immediato: la finestra di avanzamento resta sempre visibile e su Mac CineCaptions si sostituisce con la nuova versione e si riapre da solo.",
+  "ja": "更新はすぐに始まります。進行状況のウィンドウがずっと表示され、Mac では CineCaptions が新しいバージョンに入れ替わって自動で再び開きます。",
+  "ko": "업데이트가 바로 시작됩니다. 진행 창이 계속 보이고, Mac에서는 CineCaptions가 새 버전으로 바뀐 뒤 저절로 다시 열립니다.",
+  "zh": "更新即刻开始：进度窗口全程可见；在 Mac 上，CineCaptions 会替换为新版本并自动重新打开。",
+  "ru": "Обновление мгновенное: окно хода видно всё время, а на Mac CineCaptions сам заменяется новой версией и снова открывается."
  }
 }

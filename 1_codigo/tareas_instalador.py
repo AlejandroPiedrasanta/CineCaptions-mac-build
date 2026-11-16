@@ -51,7 +51,7 @@ import traceback
 from pathlib import Path
 
 TAREAS = ('verificar', 'scripts', 'quitar_scripts', 'fuentes', 'modelo', 'motor_ia', 'motor_compat', 'transcribir', 'sonda_resolve',
-          'equipo', 'equipo_admin', 'actualizar_fondo', 'aviso_mac')
+          'equipo', 'equipo_admin', 'actualizar_fondo', 'aviso_mac', 'instalar_dmg')
 # v5.1: Whisper queda de respaldo (el motor principal es Qwen3-ASR, motor_ia)
 MODELO_WHISPER = 'large-v3-turbo'
 MODELO_BYTES_APROX = 1_620_000_000
@@ -117,6 +117,18 @@ def ejecutar(argv):
 def _tarea_actualizar_fondo(estado, *_resto):
     import actualizar_fondo
     estado.ok(actualizar_fondo.correr(info=estado.info))
+
+
+def _tarea_instalar_dmg(estado, dmg='', modo='', *_resto):
+    """v5.91 (soporte y pruebas): instala en ESTA app la versión de un .dmg de «arrastrar a Aplicaciones», como lo hace el servicio del usuario
+    (copia junto a la instalada y cambia de nombre: sin contraseña si la app es del usuario). Con modo «aqui», como «Actualizar ahora»
+    (actualizaciones.instalar_aqui_mac: se reemplaza con el programa abierto y se vuelve a abrir al cerrarse)."""
+    if modo == 'aqui':
+        import actualizaciones
+        estado.ok('instalada' if actualizaciones.instalar_aqui_mac(dmg) else 'no se instaló')
+        return
+    import actualizar_fondo
+    estado.ok('instalada' if actualizar_fondo._instalar_mac(dmg) else 'no se instaló')
 
 
 def _tarea_aviso_mac(estado, ruta_aviso='', *_resto):

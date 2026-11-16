@@ -1,11 +1,11 @@
 #!/bin/bash
 # CineCaptions · By Cinema Productions
-# 7_mac/Construir_Instalador_Mac.sh — arma el .dmg (con el instalador .pkg) en una Mac; compila para la arquitectura de ESA Mac.
+# 7_mac/Construir_Instalador_Mac.sh — arma el .dmg (la app para arrastrar a Aplicaciones) en una Mac; compila para la arquitectura de ESA Mac.
 # ============================================================================
 #   bash 7_mac/Construir_Instalador_Mac.sh            todo de principio a fin
 #   bash 7_mac/Construir_Instalador_Mac.sh --solo-instalador   reusa la app ya compilada
 #
-# Hace: venv -> PyInstaller (CineCaptions.app) -> autoprueba -> .pkg -> .dmg
+# Hace: venv -> PyInstaller (CineCaptions.app) -> autoprueba -> paquete oculto para las Mac ya instaladas -> .dmg
 #   Apple Silicon (arm64):  Python 3.14, CineCaptions_Mac_AppleSilicon_<version>.dmg
 #   Intel (x86_64):         Python 3.13 + onnxruntime 1.23.2 (la ultima con version Intel), CineCaptions_Mac_Intel_<version>.dmg
 # Deja el .dmg en INSTALADORES/Mac (o en $CINECAPTIONS_SALIDA); 6_compilacion_mac/ se puede borrar.
@@ -14,9 +14,9 @@
 #   CINECAPTIONS_PYTHON     interprete Python a usar (por defecto python3.14 / python3.13 segun la Mac)
 #   CINECAPTIONS_SIN_PANTALLA=1   autoprueba con Qt "offscreen" (para CI sin sesion grafica)
 #   FIRMA_APP    "Developer ID Application: Tu Nombre (TEAMID)"   firma la app (sin esto: firma ad-hoc)
-#   FIRMA_PKG    "Developer ID Installer: Tu Nombre (TEAMID)"     firma el .pkg
+#   FIRMA_PKG    "Developer ID Installer: Tu Nombre (TEAMID)"     firma el paquete oculto
 #   NOTARIO_PERFIL  perfil de `xcrun notarytool store-credentials`  notariza y grapa (necesita las dos firmas)
-# Sin firmas de Apple el programa funciona, pero la primera vez macOS pide abrirlo con clic derecho > Abrir.
+# Sin firmas de Apple el programa funciona, pero la primera vez macOS pide permitirlo en Ajustes > Privacidad y seguridad > Abrir igualmente.
 # ============================================================================
 set -euo pipefail
 
@@ -162,60 +162,24 @@ fi
 
 [ -d "$APP" ] || falla "No hay app compilada en 6_compilacion_mac/dist: corre el script sin --solo-instalador"
 
-# 6) .pkg ---------------------------------------------------------------------------------------------
-paso "Instalador .pkg"
-PKGROOT="$OBRA/pkgroot"; rm -rf "$PKGROOT"; mkdir -p "$PKGROOT/Applications"
-ditto "$APP" "$PKGROOT/Applications/CineCaptions.app"
+# 6) el paquete OCULTO para las Mac que ya tienen la 5.87-5.90 ---------------------------------------------------------------------------
+# v5.91 (el usuario: «omite que pida contraseña para poderse instalar»; eligió «arrastrar a Aplicaciones»): el disco ya no trae un .pkg que
+# abrir (instalar en /Applications con un .pkg SIEMPRE pide la contraseña). Pero el servicio de root de las 5.87-5.90 busca un *.pkg en el
+# disco y lo instala con `installer -target /`: este paquete SIN la app (solo su postinstall) la copia del mismo disco y hace lo de siempre.
+paso "Paquete para las Mac que ya tienen CineCaptions"
 chmod +x "$AQUI/pkg/scripts/postinstall"
-cat > "$OBRA/componente.plist" <<'PLIST'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><array><dict>
-<key>RootRelativeBundlePath</key><string>Applications/CineCaptions.app</string>
-<key>BundleIsRelocatable</key><false/>
-<key>BundleIsVersionChecked</key><false/>
-<key>BundleHasStrictIdentifier</key><false/>
-<key>BundleOverwriteAction</key><string>upgrade</string>
-</dict></array></plist>
-PLIST
+PKG="$OBRA/actualizar_instaladas.pkg"; rm -f "$PKG"
 SELLO_PKG=(); [ -n "${FIRMA_PKG:-}" ] && SELLO_PKG=(--sign "$FIRMA_PKG")
-pkgbuild --root "$PKGROOT" --component-plist "$OBRA/componente.plist" --identifier com.cinemaproductions.cinecaptions \
-    --version "$VERSION" --install-location / --scripts "$AQUI/pkg/scripts" --ownership recommended \
-    "$OBRA/CineCaptions-componente.pkg" >/dev/null
-cat > "$OBRA/distribucion.xml" <<XML
-<?xml version="1.0" encoding="utf-8"?>
-<installer-gui-script minSpecVersion="2">
-    <title>CineCaptions $VERSION</title>
-    <welcome file="welcome.html"/>
-    <conclusion file="conclusion.html"/>
-    <options customize="never" require-scripts="false" hostArchitectures="$ARQ"/>
-    <allowed-os-versions><os-version min="14.0"/></allowed-os-versions>
-    <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
-    <choices-outline><line choice="default"><line choice="com.cinemaproductions.cinecaptions"/></line></choices-outline>
-    <choice id="default"/>
-    <choice id="com.cinemaproductions.cinecaptions" visible="false"><pkg-ref id="com.cinemaproductions.cinecaptions"/></choice>
-    <pkg-ref id="com.cinemaproductions.cinecaptions" version="$VERSION" onConclusion="none">CineCaptions-componente.pkg</pkg-ref>
-</installer-gui-script>
-XML
-PKG="$OBRA/Instalar_CineCaptions.pkg"; rm -f "$PKG"
-productbuild --distribution "$OBRA/distribucion.xml" --resources "$AQUI/pkg/recursos" --package-path "$OBRA" \
-    ${SELLO_PKG[@]+"${SELLO_PKG[@]}"} "$PKG" >/dev/null
+pkgbuild --nopayload --scripts "$AQUI/pkg/scripts" --identifier com.cinemaproductions.cinecaptions --version "$VERSION" \
+    ${SELLO_PKG[@]+"${SELLO_PKG[@]}"} "$PKG" >/dev/null || falla "pkgbuild no pudo armar el paquete de las Mac ya instaladas"
 
-# 7) notarizar (opcional) ----------------------------------------------------------------------------------
-if [ -n "${NOTARIO_PERFIL:-}" ] && [ -n "${FIRMA_PKG:-}" ]; then
-    paso "Notarizando con Apple (puede tardar unos minutos)"
-    xcrun notarytool submit "$PKG" --keychain-profile "$NOTARIO_PERFIL" --wait
-    xcrun stapler staple "$PKG"
-fi
-
-# 8) .dmg -------------------------------------------------------------------------------------------------------
+# 7) .dmg -------------------------------------------------------------------------------------------------------
 paso "Imagen de disco .dmg"
 STAGE="$OBRA/dmg"; rm -rf "$STAGE"; mkdir -p "$STAGE"
-# v5.87 (el usuario: «en Mac el instalador hazlo más intuitivo, se verá mejor»): la ventana del .dmg con fondo y los dos pasos (doble clic en
-# «Instalar CineCaptions» → ábrelo desde Aplicaciones), los consejos que antes iban en un LEEME.txt y sin barras. Lo arma dmgbuild
-# (7_mac/dmg/ajustes_dmg.py) escribiendo el .DS_Store él mismo: sin el Finder ni AppleScript, que en las Mac de GitHub no son de fiar.
-cp "$PKG" "$STAGE/Instalar CineCaptions.pkg"
-cp "$AQUI/Desinstalar_CineCaptions.command" "$STAGE/Desinstalar.command"; chmod +x "$STAGE/Desinstalar.command"
+# v5.91: «Arrástralo a Aplicaciones» (la app y el enlace a Aplicaciones) + el paquete oculto. Lo arma dmgbuild (7_mac/dmg/ajustes_dmg.py)
+# escribiendo el .DS_Store él mismo: sin el Finder ni AppleScript, que en las Mac de GitHub no son de fiar.
+ditto "$APP" "$STAGE/CineCaptions.app"
+cp "$PKG" "$STAGE/.Actualizar CineCaptions.pkg"
 "$VPY" -m pip install --progress-bar off -q 'dmgbuild==1.6.7' || falla "No pude instalar dmgbuild (la ventana del .dmg)"
 FONDO="$OBRA/fondo_dmg.tiff"
 tiffutil -cathidpicheck "$AQUI/dmg/fondo.png" "$AQUI/dmg/fondo@2x.png" -out "$FONDO" >/dev/null || falla "No pude preparar el fondo del .dmg"

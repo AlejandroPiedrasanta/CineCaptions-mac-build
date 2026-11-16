@@ -4689,6 +4689,8 @@
     "El instalador de macOS no pudo terminar.": "macOS のインストーラが完了できませんでした。",
     "Algo falló al instalarla.": "インストール中に問題が起きました。",
     "Mac: cuando sale una versión nueva aparece un aviso de CineCaptions arriba a la derecha, aunque el programa esté cerrado: eliges «Actualizar ahora» o «Más tarde», ves cómo se instala y te dice cuándo terminó.": "Mac：新しいバージョンが出ると、プログラムを閉じていても右上に CineCaptions のお知らせが表示されます。「今すぐ更新」か「後で」を選べ、インストールの様子と完了がわかります。",
-    "Con una versión nueva, el icono de CineCaptions rebota en el Dock (en Windows parpadea en la barra de tareas) para que no se te pase.": "新しいバージョンがあると、CineCaptions のアイコンが Dock で跳ねます（Windows ではタスクバーで点滅）。見逃しません。"
+    "Con una versión nueva, el icono de CineCaptions rebota en el Dock (en Windows parpadea en la barra de tareas) para que no se te pase.": "新しいバージョンがあると、CineCaptions のアイコンが Dock で跳ねます（Windows ではタスクバーで点滅）。見逃しません。",
+    "Mac: se instala arrastrando CineCaptions a Aplicaciones, sin contraseña. Al abrirlo pone solo los scripts de Resolve, las tipografías y sus actualizaciones.": "Mac：CineCaptions を「アプリケーション」にドラッグするだけでインストールでき、パスワードは不要です。開くと Resolve のスクリプト、フォント、アップデートを自動で設定します。",
+    "Actualizar es inmediato: la ventana de progreso se ve todo el rato y en Mac CineCaptions se cambia por la nueva y se vuelve a abrir solo.": "更新はすぐに始まります。進行状況のウィンドウがずっと表示され、Mac では CineCaptions が新しいバージョンに入れ替わって自動で再び開きます。"
   }
 }

@@ -1,0 +1,170 @@
+# CineCaptions · prueba REAL del instalador de Mac «arrastrar a Aplicaciones» (v5.91): compila con la versión BAJADA a 5.80, mira la
+# ventana del disco, la instala arrastrando (sin sudo), crea el servicio del usuario y lo ve preguntar con la tarjeta, se actualiza a sí
+# misma desde un .dmg nuevo (sin contraseña) y comprueba que las Mac con la 5.87-5.90 (servicio de root + .pkg) siguen pasando a la nueva
+# con el paquete OCULTO. Rama «probar-instalacion-…» del espejo. No publica nada.
+name: Probar instalacion Mac
+on:
+  workflow_dispatch:
+  push:
+    branches: ['probar-instalacion-*']
+jobs:
+  probar:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - nombre: macOS15
+            runner: macos-15
+          - nombre: macOS26
+            runner: macos-26
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 140
+    env:
+      ETQ: com.cinemaproductions.cinecaptions.actualizar
+      SERV: /Library/Application Support/CineCaptions/actualizar
+      APPI: /Applications/CineCaptions.app
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.13.0'
+      - name: Compilar con la versión bajada a 5.80
+        env:
+          CINECAPTIONS_PYTHON: python3
+          CINECAPTIONS_SIN_PANTALLA: '1'
+        run: |
+          sed -i '' "s/^APP_VERSION = '[0-9.]*'/APP_VERSION = '5.80'/" 1_codigo/version.py
+          bash 7_mac/Construir_Instalador_Mac.sh
+          ls -la INSTALADORES/Mac/
+          echo "DMG=$(ls "$PWD"/INSTALADORES/Mac/CineCaptions_Mac_*.dmg | head -1)" >> "$GITHUB_ENV"
+          mkdir -p ~/act/capturas ~/act/registros
+      - name: La ventana del disco
+        run: |
+          defaults write -g AppleLanguages -array es-ES es; defaults write -g AppleLocale es_ES; killall Finder 2>/dev/null || true; sleep 3
+          open "$DMG"
+          for i in $(seq 1 60); do ls -d /Volumes/CineCaptions* >/dev/null 2>&1 && break; sleep 1; done
+          ls -la /Volumes/CineCaptions*/
+          sleep 8
+          screencapture -x ~/act/capturas/01_disco.png
+      - name: Arrastrar a Aplicaciones (sin sudo) y que sea del usuario
+        run: |
+          VOL=$(ls -d /Volumes/CineCaptions* | head -1)
+          ditto "$VOL/CineCaptions.app" "$APPI" && echo "copiada sin contraseña"
+          stat -f "dueño: %Su  permisos: %Sp" "$APPI"
+          codesign --verify --deep --strict "$APPI" && echo "firma válida" || codesign --verify --deep --strict -vvvv "$APPI" 2>&1 | tail -15
+          xattr -w com.apple.quarantine "0083;$(printf %x $(date +%s));Safari;" "$APPI"; spctl --assess -vv "$APPI" 2>&1 | head -3 || true
+          xattr -d com.apple.quarantine "$APPI" 2>/dev/null || true
+          hdiutil detach "$VOL" -quiet || true
+          killall Finder 2>/dev/null || true
+      - name: Servicio del usuario y su tarjeta (el programa lo crea al abrirse)
+        run: |
+          python3 - <<'EOF'
+          import sys
+          sys.path.insert(0, '1_codigo')
+          import actualizar_fondo as F
+          F.app_instalada = lambda: F.Path('/Applications/CineCaptions.app')
+          print('asegurar:', F._asegurar_agente_mac('/Applications/CineCaptions.app/Contents/MacOS/CineCaptions'), '· servicio:', F.servicio_mac())
+          EOF
+          cat ~/Library/LaunchAgents/$ETQ.plist
+          launchctl print gui/$(id -u)/$ETQ | grep -E 'state|runs|last exit|program' || echo "NO CARGADO"
+          A=~/Library/Application\ Support/CineCaptions/actualizar/aviso.json
+          for i in $(seq 1 90); do [ -f "$A" ] && break; sleep 2; done
+          T0=$(date +%s)
+          for i in $(seq 1 12); do sleep 5; screencapture -x ~/act/capturas/02_tarjeta_usuario_$(printf %02d $i).png; done
+          pgrep -fl aviso_mac || echo "(la tarjeta no está abierta)"
+          cat "$A"; echo
+          ID=$(python3 -c "import json,os;print(json.load(open(os.path.expanduser('~/Library/Application Support/CineCaptions/actualizar/aviso.json')))['id'])")
+          echo "{\"accion\": \"luego\", \"id\": \"$ID\", \"ts\": $(date +%s)}" > ~/Library/Application\ Support/CineCaptions/pedidos/respuesta_prueba.json
+          sleep 12
+          cat ~/Library/Application\ Support/CineCaptions/actualizar/actualizar_fondo.log || true
+          cat ~/Library/Application\ Support/CineCaptions/actualizar/estado.json || true; echo
+          tail -5 ~/Library/Logs/CineCaptions_actualizar.log || true
+      - name: Se actualiza a sí misma desde un .dmg nuevo (sin contraseña)
+        run: |
+          INO1=$(stat -f %i "$APPI")
+          "$APPI/Contents/MacOS/CineCaptions" --tarea instalar_dmg /tmp/instalar_dmg.txt "$DMG"; echo "código $?"
+          cat /tmp/instalar_dmg.txt
+          INO2=$(stat -f %i "$APPI")
+          [ "$INO1" != "$INO2" ] && echo "APP REEMPLAZADA" || echo "LA APP NO CAMBIÓ"
+          stat -f "dueño: %Su" "$APPI"; ls -d /Applications/CineCaptions.app*
+          codesign --verify --deep --strict "$APPI" && echo "firma válida tras reemplazar"
+          QT_QPA_PLATFORM=offscreen "$APPI/Contents/MacOS/CineCaptions" --tarea verificar /tmp/autoprueba.txt; echo "autoprueba $?"; tail -2 /tmp/autoprueba.txt
+      - name: «Actualizar ahora» al momento (se reemplaza con el programa abierto y se vuelve a abrir)
+        run: |
+          T0=$(date +%s)
+          "$APPI/Contents/MacOS/CineCaptions" --tarea instalar_dmg /tmp/aqui.txt "$DMG" aqui; cat /tmp/aqui.txt
+          echo "reemplazada a los $(( $(date +%s) - T0 )) s"
+          for i in $(seq 1 60); do pgrep -f "^$APPI/Contents/MacOS/CineCaptions$" >/dev/null && break; sleep 0.5; done
+          echo "abierta de nuevo a los $(( $(date +%s) - T0 )) s"
+          sleep 2; ls -d /Applications/CineCaptions.app*
+          codesign --verify --deep --strict "$APPI" && echo "firma válida"
+          sleep 8; screencapture -x ~/act/capturas/03_reabierta.png
+          pkill -f 'CineCaptions.app/Contents/MacOS' || true
+      - name: Rapidez del disco (LZFSE contra lzma)
+        run: |
+          hdiutil convert "$DMG" -format ULMO -o /tmp/d_ULMO.dmg -quiet
+          cp "$DMG" /tmp/d_ULFO.dmg
+          for F in ULFO ULMO; do
+            echo "== $F: $(stat -f %z /tmp/d_$F.dmg | awk '{printf "%.0f MB", $1/1048576}')"
+            T0=$(python3 -c 'import time;print(time.time())')
+            hdiutil verify /tmp/d_$F.dmg -quiet
+            T1=$(python3 -c 'import time;print(time.time())')
+            hdiutil attach -nobrowse -readonly -noverify -mountpoint /tmp/m_$F /tmp/d_$F.dmg >/dev/null
+            ditto /tmp/m_$F/CineCaptions.app /tmp/copia_$F.app
+            T2=$(python3 -c 'import time;print(time.time())')
+            hdiutil detach /tmp/m_$F -quiet; rm -rf /tmp/copia_$F.app
+            python3 -c "print('   comprobar al abrir: %.1f s · copiar a Aplicaciones: %.1f s' % ($T1-$T0, $T2-$T1))"
+          done
+      - name: Tirar la app a la Papelera quita el servicio del usuario
+        run: |
+          rm -rf "$APPI"
+          launchctl kickstart -k gui/$(id -u)/$ETQ || true
+          sleep 6
+          ls ~/Library/LaunchAgents/ | grep -i cine && echo "EL SERVICIO SIGUE" || echo "servicio quitado solo"
+          launchctl print gui/$(id -u)/$ETQ >/dev/null 2>&1 && echo "SIGUE CARGADO" || echo "descargado"
+      - name: Las Mac con la 5.90 (servicio de root + .pkg) pasan a la nueva con el paquete oculto
+        run: |
+          sudo mkdir -p "$SERV"
+          echo "{\"fallo_ts\": $(date +%s)}" | sudo tee "$SERV/estado.json" >/dev/null
+          curl -fsSL -o ~/act/v590.dmg "https://github.com/AlejandroPiedrasanta/CineCaptions-releases/releases/download/v5.90/CineCaptions_Mac_AppleSilicon_5.90.dmg"
+          hdiutil attach -nobrowse -readonly -mountpoint /tmp/cc590 ~/act/v590.dmg >/dev/null
+          sudo installer -pkg "$(ls -d /tmp/cc590/*.pkg | head -1)" -target / | tail -1
+          hdiutil detach /tmp/cc590 -quiet
+          pkill -f 'CineCaptions.app/Contents/MacOS' || true
+          echo "antes: $(defaults read "$APPI/Contents/Info" CFBundleShortVersionString) · dueño $(stat -f %Su "$APPI")"
+          git fetch -q --depth 1 origin main && mkdir -p /tmp/viejo && git archive FETCH_HEAD 1_codigo | tar -x -C /tmp/viejo
+          grep -n "^APP_VERSION" /tmp/viejo/1_codigo/version.py
+          cp "$DMG" /tmp/nueva.dmg
+          PYB=$(which python3)
+          sudo "$PYB" - <<'EOF'
+          import subprocess, sys
+          sys.path.insert(0, '/tmp/viejo/1_codigo')
+          import actualizaciones as A                     # (el código de la 5.90 publicada, como su servicio de root)
+          pkg = A._pkg_de_dmg('/tmp/nueva.dmg')
+          print('paquete que encuentra la 5.90:', pkg)
+          r = subprocess.run(['/usr/sbin/installer', '-pkg', str(pkg), '-target', '/'], capture_output=True, text=True)
+          print(r.stdout.strip()[-300:], r.stderr.strip()[-300:], 'código', r.returncode)
+          EOF
+          echo "después: $(defaults read "$APPI/Contents/Info" CFBundleShortVersionString) · dueño $(stat -f %Su "$APPI") · permisos $(stat -f %Sp "$APPI")"
+          ls -d /Applications/CineCaptions.app*
+          sudo launchctl print system/$ETQ | grep -E 'state|program' || echo "SERVICIO DE ROOT NO CARGADO"
+          tail -15 ~/DaVinciSubtitles/instalacion_mac.log || true
+      - name: Registros
+        if: always()
+        run: |
+          echo "== informes"; ls ~/Library/Logs/DiagnosticReports /Library/Logs/DiagnosticReports 2>/dev/null | grep -i cine || echo "(ninguno)"
+          cp ~/Library/Logs/CineCaptions_actualizar.log ~/act/registros/ 2>/dev/null || true
+          cp ~/Library/Application\ Support/CineCaptions/actualizar/*.log ~/act/registros/ 2>/dev/null || true
+          ls -la INSTALADORES/Mac/ || true
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: Instalacion-${{ matrix.nombre }}
+          path: |
+            ~/act/capturas/
+            ~/act/registros/
+          retention-days: 3
+          if-no-files-found: warn

@@ -9,6 +9,34 @@
 APP="/Applications/CineCaptions.app"
 BIN="$APP/Contents/MacOS/CineCaptions"
 
+# v5.91 (el usuario: «omite que pida contraseña para poderse instalar»; eligió «arrastrar a Aplicaciones»): el .dmg trae la app para
+# arrastrarla y este paquete va OCULTO en él, SIN la app: solo lo instala el servicio de root de las Mac que ya tienen la 5.87-5.90 (busca un
+# *.pkg en el disco y corre `installer -target /`). La app se copia aquí del mismo disco: el paquete está junto al disco (el servicio y el
+# programa lo sacan a «<disco>.pkg» junto a «<disco>.dmg») o dentro del disco montado (si alguien lo abre a mano). De root y sin escribible
+# por otros: el servicio de root la ejecuta.
+copiar_app_del_disco() {
+    local PAQUETE="${1:-}" ORIGEN="" MONTADO=""
+    if [ -n "$PAQUETE" ] && [ -d "$(dirname "$PAQUETE")/CineCaptions.app" ]; then
+        ORIGEN="$(dirname "$PAQUETE")/CineCaptions.app"
+    elif [ -n "$PAQUETE" ] && [ -f "${PAQUETE%.pkg}.dmg" ]; then
+        MONTADO="$(mktemp -d /tmp/cinecaptions_disco.XXXXXX)"
+        hdiutil attach -nobrowse -readonly -noautoopen -mountpoint "$MONTADO" "${PAQUETE%.pkg}.dmg" >/dev/null 2>&1 && ORIGEN="$MONTADO/CineCaptions.app"
+    fi
+    if [ ! -x "$ORIGEN/Contents/MacOS/CineCaptions" ]; then
+        echo "CineCaptions: no encontré la app junto al paquete ($PAQUETE)" >&2
+        [ -n "$MONTADO" ] && { hdiutil detach "$MONTADO" -force -quiet 2>/dev/null; rmdir "$MONTADO" 2>/dev/null; }
+        return 1
+    fi
+    rm -rf "$APP.nuevo" "$APP.viejo"
+    ditto "$ORIGEN" "$APP.nuevo" && chown -R root:wheel "$APP.nuevo" && chmod -R go-w "$APP.nuevo" && { xattr -d com.apple.FinderInfo "$APP.nuevo" 2>/dev/null; true; }
+    local OK=$?
+    [ -n "$MONTADO" ] && { hdiutil detach "$MONTADO" -force -quiet 2>/dev/null; rmdir "$MONTADO" 2>/dev/null; }
+    [ "$OK" = 0 ] || { rm -rf "$APP.nuevo"; return 1; }
+    [ -d "$APP" ] && mv "$APP" "$APP.viejo"                 # (cambiar de nombre es al momento: la versión vieja abierta sigue viva hasta que se cierra)
+    mv "$APP.nuevo" "$APP" && rm -rf "$APP.viejo"
+}
+copiar_app_del_disco "${1:-$PACKAGE_PATH}" || exit 1
+
 xattr -dr com.apple.quarantine "$APP" 2>/dev/null
 
 # v5.85: hasta la 5.84 el «resource_tracker» de multiprocessing que lanza la tarea «modelo» volvía a abrir CineCaptions entero,

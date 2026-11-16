@@ -398,11 +398,13 @@ def instalar(ruta, aviso_mac='', silencioso=False):
             # DETACHED_PROCESS: sobrevive al cierre del programa. cwd = la carpeta del propio instalador: si heredara la del programa (los accesos
             # directos la fijan a la carpeta de instalación) Windows no dejaría renombrarla ni reemplazar la versión instalada.
             args = ['/silencioso', '/noabrir', '/sinmodelo'] if silencioso else ['/empezar']
-            subprocess.Popen([ruta] + args, close_fds=True, creationflags=0x00000008, cwd=os.path.dirname(ruta) or tempfile.gettempdir())
+            proc = subprocess.Popen([ruta] + args, close_fds=True, creationflags=0x00000008, cwd=os.path.dirname(ruta) or tempfile.gettempdir())
+            _INSTALADOR['pid'] = getattr(proc, 'pid', None)                        # v5.91: la ventana de «Actualizar» espera a ver la del instalador
         elif sys.platform == 'darwin':
             if silencioso:
                 import actualizar_fondo
-                return actualizar_fondo.pedir_al_servicio(reabrir=False, dmg=ruta)
+                return (actualizar_fondo.pedir_al_servicio(reabrir=False, dmg=ruta)
+                        or actualizar_fondo.pedir_y_correr_aparte(reabrir=False, dmg=ruta))
             return _instalar_mac(ruta, aviso_mac)
         else:
             return False
@@ -444,14 +446,38 @@ sleep 1
 '''
 
 
-def _pkg_de_dmg(dmg):
-    """El .pkg que trae el .dmg descargado, copiado junto a él (se monta sin ventanas ni Finder y se desmonta al acabar)."""
+def montar_dmg(dmg):
+    """Monta el .dmg sin ventanas ni Finder (solo lectura). Devuelve sus puntos de montaje; desmontar() al acabar."""
     import plistlib
-    import shutil
     r = subprocess.run(['hdiutil', 'attach', '-nobrowse', '-readonly', '-noautoopen', '-plist', str(dmg)], capture_output=True, timeout=300)
     if r.returncode != 0:
         raise RuntimeError('hdiutil attach: ' + (r.stderr or b'').decode('utf-8', 'replace').strip()[-300:])
-    montajes = [e['mount-point'] for e in plistlib.loads(r.stdout).get('system-entities', []) if e.get('mount-point')]
+    return [e['mount-point'] for e in plistlib.loads(r.stdout).get('system-entities', []) if e.get('mount-point')]
+
+
+def desmontar(montajes):
+    for m in montajes:
+        try:
+            if subprocess.run(['hdiutil', 'detach', m, '-quiet'], capture_output=True, timeout=120).returncode != 0:
+                subprocess.run(['hdiutil', 'detach', m, '-force', '-quiet'], capture_output=True, timeout=120)
+        except (OSError, subprocess.SubprocessError):
+            pass
+
+
+def app_en_montajes(montajes):
+    """v5.91: la CineCaptions.app que trae el disco (arrastrar a Aplicaciones) o None (los discos de antes solo traen un .pkg)."""
+    for m in montajes:
+        app = Path(m) / 'CineCaptions.app'
+        if (app / 'Contents' / 'MacOS' / 'CineCaptions').is_file():
+            return app
+    return None
+
+
+def _pkg_de_dmg(dmg):
+    """El .pkg que trae el .dmg descargado, copiado junto a él (se monta sin ventanas ni Finder y se desmonta al acabar). v5.91: en los
+    discos nuevos es el paquete OCULTO (sin la app: su postinstall la copia del disco que queda junto a él, «<disco>.dmg»)."""
+    import shutil
+    montajes = montar_dmg(dmg)
     try:
         pkgs = sorted(p for m in montajes for p in Path(m).glob('*.pkg'))
         if not pkgs:
@@ -465,9 +491,82 @@ def _pkg_de_dmg(dmg):
             shutil.copy(pkgs[0], destino)                          # (sin copy2: con la fecha de AHORA, limpiar_descargas_viejas no lo toca enseguida)
         return destino
     finally:
-        for m in montajes:
-            if subprocess.run(['hdiutil', 'detach', m, '-quiet'], capture_output=True, timeout=120).returncode != 0:
-                subprocess.run(['hdiutil', 'detach', m, '-force', '-quiet'], capture_output=True, timeout=120)
+        desmontar(montajes)
+
+
+def _dmg_trae_app(dmg):
+    try:
+        montajes = montar_dmg(dmg)
+    except Exception:
+        return False
+    try:
+        return app_en_montajes(montajes) is not None
+    finally:
+        desmontar(montajes)
+
+
+_INSTALADOR = {'pid': None}
+
+
+def ventana_del_instalador_visible():
+    """v5.91 (el usuario: «tardó bastante para que se empezara a instalar… todo debe ser inmediato»): Windows revisa el instalador (732 MB)
+    antes de abrirlo y la ventana de «Actualizar» se cerraba a los 1,5 s: quedaba un rato SIN NADA en pantalla. Ahora se queda hasta que
+    se ve la ventana del instalador. True cuando el proceso lanzado ya enseña una ventana (o ya no existe: no hay nada que esperar)."""
+    pid = _INSTALADOR.get('pid')
+    if not pid or not sys.platform.startswith('win'):
+        return True
+    try:
+        import ctypes
+        from ctypes import wintypes
+        user32 = ctypes.windll.user32
+        kernel32 = ctypes.windll.kernel32
+        h = kernel32.OpenProcess(0x1000, False, int(pid))             # (PROCESS_QUERY_LIMITED_INFORMATION)
+        if not h:
+            return True
+        codigo = wintypes.DWORD()
+        vivo = kernel32.GetExitCodeProcess(h, ctypes.byref(codigo)) and codigo.value == 259
+        kernel32.CloseHandle(h)
+        if not vivo:
+            return True
+        hallada = []
+
+        @ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+        def mirar(hwnd, _l):
+            dueno = wintypes.DWORD()
+            user32.GetWindowThreadProcessId(hwnd, ctypes.byref(dueno))
+            if dueno.value == int(pid) and user32.IsWindowVisible(hwnd) and user32.GetWindowTextLengthW(hwnd) > 0:
+                hallada.append(hwnd)
+                return False
+            return True
+        user32.EnumWindows(mirar, 0)
+        return bool(hallada)
+    except Exception:
+        return True
+
+
+def instalar_aqui_mac(dmg):
+    """v5.91 (el usuario: «que muestre rápido el proceso de que se está instalando… todo debe ser inmediato»): con un disco de «arrastrar
+    a Aplicaciones» y la app del usuario (no de root), el programa se reemplaza a sí mismo CON LA VENTANA DE PROGRESO A LA VISTA (copia la
+    nueva junto a la instalada y cambia de nombre; la abierta sigue viva desde «….app.viejo») y se vuelve a abrir al cerrarse: sin esperar al
+    servicio ni a su tarjeta. True si quedó instalada; None si no aplica (sin compilar, app de root o abierta desde el disco, disco de antes)."""
+    if sys.platform != 'darwin' or not getattr(sys, 'frozen', False):
+        return None
+    import actualizar_fondo as F
+    app = F.app_instalada()
+    if F.app_de_paso(app) or not os.access(app, os.W_OK) or not os.access(app.parent, os.W_OK):
+        return None
+    montajes = montar_dmg(dmg)
+    try:
+        nueva = app_en_montajes(montajes)
+        if nueva is None:
+            return None
+        viejo = F._reemplazar_app(nueva, borrar_viejo=False)
+    finally:
+        desmontar(montajes)
+    guion = 'while kill -0 "$1" 2>/dev/null; do sleep 0.2; done; rm -rf "$2"; /usr/bin/open "$3"'
+    subprocess.Popen(['/bin/sh', '-c', guion, 'sh', str(os.getpid()), str(viejo), str(app)], close_fds=True, start_new_session=True,
+                     stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=F.entorno_para_abrir())
+    return True
 
 
 def _instalar_mac(dmg, aviso='', reabrir=True):
@@ -476,8 +575,17 @@ def _instalar_mac(dmg, aviso='', reabrir=True):
     Con el servicio del sistema (actualizar_fondo, lo pone el .pkg desde la 5.87) se le deja el pedido y él instala SIN contraseña (pedido
     del usuario: «sin contraseña»); el script con la ventana de la contraseña queda para una Mac que aún no lo tiene."""
     try:
+        if reabrir and instalar_aqui_mac(dmg):                       # v5.91: al momento y a la vista (sin esperar al servicio)
+            return True
+    except Exception:
+        pass
+    try:
         import actualizar_fondo
         if actualizar_fondo.pedir_al_servicio(reabrir=reabrir, dmg=dmg):
+            return True
+        # v5.91: sin servicio y con un disco de «arrastrar a Aplicaciones», la pasada del servicio la corre aparte este mismo programa
+        # (espera a que se cierre, reemplaza la app y la vuelve a abrir): sin contraseña
+        if _dmg_trae_app(dmg) and actualizar_fondo.pedir_y_correr_aparte(reabrir=reabrir, dmg=dmg):
             return True
     except Exception:
         pass

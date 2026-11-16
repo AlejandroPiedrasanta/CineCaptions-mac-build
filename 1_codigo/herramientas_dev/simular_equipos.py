@@ -2579,7 +2579,8 @@ def actualizar_en_mac_se_instala_y_vuelve_a_abrir():
         import shutil
         shutil.rmtree(tmp, ignore_errors=True)
     fuente = open(os.path.join(CODIGO, 'CineCaptions (script principal).py'), encoding='utf-8').read()
-    esperar("if sys.platform.startswith('win') or sys.platform == 'darwin':" in fuente, 'en la Mac el programa no se cierra tras lanzar la actualización')
+    esperar("elif sys.platform == 'darwin':" in fuente and 'despues(600, lambda: QApplication.instance().quit(), self)' in fuente,
+            'en la Mac el programa no se cierra tras lanzar la actualización')
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------------
@@ -2736,7 +2737,8 @@ def mac_servicio_de_root_seguro_y_sin_contrasena():
         esperar(pieza in texto, f'al postinstall le falta: {pieza}')
     esperar(texto.index('ETIQUETA="com.cinemaproductions') < texto.index('USUARIO=$(stat'), 'el servicio se pone después de salir sin usuario')
     des = open(os.path.join(RAIZ, '7_mac', 'Desinstalar_CineCaptions.command'), encoding='utf-8').read()
-    esperar('launchctl bootout system/com.cinemaproductions.cinecaptions.actualizar' in des, 'el desinstalador no quita el servicio')
+    esperar('launchctl bootout "system/$ETIQUETA"' in des and 'launchctl bootout "gui/$(id -u)/$ETIQUETA"' in des
+            and 'ETIQUETA="com.cinemaproductions.cinecaptions.actualizar"' in des, 'el desinstalador no quita los servicios')
     import actualizar_fondo as F
     import actualizaciones as A
     carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_ped_')) / 'pedidos'
@@ -2745,7 +2747,7 @@ def mac_servicio_de_root_seguro_y_sin_contrasena():
     (carpeta / 'grande.json').write_text('{"a": "' + 'x' * 5000 + '"}')
     try:
         with parches((F, 'PEDIDOS_MAC', carpeta), (sys, 'platform', 'darwin'), (F, 'es_root', lambda: False)):
-            pedidos = F._tomar_pedidos()
+            pedidos = F._tomar_pedidos(carpeta)
         esperar(pedidos == [{'reabrir': True, 'pid': 123, 'dmg': '/x.dmg'}] and not list(carpeta.iterdir()),
                 f'pedidos mal leídos o sin vaciar: {pedidos} {list(carpeta.iterdir())}')
         llamado = []
@@ -2828,6 +2830,197 @@ def la_misma_version_ya_bajada_no_se_vuelve_a_bajar():
 
 
 @caso('Actualizaciones con el programa cerrado')
+def mac_se_instala_arrastrando_sin_contrasena():
+    """v5.91 (el usuario: «omite que pida contraseña para poderse instalar»; eligió «arrastrar a Aplicaciones» y la propuesta C): el disco
+    trae la app y el enlace a Aplicaciones (sin .pkg que abrir: en /Applications un .pkg SIEMPRE pide contraseña) y un paquete OCULTO, sin
+    la app, para el servicio de root de las 5.87-5.90 (busca *.pkg con pathlib, que ve los ocultos); su postinstall copia la app del disco
+    que queda junto a él antes de lo de siempre. Fondo C a 600 × 360 (y al doble)."""
+    import importlib.util as iu
+    from PIL import Image
+    sh = open(os.path.join(RAIZ, '7_mac', 'Construir_Instalador_Mac.sh'), encoding='utf-8').read()
+    esperar('pkgbuild --nopayload --scripts' in sh and 'productbuild' not in sh and 'ditto "$APP" "$STAGE/CineCaptions.app"' in sh
+            and 'cp "$PKG" "$STAGE/.Actualizar CineCaptions.pkg"' in sh, 'el disco no se arma con la app + el paquete oculto')
+    espec = iu.spec_from_file_location('ajustes_dmg_prueba', os.path.join(RAIZ, '7_mac', 'dmg', 'ajustes_dmg.py'))
+    mod = iu.module_from_spec(espec)
+    mod.__dict__['defines'] = {'stage': '/tmp/stage', 'fondo': '/tmp/fondo.tiff', 'icono': None}
+    espec.loader.exec_module(mod)
+    nombres = [os.path.basename(f) for f in mod.files]
+    esperar(nombres == ['CineCaptions.app', '.Actualizar CineCaptions.pkg'] and mod.symlinks == {'Aplicaciones': '/Applications'}
+            and set(mod.icon_locations) == {'CineCaptions.app', 'Aplicaciones', '.Actualizar CineCaptions.pkg'}, f'ajustes del disco: {nombres}')
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_oculto_'))
+    try:
+        (carpeta / '.Actualizar CineCaptions.pkg').write_bytes(b'x')
+        esperar([p.name for p in carpeta.glob('*.pkg')] == ['.Actualizar CineCaptions.pkg'], 'pathlib no ve el paquete oculto')
+    finally:
+        import shutil
+        shutil.rmtree(carpeta, ignore_errors=True)
+    tam = (Image.open(os.path.join(RAIZ, '7_mac', 'dmg', 'fondo.png')).size, Image.open(os.path.join(RAIZ, '7_mac', 'dmg', 'fondo@2x.png')).size)
+    esperar(tam == ((600, 360), (1200, 720)) and mod.window_rect[1] == (600, 388), f'fondo {tam} ventana {mod.window_rect}')
+    post = open(os.path.join(RAIZ, '7_mac', 'pkg', 'scripts', 'postinstall'), encoding='utf-8').read()
+    esperar('copiar_app_del_disco "${1:-$PACKAGE_PATH}" || exit 1' in post and '"${PAQUETE%.pkg}.dmg"' in post
+            and 'chown -R root:wheel "$APP.nuevo"' in post and post.index('copiar_app_del_disco "${1') < post.index('ETIQUETA="com.'),
+            'el postinstall no copia la app del disco antes de lo demás')
+    esperar('\r' not in post, 'el postinstall tiene CRLF (bash en la Mac no lo corre)')
+
+
+@caso('Actualizaciones con el programa cerrado')
+def mac_reemplaza_la_app_sin_dejarla_a_medias():
+    """v5.91: la actualización con un disco nuevo copia la app junto a la instalada (ditto) y las cambia de nombre: nunca queda una app a
+    medias; si la copia falla, la instalada sigue como estaba. El servicio del usuario reemplaza la que el usuario arrastró; con un disco de
+    antes (solo .pkg) el del usuario no puede (haría falta la contraseña) y el de root usa installer."""
+    import shutil
+    import actualizaciones as A
+    import actualizar_fondo as F
+    raiz = pathlib.Path(tempfile.mkdtemp(prefix='cc_reemplazo_'))
+    vieja, disco = raiz / 'Applications' / 'CineCaptions.app', raiz / 'disco' / 'CineCaptions.app'
+    for app, texto in ((vieja, 'vieja'), (disco, 'nueva')):
+        (app / 'Contents' / 'MacOS').mkdir(parents=True)
+        (app / 'Contents' / 'MacOS' / 'CineCaptions').write_text(texto)
+    llamadas = []
+
+    def run(orden, **k):
+        llamadas.append(orden[0])
+        if orden[0] == '/usr/bin/ditto':
+            if 'romper' in hecho:
+                return types.SimpleNamespace(returncode=1, stderr='No space left on device', stdout='')
+            shutil.copytree(orden[1], orden[2])
+        return types.SimpleNamespace(returncode=0, stderr='', stdout='')
+    hecho = set()
+    try:
+        with parches((F, 'es_root', lambda: False), (F, 'app_instalada', lambda: vieja), (F.subprocess, 'run', run)):
+            F._reemplazar_app(disco)
+            esperar((vieja / 'Contents' / 'MacOS' / 'CineCaptions').read_text() == 'nueva' and sorted(p.name for p in vieja.parent.iterdir()) == ['CineCaptions.app'],
+                    f'no quedó la nueva sola: {sorted(p.name for p in vieja.parent.iterdir())}')
+            esperar('/usr/sbin/chown' not in llamadas, 'el servicio del usuario intentó cambiar el dueño a root')
+            hecho.add('romper')
+            (disco / 'Contents' / 'MacOS' / 'CineCaptions').write_text('otra')
+            try:
+                F._reemplazar_app(disco)
+                esperar(False, 'una copia rota no lanzó')
+            except RuntimeError:
+                pass
+            esperar((vieja / 'Contents' / 'MacOS' / 'CineCaptions').read_text() == 'nueva' and sorted(p.name for p in vieja.parent.iterdir()) == ['CineCaptions.app'],
+                    'con la copia rota la instalada no se quedó como estaba')
+        instaladas = []
+        with parches((A, 'montar_dmg', lambda dmg: ['/Volumes/x']), (A, 'desmontar', lambda m: None), (A, 'app_en_montajes', lambda m: None),
+                     (F, 'es_root', lambda: False)):
+            try:
+                F._instalar_mac('/tmp/viejo.dmg')
+                esperar(False, 'el servicio del usuario «instaló» un disco con .pkg')
+            except RuntimeError as e:
+                esperar('contraseña' in str(e), str(e))
+        with parches((A, 'montar_dmg', lambda dmg: ['/Volumes/x']), (A, 'desmontar', lambda m: None),
+                     (A, 'app_en_montajes', lambda m: pathlib.Path('/Volumes/x/CineCaptions.app')), (F, 'es_root', lambda: False),
+                     (F, '_reemplazar_app', lambda o: instaladas.append(str(o)))):
+            esperar(F._instalar_mac('/tmp/nuevo.dmg') is True and instaladas == [str(pathlib.Path('/Volumes/x/CineCaptions.app'))], f'{instaladas}')
+    finally:
+        shutil.rmtree(raiz, ignore_errors=True)
+
+
+@caso('Actualizaciones con el programa cerrado')
+def mac_servicio_del_usuario_sin_contrasena():
+    """v5.91: el programa crea al abrirse el servicio DEL USUARIO (LaunchAgent: al iniciar sesión, cada hora y con un pedido) que apunta a la
+    app que el usuario arrastró, y que se quita solo si la app ya no está. No lo crea si la Mac tiene el de root de antes ni si la app corre
+    desde el disco o sin moverla («trasladada» por macOS); «Actualizar» y cerrar le dejan el pedido en su carpeta."""
+    import plistlib
+    import actualizar_fondo as F
+    casa = pathlib.Path(tempfile.mkdtemp(prefix='cc_agente_'))
+    app = pathlib.Path('/Applications/CineCaptions.app')
+    ordenes = []
+    cargado = {'v': False}
+
+    def run(orden, **k):
+        ordenes.append(list(orden))
+        if orden[:2] == ['/bin/launchctl', 'print']:
+            return types.SimpleNamespace(returncode=0 if cargado['v'] else 113, stdout='', stderr='')
+        if orden[:2] == ['/bin/launchctl', 'bootstrap']:
+            cargado['v'] = True
+        return types.SimpleNamespace(returncode=0, stdout='', stderr='')
+    exe = str(app / 'Contents' / 'MacOS' / 'CineCaptions')
+    getuid_antes = getattr(os, 'getuid', None)
+    os.getuid = lambda: 501                                                         # (en Windows no existe)
+    try:
+        with parches((sys, 'platform', 'darwin'), (pathlib.Path, 'home', classmethod(lambda c: casa)),
+                     (F, 'servicio_root_mac', lambda: False), (F, 'app_instalada', lambda: app), (F.subprocess, 'run', run)):
+            r1 = F.asegurar_programada(exe)
+            r2 = F.asegurar_programada(exe)
+            plist = plistlib.loads(F.plist_usuario().read_bytes())
+            esperar((r1, r2) == ('creada', 'al_dia') and plist['ProgramArguments'][3] == str(app / 'Contents' / 'MacOS' / 'CineCaptions')
+                    and plist['QueueDirectories'] == [str(F.pedidos_usuario())] and plist['StartInterval'] == 3600 and plist['RunAtLoad'] is True
+                    and 'bootout' in plist['ProgramArguments'][2] and F.servicio_mac() == 'usuario', f'{(r1, r2)} {plist}')
+            esperar(F.pedir_al_servicio(reabrir=True, dmg='/tmp/x.dmg') and len(list(F.pedidos_usuario().glob('pedido_*.json'))) == 1,
+                    'el pedido no quedó en la carpeta del usuario')
+            with parches((F, 'servicio_root_mac', lambda: True)):
+                esperar(F.asegurar_programada(exe) == 'al_dia' and F.carpeta_pedidos() == F.PEDIDOS_MAC, 'con el servicio de root no manda él')
+            with parches((F, 'app_instalada', lambda: pathlib.Path('/Volumes/CineCaptions 5.91/CineCaptions.app'))):
+                esperar(F.asegurar_programada(exe) == 'no_aplica' and F.app_de_paso(), 'abierta desde el disco y crea el servicio')
+            esperar(F.app_de_paso('/private/var/folders/x/T/AppTranslocation/ABC/d/CineCaptions.app'), 'no reconoce la app trasladada')
+    finally:
+        if getuid_antes is None:
+            del os.getuid
+        else:
+            os.getuid = getuid_antes
+        import shutil
+        shutil.rmtree(casa, ignore_errors=True)
+    vig = open(os.path.join(CODIGO, 'vigilancia.py'), encoding='utf-8').read()
+    esperar("(sys.platform.startswith('win') or sys.platform == 'darwin') and getattr(sys, 'frozen', False)" in vig,
+            'el programa no crea el servicio al abrirse en la Mac')
+
+
+@caso('Actualizaciones con el programa cerrado')
+def actualizar_no_deja_la_pantalla_vacia():
+    """v5.91 (el usuario: «tardó bastante para que se empezara a instalar… que muestre rápido el proceso, todo inmediato»). Windows: la
+    ventana de «Actualizar» ya no se cierra a los 1,5 s; espera a VER la ventana del instalador (Windows lo revisa antes de abrirlo) y como
+    mucho 2 min. Mac con el disco nuevo y la app del usuario: se reemplaza a sí misma con la ventana de progreso a la vista y se vuelve a
+    abrir al cerrarse (sin esperar al servicio); con la app de root o abierta desde el disco no lo intenta."""
+    import actualizaciones as A
+    import actualizar_fondo as F
+    fuente = open(os.path.join(CODIGO, 'CineCaptions (script principal).py'), encoding='utf-8').read()
+    esperar('actualizaciones.ventana_del_instalador_visible()' in fuente and 'limite = time.time() + 120' in fuente,
+            'la ventana de «Actualizar» no espera a la del instalador')
+    with parches((A, '_INSTALADOR', {'pid': None})):
+        esperar(A.ventana_del_instalador_visible() is True, 'sin instalador lanzado se queda esperando')
+    if sys.platform.startswith('win'):
+        p = subprocess.Popen([getattr(sys, '_base_executable', sys.executable), '-c', 'import time; time.sleep(20)'], creationflags=0x08000000)
+        try:
+            with parches((A, '_INSTALADOR', {'pid': p.pid})):
+                esperar(A.ventana_del_instalador_visible() is False, 'un proceso sin ventana cuenta como instalador a la vista')
+                p.kill()
+                p.wait(10)
+                esperar(A.ventana_del_instalador_visible() is True, 'con el instalador ya cerrado se queda esperando')
+        finally:
+            if p.poll() is None:
+                p.kill()
+    raiz = pathlib.Path(tempfile.mkdtemp(prefix='cc_aqui_'))
+    app = raiz / 'Applications' / 'CineCaptions.app'
+    app.mkdir(parents=True)
+    lanzados, reemplazos = [], []
+    try:
+        base = ((sys, 'platform', 'darwin'), (F, 'app_instalada', lambda: app), (A, 'montar_dmg', lambda d: ['/Volumes/x']),
+                (A, 'desmontar', lambda m: None), (A.subprocess, 'Popen', lambda *a, **k: lanzados.append(a[0])))
+        frozen_antes = getattr(sys, 'frozen', None)
+        sys.frozen = True
+        try:
+            with parches(*base, (A, 'app_en_montajes', lambda m: pathlib.Path('/Volumes/x/CineCaptions.app')),
+                         (F, '_reemplazar_app', lambda o, borrar_viejo=True: reemplazos.append(borrar_viejo) or app.with_name('CineCaptions.app.viejo'))):
+                esperar(A.instalar_aqui_mac('/tmp/n.dmg') is True and reemplazos == [False] and lanzados
+                        and lanzados[0][4:] == [str(os.getpid()), str(app.with_name('CineCaptions.app.viejo')), str(app)],
+                        f'no se reemplazó a la vista: {reemplazos} {lanzados}')
+            with parches(*base, (A, 'app_en_montajes', lambda m: None)):
+                esperar(A.instalar_aqui_mac('/tmp/viejo.dmg') is None, 'con un disco de antes lo intentó aquí')
+            with parches(*base, (F, 'app_instalada', lambda: pathlib.Path('/Volumes/CineCaptions 5.91/CineCaptions.app'))):
+                esperar(A.instalar_aqui_mac('/tmp/n.dmg') is None, 'abierta desde el disco y lo intentó')
+        finally:
+            if frozen_antes is None:
+                del sys.frozen
+            else:
+                sys.frozen = frozen_antes
+    finally:
+        import shutil
+        shutil.rmtree(raiz, ignore_errors=True)
+
+
+@caso('Actualizaciones con el programa cerrado')
 def tarjeta_de_la_mac_se_ve_responde_y_se_cierra_sola():
     """v5.90: la tarjeta (aviso_mac) se pinta en sus cuatro momentos; su respuesta llega al servicio como pedido (la lee _tomar_pedidos);
     solo cuenta el resultado de ESTA instalación (un fallo viejo no la cierra); es una tarea del programa; el servicio la abre con
@@ -2846,7 +3039,7 @@ def tarjeta_de_la_mac_se_ve_responde_y_se_cierra_sola():
     try:
         with parches((F, 'PEDIDOS_MAC', pedidos), (sys, 'platform', 'darwin'), (F, 'es_root', lambda: False)):
             esperar(AV.responder('luego', 'abc'), 'responder() no dejó la respuesta')
-            leidos = F._tomar_pedidos()
+            leidos = F._tomar_pedidos(pedidos)
         esperar(len(leidos) == 1 and leidos[0].get('accion') == 'luego' and leidos[0].get('id') == 'abc', f'respuesta mal leída: {leidos}')
         _qapp()
         tamanos = {}
@@ -2874,7 +3067,7 @@ def tarjeta_de_la_mac_se_ve_responde_y_se_cierra_sola():
         import shutil
         shutil.rmtree(carpeta, ignore_errors=True)
     fuente = open(os.path.join(CODIGO, 'actualizar_fondo.py'), encoding='utf-8').read()
-    esperar("'/usr/bin/open', '-n', '-a', APP_MAC" in fuente and "'--tarea', 'aviso_mac', '/dev/null'" in fuente and "'asuser'" in fuente,
+    esperar("'/usr/bin/open', '-n', '-a', str(app)" in fuente and "'--tarea', 'aviso_mac', '/dev/null'" in fuente and "'asuser'" in fuente,
             'el servicio no abre la tarjeta como el usuario')
 
 

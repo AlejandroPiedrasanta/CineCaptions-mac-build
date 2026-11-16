@@ -8254,7 +8254,8 @@ class SubtitleApp(QWidget):
                 try:
                     import actualizaciones
                     import actualizar_fondo
-                    if actualizaciones.es_mas_nueva(version, APP_VERSION) and actualizar_fondo.pedir_al_servicio(reabrir=False):
+                    if actualizaciones.es_mas_nueva(version, APP_VERSION) and (actualizar_fondo.pedir_al_servicio(reabrir=False)
+                                                                              or actualizar_fondo.pedir_y_correr_aparte(reabrir=False)):
                         self._instalador_lanzado = True
                         registro.info(f'Actualización a {version}: la descarga no había terminado; el servicio del sistema la baja e '
                                       'instala ahora que se cerró CineCaptions.', 'actualizaciones')
@@ -8471,10 +8472,23 @@ class SubtitleApp(QWidget):
                 return
             panel.terminar(tr('Instalando…'))
             self._instalador_lanzado = True
-            if sys.platform.startswith('win') or sys.platform == 'darwin':
+            if sys.platform.startswith('win'):
+                # v5.91 (el usuario: «tardó bastante para que se empezara a instalar… todo debe ser inmediato»): Windows revisa el instalador
+                # (732 MB) antes de abrirlo; cerrar a los 1,5 s dejaba un rato sin NADA en pantalla. La ventana se queda hasta que se ve
+                # la del instalador (él cierra CineCaptions al empezar a copiar); como mucho 2 min.
+                limite = time.time() + 120
+                def esperar_instalador():
+                    import actualizaciones
+                    if actualizaciones.ventana_del_instalador_visible() or time.time() > limite:
+                        despues(800, lambda: QApplication.instance().quit(), self)
+                    else:
+                        despues(250, esperar_instalador, self)
+                despues(250, esperar_instalador, self)
+            elif sys.platform == 'darwin':
                 # el instalador ya está en marcha: CineCaptions se cierra y él lo vuelve a abrir (v5.87: también en la Mac,
-                # actualizaciones._instalar_mac; hasta la 5.86 pedía abrir el .pkg a mano con el programa abierto y no se volvía a abrir)
-                despues(1500, lambda: QApplication.instance().quit(), self)
+                # actualizaciones._instalar_mac; hasta la 5.86 pedía abrir el .pkg a mano con el programa abierto y no se volvía a abrir).
+                # v5.91: con el disco nuevo la app ya quedó reemplazada a la vista (instalar_aqui_mac): se cierra y se abre la nueva
+                despues(600, lambda: QApplication.instance().quit(), self)
             else:
                 despues(1200, lambda: dlg.cerrar(), self)
                 messagebox.showinfo(tr('Actualización descargada'), tr('Se abrió el disco de CineCaptions {v}: abre «Instalar_CineCaptions.pkg» para terminar.', v=r['version']), parent=self)

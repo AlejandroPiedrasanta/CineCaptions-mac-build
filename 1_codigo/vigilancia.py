@@ -517,11 +517,17 @@ def revisar_salud_al_arrancar():
         pass
     if getattr(sys, 'frozen', False):
         _tipografias_al_dia(r)
-    if sys.platform.startswith('win') and getattr(sys, 'frozen', False):
+    if (sys.platform.startswith('win') or sys.platform == 'darwin') and getattr(sys, 'frozen', False):
         try:                                          # v5.87: las versiones nuevas se instalan solas también con el programa cerrado (actualizar_fondo)
-            import actualizar_fondo
+            import actualizar_fondo                   # v5.91: en la Mac, el servicio del usuario (se arrastra a Aplicaciones: sin .pkg ni contraseña)
             hecho = actualizar_fondo.asegurar_programada()
-            if hecho == 'creada':
+            if hecho == 'creada' and sys.platform == 'darwin':
+                r.info(f'Actualizaciones: servicio de tu usuario listo (cada {actualizar_fondo.CADA_H_MAC} h y al iniciar sesión, con el '
+                       'programa cerrado; sin contraseña).', 'arranque')
+            elif hecho == 'no_aplica' and sys.platform == 'darwin' and actualizar_fondo.app_de_paso():
+                r.aviso('CineCaptions está abierto desde el disco o sin moverlo a Aplicaciones: arrástralo a Aplicaciones para que se '
+                        'actualice solo.', 'arranque')
+            elif hecho == 'creada':
                 r.info(f'Actualizaciones: tarea «{actualizar_fondo.NOMBRE_TAREA}» lista (cada {actualizar_fondo.CADA_H} h, con el programa '
                        'cerrado).', 'arranque')
             elif hecho.startswith('fallo'):
