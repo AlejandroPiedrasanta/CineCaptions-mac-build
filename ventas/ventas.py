@@ -87,7 +87,7 @@ from PySide6.QtWidgets import (QAbstractButton, QAbstractItemView, QApplication,
 from logo_ventas import icono_app, pixmap_logo   # ícono verde propio: no se confunde con el de CineCaptions
 
 APP = 'CineCaptions Ventas'
-VERSION = '2.11.0'   # (2.11: se actualiza sola desde el servidor —banda «Actualizar ahora», con avance— y se instala al instante: en Mac, doble clic en el .dmg con la ventanita «Instalando…»; en Windows, el instalador la abre al terminar; 2.10:en Errores, «Informe completo» —todos los errores con su informe técnico en un solo archivo— y «Borrar todo»; la interfaz, más pareja; en Mac, sin textos de Windows: el cuadro de la clave habla del Llavero, «esta Mac» y ⌘ en los atajos; 2.9: también en Mac —la clave en el Llavero, carpetas de macOS— con su .dmg Apple Silicon e Intel; 2.8: la página Cupones —crear, pausar y borrar cupones de descuento— y el cupón de cada venta; 2.7:el menú es la isla flotante de arriba, sin la barra lateral; 2.6: «Copiar resumen» de los errores; 2.5: las dos capturas del error, pantalla y ventana, de CineCaptions 5.73; 2.4: la ficha del equipo)
+VERSION = '2.11.1'   # (2.11.1: el cupón se limpia al escribirlo —tildes, rayas largas, invisibles, puntuación— y «Anunciar versión» dice que es un correo con tres descargas directas; 2.11: se actualiza sola desde el servidor —banda «Actualizar ahora», con avance— y se instala al instante: en Mac, doble clic en el .dmg con la ventanita «Instalando…»; en Windows, el instalador la abre al terminar; 2.10:en Errores, «Informe completo» —todos los errores con su informe técnico en un solo archivo— y «Borrar todo»; la interfaz, más pareja; en Mac, sin textos de Windows: el cuadro de la clave habla del Llavero, «esta Mac» y ⌘ en los atajos; 2.9: también en Mac —la clave en el Llavero, carpetas de macOS— con su .dmg Apple Silicon e Intel; 2.8: la página Cupones —crear, pausar y borrar cupones de descuento— y el cupón de cada venta; 2.7:el menú es la isla flotante de arriba, sin la barra lateral; 2.6: «Copiar resumen» de los errores; 2.5: las dos capturas del error, pantalla y ventana, de CineCaptions 5.73; 2.4: la ficha del equipo)
 API_POR_DEFECTO = 'https://cinecaptions.shop/pagos/admin.php'
 SITIO = 'https://cinecaptions.shop'   # (2.8: el enlace de un cupón, si el servidor no manda el suyo)
 DESCARGA = 'https://github.com/AlejandroPiedrasanta/CineCaptions-releases/releases/latest'
@@ -1027,6 +1027,16 @@ def normalizar_cupon(c):
         if c['estado'] not in ESTADOS_CUPON:
             c['estado'] = 'activo' if c['activo'] else 'pausado'
     return c
+
+
+_RAYAS = dict.fromkeys(map(ord, '‐‑‒–—―−－'), '-')
+
+
+def limpiar_codigo_cupon(texto):
+    """El código como lo guarda el servidor (codigo_cupon() de pagos/cupones.php): mayúsculas, sin tildes, las rayas largas
+    como guion y sin nada que no sea letra, número, guion o guion bajo (espacios normales o invisibles, puntos, comillas)."""
+    sin_tildes = ''.join(c for c in unicodedata.normalize('NFD', str(texto or '')) if not unicodedata.combining(c))
+    return re.sub(r'[^A-Za-z0-9_-]+', '', sin_tildes.translate(_RAYAS)).lstrip('-_').upper()
 
 
 def texto_descuento(porcentaje):
@@ -6557,7 +6567,7 @@ class DialogoCupon(QDialog):
         self._poner_precio()
 
     def _mayusculas(self, texto):
-        limpio = re.sub(r'\s+', '', texto).upper()
+        limpio = limpiar_codigo_cupon(texto)
         if limpio != texto:
             posicion = self.codigo.cursorPosition() - (len(texto) - len(limpio))
             self.codigo.setText(limpio)
@@ -6583,7 +6593,7 @@ class DialogoCupon(QDialog):
     def datos(self):
         """Todo lo del diálogo, como lo pide cupon_crear (usos_max y vence en None: sin tope, no vence)."""
         q = self.fecha.date()
-        return {'codigo': self.codigo.text().strip().upper(), 'porcentaje': self._porcentaje(),
+        return {'codigo': limpiar_codigo_cupon(self.codigo.text()), 'porcentaje': self._porcentaje(),
                 'usos_max': entero_o_nada(self.usos.text().strip()) or None,
                 'vence': f'{q.year():04d}-{q.month():02d}-{q.day():02d}' if self.con_vence.isChecked() else None,
                 'nota': ' '.join(self.nota.text().split()) or None, 'activo': self.activo.isChecked()}
@@ -6660,8 +6670,11 @@ class DialogoAnunciar(QDialog):
         lay = QVBoxLayout(self)
         margenes_dialogo(lay)
         self.titulo = cabeza_dialogo(lay, 'megafono', 'Anunciar una versión nueva')
-        texto = etiqueta('A cada cliente le llega un correo con lo nuevo y el enlace para descargarla. Los que pidieron no '
-                         'recibir estos avisos no lo reciben.', 'suave')
+        # (2026-11-17, el dueño: «lanzo avisos… y no les cae en las computadoras»: este aviso es SOLO el correo; en las
+        # computadoras avisa el propio CineCaptions, que lee el version.json de GitHub al publicar con Publicar_Version.ps1)
+        texto = etiqueta('A cada cliente le llega un correo con lo nuevo y un botón para descargarla en su sistema. En sus '
+                         'computadoras avisa CineCaptions por su cuenta desde que publicas la versión; este correo es para '
+                         'quien no lo ha abierto. Los que pidieron no recibir estos avisos no lo reciben.', 'suave')
         texto.setWordWrap(True)
         lay.addWidget(texto)
         lay.addSpacing(4)

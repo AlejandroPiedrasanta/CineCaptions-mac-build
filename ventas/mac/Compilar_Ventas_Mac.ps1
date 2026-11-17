@@ -12,6 +12,8 @@ $ErrorActionPreference = 'Stop'
 $aqui = Split-Path -Parent $MyInvocation.MyCommand.Path          # programa\mac
 $programa = Split-Path -Parent $aqui                             # programa
 $raiz = (Resolve-Path (Join-Path $programa '..\..')).Path        # CineCaptions
+# (2026-11-16: el programa pasó a PROGRAMA\ y .github se quedó en la raíz del repositorio, un nivel más arriba)
+if (-not (Test-Path (Join-Path $raiz '.github\workflows'))) { $raiz = Split-Path -Parent $raiz }
 $repo = 'AlejandroPiedrasanta/CineCaptions-mac-build'
 $espejo = Join-Path $env:USERPROFILE 'CineCaptions-mac-espejo'
 $flujo = 'ventas_mac.yml'

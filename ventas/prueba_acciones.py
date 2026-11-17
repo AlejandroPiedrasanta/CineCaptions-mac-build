@@ -3003,6 +3003,18 @@ def prueba_cupones():
     revisar(am['precio_final'] == 0 and v.texto_descuento(am['porcentaje']) == 'Gratis' and bf['estado'] == 'pausado'
             and not bf['activo'], 'AMIGOS100 regala la licencia; BLACKFRIDAY está pausado')
     revisar(v.texto_usos(nv) == '0 de 50' and v.texto_usos(lz) == '3', 'usos: «0 de 50» y, sin tope, «3»')
+    # (2026-11-17: el código se limpia como en codigo_cupon() de pagos/cupones.php: lo que se cuela al copiar o en el móvil)
+    sucios = {' navidad 20 ': 'NAVIDAD20', 'NAVIDAD20.': 'NAVIDAD20', 'NAVIDAD20 ': 'NAVIDAD20',
+              '​NAVIDAD20﻿': 'NAVIDAD20', 'NAVIDAD–20': 'NAVIDAD-20', 'PROMOCIÓN_AÑO': 'PROMOCION_ANO',
+              '«NAVIDAD20»,': 'NAVIDAD20', '-_NAVIDAD20': 'NAVIDAD20', 'BLACK-FRIDAY_26': 'BLACK-FRIDAY_26', '...': '', None: ''}
+    mal = {k: v.limpiar_codigo_cupon(k) for k, bien in sucios.items() if v.limpiar_codigo_cupon(k) != bien}
+    revisar(not mal, f'el código de un cupón se limpia: sin tildes, rayas largas a guion, sin invisibles ni puntos ({mal})')
+    d = v.DialogoCupon(None, precio=2900)
+    d.codigo.setText('promoción–20. ')
+    d._mayusculas(d.codigo.text())
+    revisar(d.codigo.text() == 'PROMOCION-20' and d.datos()['codigo'] == 'PROMOCION-20' and d._problema()[0] is None,
+            f'«Nuevo cupón»: un código pegado con tilde, raya larga y punto queda limpio ({d.codigo.text()!r})')
+    d.deleteLater()
     ventas_lz = c.ventas(buscar='lanzamiento')
     revisar(len(ventas_lz) == 3 and all(x['cupon'] == 'LANZAMIENTO' and x['descuento'] == 1000 for x in ventas_lz)
             and all(x['cupon'] is None for x in c.ventas() if x['monto'] != 1900),
