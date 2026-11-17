@@ -4763,6 +4763,13 @@
     "1 posición marcada": "1 か所を指定済み",
     "{n} posiciones marcadas": "{n} か所を指定済み",
     "Sin marcar: GO elige dónde, según tu video. Con «Posición» lo marcas tú.": "未指定：GO が動画に合わせて位置を決めます。「位置」で自分で指定できます。",
-    "Página Efectos nueva: cada efecto en su pestaña con iconos animados, el ejemplo en grande en el centro y todas sus opciones a la vista; pasa por encima de una para verla y elígela con «Usar».": "エフェクトページを一新：エフェクトごとにアニメーションアイコン付きのタブ、中央に大きなプレビュー、すべての選択肢が一目で見えます。カーソルを合わせて確認し、「使う」で選択。"
+    "Página Efectos nueva: cada efecto en su pestaña con iconos animados, el ejemplo en grande en el centro y todas sus opciones a la vista; pasa por encima de una para verla y elígela con «Usar».": "エフェクトページを一新：エフェクトごとにアニメーションアイコン付きのタブ、中央に大きなプレビュー、すべての選択肢が一目で見えます。カーソルを合わせて確認し、「使う」で選択。",
+    "Traer la secuencia de Premiere": "Premiereのシーケンスを取得",
+    "Trayendo la secuencia": "シーケンスを取得中",
+    "Pidiéndole a Premiere Pro el audio de la secuencia…": "Premiere Proにシーケンスの音声をリクエスト中…",
+    "secuencia «{s}»": "シーケンス「{s}」",
+    "No pude traer la secuencia de Premiere Pro: {e}": "Premiere Proのシーケンスを取得できませんでした：{e}",
+    "Premiere Pro: GO trabaja con la secuencia que tienes abierta, sin arrastrar el video. Los subtítulos y los sonidos van a una copia de tu secuencia; la tuya queda intacta.": "Premiere Pro：動画をドラッグしなくても、開いているシーケンスでGOが動きます。字幕とサウンドはシーケンスのコピーに配置され、元のシーケンスはそのままです。",
+    "Premiere Pro: si hace falta cerrar y volver a abrir Premiere para conectar, GO te lo dice al momento en vez de esperar varios minutos.": "Premiere Pro：接続のためにPremiereの再起動が必要な場合、数分待たずにGOがすぐ知らせます。"
   }
 }

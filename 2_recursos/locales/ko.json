@@ -4763,6 +4763,13 @@
     "1 posición marcada": "1개 위치 지정됨",
     "{n} posiciones marcadas": "{n}개 위치 지정됨",
     "Sin marcar: GO elige dónde, según tu video. Con «Posición» lo marcas tú.": "지정 안 함: GO가 영상에 맞춰 위치를 정합니다. «위치»로 직접 지정할 수 있습니다.",
-    "Página Efectos nueva: cada efecto en su pestaña con iconos animados, el ejemplo en grande en el centro y todas sus opciones a la vista; pasa por encima de una para verla y elígela con «Usar».": "새 효과 페이지: 효과마다 애니메이션 아이콘이 있는 탭, 가운데에 크게 보이는 예시, 모든 옵션을 한눈에. 마우스를 올려 보고 «사용»으로 선택하세요."
+    "Página Efectos nueva: cada efecto en su pestaña con iconos animados, el ejemplo en grande en el centro y todas sus opciones a la vista; pasa por encima de una para verla y elígela con «Usar».": "새 효과 페이지: 효과마다 애니메이션 아이콘이 있는 탭, 가운데에 크게 보이는 예시, 모든 옵션을 한눈에. 마우스를 올려 보고 «사용»으로 선택하세요.",
+    "Traer la secuencia de Premiere": "Premiere 시퀀스 가져오기",
+    "Trayendo la secuencia": "시퀀스 가져오는 중",
+    "Pidiéndole a Premiere Pro el audio de la secuencia…": "Premiere Pro에 시퀀스 오디오를 요청하는 중…",
+    "secuencia «{s}»": "시퀀스 «{s}»",
+    "No pude traer la secuencia de Premiere Pro: {e}": "Premiere Pro 시퀀스를 가져오지 못했습니다: {e}",
+    "Premiere Pro: GO trabaja con la secuencia que tienes abierta, sin arrastrar el video. Los subtítulos y los sonidos van a una copia de tu secuencia; la tuya queda intacta.": "Premiere Pro: 동영상을 끌어 놓지 않아도 열려 있는 시퀀스로 GO가 작업합니다. 자막과 사운드는 시퀀스의 복사본에 들어가고 원본은 그대로 유지됩니다.",
+    "Premiere Pro: si hace falta cerrar y volver a abrir Premiere para conectar, GO te lo dice al momento en vez de esperar varios minutos.": "Premiere Pro: 연결하려면 Premiere를 닫았다가 다시 열어야 할 때, 몇 분씩 기다리지 않고 GO가 바로 알려 줍니다."
   }
 }

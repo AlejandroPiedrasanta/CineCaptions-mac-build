@@ -592,6 +592,10 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.94', [
+        'Premiere Pro: GO trabaja con la secuencia que tienes abierta, sin arrastrar el video. Los subtítulos y los sonidos van a una copia de tu secuencia; la tuya queda intacta.',
+        'Premiere Pro: si hace falta cerrar y volver a abrir Premiere para conectar, GO te lo dice al momento en vez de esperar varios minutos.',
+    ]),
     ('5.93', [
         'Sonido con «oído», en todos los estilos: cada efecto cae justo en su cuadro (al milisegundo, aunque Resolve coloque por cuadros) y su volumen sigue al de tu voz en cada video.',
         'La música respira: baja un momento antes de cada golpe fuerte y vuelve en el golpe, como en los anuncios profesionales. Y los sonidos de tu biblioteca se revisan antes de usarlos: fuera los saturados o casi mudos.',

@@ -667,14 +667,14 @@ def _lineas_tipo(c, faltan, ancho_cuadro):
     return salida
 
 
-def preparar(video, cues, carpeta=None, emoji_arriba=True, estilo=None, cancelado=None, plantilla=None):
+def preparar(video, cues, carpeta=None, emoji_arriba=True, estilo=None, cancelado=None, plantilla=None, medidas=None):
     """Las piezas del pedido de Premiere. → {'ok', 'textos', 'imagenes', 'carriles_texto', 'carriles_imagen', 'ancho', 'alto', 'fps',
     'duracion', 'carpeta', 'faltan_fuentes', 'segundos'} · {'ok': False, 'error'} · {'ok': False, 'cancelado': True}."""
     import render_sin_resolve as RSR
     t_ini = time.time()
     video = Path(video)
     try:
-        m = RSR.medir_video(video)
+        m = RSR.medidas_de(video, medidas)       # v5.94: `medidas` = las de la secuencia abierta de Premiere (video = el WAV de su audio)
     except Exception as e:
         return {'ok': False, 'error': f'no pude leer el video: {e}'}
     if m.get('solo_audio'):

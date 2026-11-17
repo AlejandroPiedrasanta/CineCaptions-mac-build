@@ -10,8 +10,11 @@
 // emojis) van como PNG en las pistas de debajo. Sin capa de video.
 
 var CC = (typeof CC !== 'undefined' && CC) ? CC : {};
-CC.PANEL = 2;                                    // protocolo del panel (latido.panel): 2 = textos editables
-CC.REV = 15;                                 // revisión de ESTE archivo (latido.rev): CineCaptions sabe si Premiere corre un panel viejo
+CC.PANEL = 3;                                    // protocolo del panel (latido.panel): 2 = textos editables · 3 = trae la secuencia abierta
+CC.REV = 16;                                 // revisión de ESTE archivo (latido.rev): CineCaptions sabe si Premiere corre un panel viejo
+// v5.94 (rev 16; un cliente: «agarra un audio de la timeline que no es»): GO sin video trabaja con la SECUENCIA ABIERTA, como con el
+// timeline de Resolve: pedido `tipo: 'audio'` → CC.traerAudio exporta su audio a un WAV (preset de Premiere) y dice sus medidas; el pedido
+// de colocar con `en_secuencia` (su sequenceID) pone todo en una COPIA de esa secuencia (la del usuario no se toca ni se guarda el proyecto)
 // v5.87 (rev 15): animación de cada pieza (`anim`: fotogramas clave), cada texto comprobado en su sitio (a veces Premiere lo dejaba en el 0),
 // latido con `inicio` (las letras instaladas después no las ve este Premiere) y `plantilla` (la «Basic Title» que encuentra él: Mac y Windows)
 if (!CC.INICIO) { CC.INICIO = new Date().getTime(); }
@@ -102,7 +105,10 @@ CC.latido = function () {
     var info = { t: new Date().getTime(), version: String(app.version), proyecto: '', panel: CC.PANEL, rev: CC.REV, inicio: CC.INICIO,
                  plantilla: CC.plantillaTexto(), so: String($.os) };
     try {
-        if (CC.hayProyecto()) { info.proyecto = String(app.project.name); }
+        if (CC.hayProyecto()) {
+            info.proyecto = String(app.project.name);
+            info.secuencia = app.project.activeSequence ? String(app.project.activeSequence.name) : '';     // v5.94: la secuencia abierta
+        }
     } catch (e) {}
     CC.escribir(new File(CC.carpeta().fsName + '/latido.json'), CC.aTexto(info));
 };
@@ -585,23 +591,102 @@ CC.propio = function (p) {                       // v5.85: ¿el proyecto abierto
     return false;
 };
 
+// ---------------------------------------------------------------------------------------------- v5.94: la secuencia abierta
+CC.presetWav = function (p) {                    // el preset WAV que trae ESTE Premiere (o el que diga el pedido)
+    var cand = [], i;
+    if (p && p.preset) { cand.push(String(p.preset)); }
+    try {
+        var base = Folder.appPackage, rel = 'MediaIO/systempresets/3F3F3F3F_57415645/Waveform Audio 48kHz 16-bit.epr';
+        if (base) {
+            cand.push(base.fsName + '/' + rel);
+            cand.push(base.fsName + '/Contents/' + rel);
+            if (base.parent) { cand.push(base.parent.fsName + '/' + rel); }
+        }
+    } catch (e) {}
+    for (i = 0; i < cand.length; i++) {
+        if (new File(cand[i]).exists) { return new File(cand[i]).fsName; }
+    }
+    return '';
+};
+
+CC.secuenciaPorId = function (proj, id) {
+    for (var i = 0; i < proj.sequences.numSequences; i++) {
+        if (String(proj.sequences[i].sequenceID) === String(id)) { return proj.sequences[i]; }
+    }
+    return null;
+};
+
+CC.medidas = function (seq) {
+    var m = { secuencia: String(seq.name), id_secuencia: String(seq.sequenceID), ancho: 0, alto: 0, fps: 0, duracion: 0 };
+    try { m.ancho = Number(seq.frameSizeHorizontal); m.alto = Number(seq.frameSizeVertical); } catch (e1) {}
+    try { m.fps = CC.TICKS / Number(seq.timebase); } catch (e2) {}
+    try { m.duracion = Number(seq.end) / CC.TICKS; } catch (e3) {}
+    return m;
+};
+
+CC.traerAudio = function (p) {
+    if (!CC.hayProyecto()) { return { ok: false, causa: 'sin_secuencia', error: 'no hay ningún proyecto abierto en Premiere Pro' }; }
+    var seq = app.project.activeSequence;
+    if (!seq) { return { ok: false, causa: 'sin_secuencia', error: 'no hay ninguna secuencia abierta en Premiere Pro' }; }
+    var res = CC.medidas(seq);
+    res.version = String(app.version);
+    res.panel = CC.PANEL;
+    res.proyecto = String(app.project.name);
+    if (!(res.duracion > 0)) { res.ok = false; res.causa = 'sin_secuencia'; res.error = 'la secuencia abierta está vacía'; return res; }
+    var preset = CC.presetWav(p);
+    if (!preset) { res.ok = false; res.causa = 'sin_preset'; res.error = 'no encuentro el preset WAV de Premiere Pro'; return res; }
+    var salida = new File(p.salida);
+    if (salida.exists) { salida.remove(); }
+    var t0 = new Date().getTime(), dicho = '';
+    try {
+        dicho = String(seq.exportAsMediaDirect(salida.fsName, preset, 0));       // 0 = la secuencia entera (bloquea hasta terminar)
+    } catch (e) {
+        dicho = String(e.message || e);
+    }
+    salida = new File(p.salida);
+    res.ok = salida.exists && salida.length > 1000;
+    res.ruta = salida.fsName;
+    res.tardo = (new Date().getTime() - t0) / 1000;
+    res.dicho = dicho;
+    res.preset = preset;
+    if (!res.ok) { res.causa = 'exportar'; res.error = 'Premiere no exportó el audio de la secuencia (' + dicho + ')'; }
+    return res;
+};
+
+CC.copiaDe = function (proj, p) {                // la copia de la secuencia del usuario donde se coloca (clone() no devuelve la nueva: se busca)
+    var origen = CC.secuenciaPorId(proj, p.en_secuencia) || proj.activeSequence;
+    if (!origen) { throw new Error('ya no encuentro la secuencia en Premiere Pro'); }
+    var antes = {}, i, nueva = null, nombre = CC.nombreLibre(proj, p.secuencia || (String(origen.name) + ' (CineCaptions)'));
+    for (i = 0; i < proj.sequences.numSequences; i++) { antes[String(proj.sequences[i].sequenceID)] = true; }
+    origen.clone();
+    for (i = 0; i < proj.sequences.numSequences; i++) {
+        if (!antes[String(proj.sequences[i].sequenceID)]) { nueva = proj.sequences[i]; }
+    }
+    if (!nueva) { throw new Error('Premiere no pudo duplicar la secuencia'); }
+    try { nueva.name = nombre; } catch (e) {}
+    try { nueva.projectItem.name = nombre; } catch (e2) {}
+    return nueva;
+};
+
 CC.colocar = function (p) {
     var nuevo = false, i;
-    if (!CC.hayProyecto()) {                     // sin proyecto abierto: uno nuevo junto al video
+    var enSec = !!p.en_secuencia;                // v5.94: sobre una copia de la secuencia del usuario (sin importar video ni guardar)
+    if (enSec && !CC.hayProyecto()) { throw new Error('no hay ningún proyecto abierto en Premiere Pro'); }
+    if (!CC.hayProyecto()) {                   // sin proyecto abierto: uno nuevo junto al video
         if (!p.proyecto_nuevo) { throw new Error('no hay ningún proyecto abierto en Premiere Pro'); }
         app.newProject(p.proyecto_nuevo);
         nuevo = true;
         if (!CC.hayProyecto()) { throw new Error('no pude crear el proyecto ' + p.proyecto_nuevo); }
-    } else if (CC.propio(p)) {                   // v5.85: Premiere se abrió con el proyecto que GO dejó junto al video: se guarda al terminar
+    } else if (!enSec && CC.propio(p)) {         // v5.85: Premiere se abrió con el proyecto que GO dejó junto al video: se guarda al terminar
         nuevo = true;
     }
     var proj = app.project;
     var bin = CC.bin(proj.rootItem, p.bin || 'CineCaptions');
     var sfx = p.sfx || [], musica = p.musica || [];
     var conTextos = !!(p.textos && p.textos.length && p.plantilla && !p.solo_audio);    // v5.85: textos editables en vez de la capa
-    var mapa = CC.importar(proj, bin, conTextos ? [p.video] : [p.video, p.capa]);
-    var video = mapa[CC.norma(p.video)], capa = conTextos ? null : mapa[CC.norma(p.capa)];
-    if (!video) { throw new Error('Premiere no pudo importar el video ' + p.video); }
+    var mapa = CC.importar(proj, bin, enSec ? (conTextos ? [] : [p.capa]) : (conTextos ? [p.video] : [p.video, p.capa]));
+    var video = enSec ? null : mapa[CC.norma(p.video)], capa = conTextos ? null : mapa[CC.norma(p.capa)];
+    if (!video && !enSec) { throw new Error('Premiere no pudo importar el video ' + p.video); }
     if (!capa && !conTextos) { throw new Error('Premiere no pudo importar los subtítulos ' + p.capa); }
     var unicas = [], vistas = {}, todos = sfx.concat(musica);
     for (i = 0; i < todos.length; i++) {
@@ -610,7 +695,8 @@ CC.colocar = function (p) {
     }
     var sonidos = unicas.length ? CC.importar(proj, CC.bin(bin, 'Sonidos'), unicas) : {};
 
-    var seq = proj.createNewSequenceFromClips(CC.nombreLibre(proj, p.secuencia), [p.solo_audio ? capa : video], bin);
+    var seq = enSec ? CC.copiaDe(proj, p)
+                    : proj.createNewSequenceFromClips(CC.nombreLibre(proj, p.secuencia), [p.solo_audio ? capa : video], bin);
     if (!seq) { throw new Error('Premiere no pudo crear la secuencia'); }
     try { proj.activeSequence = seq; } catch (e1) {}
     try { proj.openSequence(seq.sequenceID); } catch (e2) {}
@@ -650,7 +736,7 @@ CC.colocar = function (p) {
             return fallo;
         }
         CC.ponerImagenes(seq, proj, bin, p, baseV, res);
-    } else if (p.solo_audio) {                   // un audio suelto: la capa es la imagen (V1) y el audio va en A1
+    } else if (p.solo_audio && !enSec) {         // un audio suelto: la capa es la imagen (V1) y el audio va en A1
         CC.poner(seq.audioTracks[0], video, 0);
     } else if (seq.videoTracks.numTracks <= baseV || !CC.poner(seq.videoTracks[baseV], capa, 0)) {
         throw new Error('Premiere no pudo poner los subtítulos encima del video');
@@ -683,6 +769,7 @@ CC.colocar = function (p) {
     res.version = String(app.version);
     res.panel = CC.PANEL;
     res.con_textos = conTextos;
+    res.en_secuencia = enSec;
     return res;
 };
 
@@ -698,7 +785,7 @@ CC.revisar = function (conLatido) {
     var pedido = null, res;
     try {
         pedido = CC.desdeTexto(CC.leer(curso));
-        res = CC.colocar(pedido);
+        res = (pedido && pedido.tipo === 'audio') ? CC.traerAudio(pedido) : CC.colocar(pedido);
     } catch (e) {
         res = { ok: false, error: String(e.message || e) + (e.line ? ' (colocar.jsx, línea ' + e.line + ')' : '') };
     }

@@ -2526,6 +2526,7 @@ def go_sin_video_con_video_sin_editores_no_es_un_error():
             falso = types.SimpleNamespace(_go_archivo=None, video_var=types.SimpleNamespace(get=lambda v=hay_video: video.name if v else ''),
                                           _motivo_mp4=lambda m=motivo: m, go_panel=types.SimpleNamespace(reposo=lambda *a, **k: reposo.append(k)))
             falso._texto_pide_video = lambda m, f=falso: M.SubtitleApp._texto_pide_video(f, m)
+            falso._secuencia_premiere = lambda elegido: ''            # (v5.94: sin Premiere conectado, como en este caso)
             with parches((R, 'aviso', lambda *a, **k: anotado.append(('aviso', a))), (R, 'error', lambda *a, **k: anotado.append(('error', a)))):
                 r = M.SubtitleApp._go_pide_video(falso)
             if r != pide or (pide and ([n for n, _a in anotado] != ['aviso'] or not reposo or reposo[0].get('tono') != 'aviso')) \
@@ -3912,6 +3913,8 @@ def la_mac_instala_el_motor_sola_al_abrir():
 # ---------------------------------------------------------------------------------------------------------------------------------------
 import premiere  # noqa: E402
 import premiere_textos  # noqa: E402
+import render_sin_resolve  # noqa: E402
+from fractions import Fraction  # noqa: E402
 
 
 @contextlib.contextmanager
@@ -4056,6 +4059,65 @@ def premiere_panel_viejo_se_avisa():
         _latido(tmp / 'cola', rev=premiere.rev_instalada())
         nuevo = premiere.panel_viejo()
     esperar(premiere.rev_instalada() >= 15 and viejo and not nuevo and txt[1] == 'aviso', f'{premiere.rev_instalada()} {viejo} {nuevo} {txt}')
+
+
+@caso('Premiere')
+def premiere_falta_reiniciar_si_el_panel_llego_despues():
+    # v5.94 (informe 5.93, causa sin_panel): el panel se instaló con Premiere ya abierto → GO pide reiniciarlo (no «Premiere no contestó»)
+    with _entorno_premiere() as tmp:
+        (tmp / 'cola').mkdir(parents=True)
+        (tmp / 'cola' / 'panel_instalado.json').write_text(json.dumps({'t': time.time()}), encoding='utf-8')
+        abiertos, dichos = [], []
+        comunes = ((premiere, 'instalar_panel', lambda: {'ok': True, 'instalado': False, 'ruta': '', 'texto': ''}),
+                   (premiere, 'ejecutable', lambda: pathlib.Path('C:/Premiere/Adobe Premiere Pro.exe')),
+                   (premiere, 'abierto', lambda: True), (premiere, 'panel_vivo', lambda *a, **k: False),
+                   (premiere, 'abrir', lambda exe=None, proyecto=None: abiertos.append(proyecto) or True), (premiere, 'ESPERA_INICIO_S', 0.2))
+        pedido = {'id': 'a', 'proyecto_nuevo': str(tmp / 'v.prproj'), 'textos': [], 'sfx': []}
+        with parches(*comunes, (premiere, '_inicio_premiere', lambda: time.time() - 500)):
+            r = premiere.colocar(dict(pedido), aviso=dichos.append, espera_abrir_s=1)
+        esperar(r.get('causa') == 'reiniciar' and not abiertos and r.get('detalle') and dichos and dichos[0].startswith('Cierra Premiere'),
+                f'{r} · {abiertos} · {dichos}')
+        with parches(*comunes, (premiere, '_inicio_premiere', lambda: time.time() + 5)):
+            r = premiere.colocar(dict(pedido), espera_abrir_s=1)
+        esperar(r.get('causa') == 'sin_panel' and len(abiertos) == 1, f'{r} · {abiertos}')
+
+
+@caso('Premiere')
+def premiere_trae_la_secuencia_abierta():
+    # v5.94 (un cliente: «agarra un audio de la timeline que no es»): GO sin video pide al panel el audio de la secuencia abierta
+    with _entorno_premiere() as tmp:
+        cola = tmp / 'cola'
+        _latido(cola)                                          # panel 2: no sabe
+        esperar(not premiere.puede_traer_secuencia() and premiere.traer_secuencia().get('causa') == 'reiniciar', 'panel anterior')
+        _latido(cola, panel=3, secuencia='Mi edición')
+        esperar(premiere.secuencia_abierta() == 'Mi edición' and not premiere.es_de_cinecaptions('Mi edición')
+                and premiere.es_de_cinecaptions('v (CineCaptions)') and premiere.es_de_cinecaptions('v (CineCaptions) 2'), 'nombres')
+        visto = {}
+
+        def panel():                                           # el panel de mentira: toma el pedido, escribe el WAV y contesta
+            for _ in range(200):
+                try:
+                    p = json.loads((cola / 'pedido.json').read_text(encoding='utf-8'))
+                    break
+                except (OSError, ValueError):
+                    time.sleep(0.02)
+            (cola / 'pedido.json').unlink()
+            visto.update(p)
+            pathlib.Path(p['salida']).write_bytes(b'RIFF' + b'0' * 2000)
+            (cola / 'resultado.json').write_text(json.dumps({'ok': True, 'id': p['id'], 'ruta': p['salida'], 'secuencia': 'Mi: edición?',
+                'id_secuencia': 'abc-1', 'ancho': 1080, 'alto': 1920, 'fps': 29.97002997, 'duracion': 12.5}), encoding='utf-8')
+        with parches((render_sin_resolve, 'carpeta_videos', lambda: tmp / 'Videos'), (premiere, 'panel_vivo', lambda *a, **k: True)):
+            h = threading.Thread(target=panel, daemon=True)
+            h.start()
+            r = premiere.traer_secuencia(espera_s=10)
+            h.join(5)
+        wav = pathlib.Path(r.get('ruta') or 'x')
+        esperar(r.get('ok') and visto.get('tipo') == 'audio' and wav.is_file() and wav.name == 'Mi edición (Premiere).wav', f'{r} · {visto}')
+        m = render_sin_resolve.medidas_de(wav, r)
+        esperar((m['ancho'], m['alto'], m['solo_audio']) == (1080, 1920, False) and m['fps'] == Fraction(30000, 1001) and m['cuadros'] == 375, str(m))
+        p = premiere.armar_pedido(wav, {'ruta': str(wav), 'solo_audio': True}, [], 'Estilo 4', secuencia=r)
+        esperar(p['en_secuencia'] == 'abc-1' and p['secuencia'] == 'Mi: edición? (CineCaptions)' and p['proyecto_nuevo'] is None
+                and p['solo_audio'] is False, json.dumps(p)[:400])
 
 
 @caso('Premiere')

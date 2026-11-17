@@ -350,7 +350,87 @@ def instalar_panel():
         depuracion = _modo_depuracion()
     except Exception:
         pass
+    if copiado or depuracion:                 # v5.94: cuándo cambió el panel (falta_reiniciar lo compara con el arranque de Premiere)
+        try:
+            import archivos_seguros
+            _marca_panel().parent.mkdir(parents=True, exist_ok=True)
+            archivos_seguros.escribir_json(_marca_panel(), {'t': time.time()})
+        except Exception:
+            pass
     return {'ok': True, 'instalado': copiado or depuracion, 'ruta': str(destino), 'texto': ''}
+
+
+def _marca_panel():
+    return carpeta_cola() / 'panel_instalado.json'
+
+
+def _inicio_premiere():
+    """v5.94: cuándo arrancó el Premiere que corre (segundos epoch) o None. Lanza procesos en Mac: solo desde un hilo."""
+    try:
+        if sys.platform == 'darwin':
+            r = subprocess.run(['pgrep', '-o', '-f', 'Adobe Premiere Pro'], capture_output=True, text=True, timeout=5)
+            pid = (r.stdout.split() or [''])[0]
+            if not pid.isdigit():
+                return None
+            r = subprocess.run(['ps', '-o', 'etime=', '-p', pid], capture_output=True, text=True, timeout=5)
+            dias, _, resto = r.stdout.strip().rpartition('-')          # [[dd-]hh:]mm:ss
+            s = 0
+            for parte in resto.split(':'):
+                s = s * 60 + int(parte)
+            return time.time() - (s + 86400 * int(dias or 0))
+        import ctypes
+        from ctypes import wintypes
+
+        class _Proc(ctypes.Structure):
+            _fields_ = [('dwSize', wintypes.DWORD), ('cntUsage', wintypes.DWORD), ('th32ProcessID', wintypes.DWORD),
+                        ('th32DefaultHeapID', ctypes.c_size_t), ('th32ModuleID', wintypes.DWORD), ('cntThreads', wintypes.DWORD),
+                        ('th32ParentProcessID', wintypes.DWORD), ('pcPriClassBase', ctypes.c_long), ('dwFlags', wintypes.DWORD),
+                        ('szExeFile', ctypes.c_wchar * 260)]
+
+        k32 = ctypes.WinDLL('kernel32', use_last_error=True)
+        k32.CreateToolhelp32Snapshot.argtypes = [wintypes.DWORD, wintypes.DWORD]
+        k32.CreateToolhelp32Snapshot.restype = ctypes.c_void_p
+        k32.Process32FirstW.argtypes = k32.Process32NextW.argtypes = [ctypes.c_void_p, ctypes.POINTER(_Proc)]
+        k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+        k32.OpenProcess.restype = ctypes.c_void_p
+        k32.GetProcessTimes.argtypes = [ctypes.c_void_p] + [ctypes.POINTER(wintypes.FILETIME)] * 4
+        k32.CloseHandle.argtypes = [ctypes.c_void_p]
+        foto = k32.CreateToolhelp32Snapshot(0x2, 0)
+        if not foto or foto == (1 << (8 * ctypes.sizeof(ctypes.c_void_p))) - 1:
+            return None
+        inicios = []
+        try:
+            e = _Proc()
+            e.dwSize = ctypes.sizeof(_Proc)
+            ok = k32.Process32FirstW(foto, ctypes.byref(e))
+            while ok:
+                if e.szExeFile.lower() == EXE_WIN.lower():
+                    h = k32.OpenProcess(0x1000, False, e.th32ProcessID)       # PROCESS_QUERY_LIMITED_INFORMATION
+                    if h:
+                        try:
+                            c, x, k, u = (wintypes.FILETIME() for _ in range(4))
+                            if k32.GetProcessTimes(h, ctypes.byref(c), ctypes.byref(x), ctypes.byref(k), ctypes.byref(u)):
+                                inicios.append(((c.dwHighDateTime << 32) | c.dwLowDateTime) / 1e7 - 11644473600.0)
+                        finally:
+                            k32.CloseHandle(h)
+                ok = k32.Process32NextW(foto, ctypes.byref(e))
+        finally:
+            k32.CloseHandle(foto)
+        return min(inicios) if inicios else None
+    except Exception:
+        return None
+
+
+def falta_reiniciar():
+    """v5.94: True si el Premiere que corre arrancó ANTES de que se instalara (o cambiara) el panel: no lo carga hasta reiniciarlo. Visto en
+    un informe (5.93): el panel se instaló desde Ajustes con Premiere abierto y GO esperó 4 min para decir «Premiere Pro no contestó»."""
+    try:
+        import archivos_seguros
+        t = float((archivos_seguros.leer_json(_marca_panel(), {}) or {}).get('t') or 0)
+        ini = _inicio_premiere() if t else None
+        return bool(ini) and ini < t
+    except Exception:
+        return False
 
 
 def preparar():
@@ -528,9 +608,85 @@ def _sonidos(lista):
     return salida
 
 
-def armar_pedido(video, capa, sfx, nombre_estilo='', musica=None, piezas=None):
+PANEL_SECUENCIA = 3                       # v5.94: desde esta versión del panel, GO sin video trabaja con la secuencia abierta
+ESPERA_AUDIO_S = 900.0                    # exportar el audio de la secuencia (medido: 20 s de secuencia en 1,1 s; mientras exporta no late)
+
+
+def puede_traer_secuencia():
+    """v5.94: ¿hay un Premiere conectado cuyo panel sabe traer la secuencia abierta? (barato: el latido)"""
+    try:
+        return panel_vivo() and int((latido() or {}).get('panel') or 0) >= PANEL_SECUENCIA
+    except (TypeError, ValueError):
+        return False
+
+
+def secuencia_abierta():
+    """v5.94: el nombre de la secuencia abierta en el Premiere conectado ('' si no hay, no está conectado o su panel es anterior)."""
+    return str((latido() or {}).get('secuencia') or '') if puede_traer_secuencia() else ''
+
+
+def es_de_cinecaptions(nombre):
+    """v5.94: ¿esa secuencia la armó un GO anterior («… (CineCaptions)», «… (CineCaptions) 2»)? Ya lleva subtítulos: no se subtitula otra vez."""
+    import re
+    return bool(re.search(r'\(CineCaptions\)( \d+)?$', str(nombre or '').strip()))
+
+
+def traer_secuencia(cancelado=None, espera_s=ESPERA_AUDIO_S):
+    """v5.94 (un cliente: «agarra un audio de la timeline que no es»): GO sin video con «Usar con Premiere Pro» trabaja con la SECUENCIA
+    ABIERTA, como con el timeline de Resolve. El panel exporta su audio a un WAV (Videos/CineCaptions) y dice sus medidas. Desde un hilo.
+    → {'ok', 'ruta' (el WAV), 'secuencia', 'id_secuencia', 'ancho', 'alto', 'fps', 'duracion', 'proyecto'} · {'ok': False, 'error', 'causa'
+    ('sin_panel' | 'reiniciar' | 'sin_secuencia' | 'sin_preset' | 'exportar')} · {'ok': False, 'cancelado': True}"""
+    if not panel_vivo():
+        return {'ok': False, 'causa': 'sin_panel',
+                'error': 'Premiere Pro no está conectado. Ábrelo con tu proyecto y tu secuencia, o arrastra un video a CineCaptions.'}
+    if not puede_traer_secuencia():
+        return {'ok': False, 'causa': 'reiniciar',
+                'error': 'Cierra Premiere Pro y vuelve a abrirlo una vez (carga el panel nuevo de CineCaptions), o arrastra un video a CineCaptions.'}
+    import render_sin_resolve
+    carpeta = render_sin_resolve.carpeta_videos() / 'CineCaptions'
+    carpeta.mkdir(parents=True, exist_ok=True)
+    salida = carpeta / f'Premiere {time.strftime("%Y-%m-%d %H%M%S")}.wav'
+    id_pedido = enviar({'id': uuid.uuid4().hex, 'tipo': 'audio', 'creado': time.time(), 'salida': str(salida)})
+    limite = time.time() + espera_s
+    while True:
+        if cancelado and cancelado():
+            retirar()
+            return {'ok': False, 'cancelado': True}
+        r = resultado(id_pedido)
+        if r is not None:
+            if r.get('ok'):
+                final = salida.with_name(_nombre_archivo(r.get('secuencia')) + ' (Premiere).wav')     # con el nombre de la secuencia
+                try:
+                    os.replace(r.get('ruta') or salida, final)
+                    r['ruta'] = str(final)
+                except OSError:
+                    pass
+            else:
+                r.setdefault('causa', 'premiere')
+            return r
+        if time.time() > limite:
+            retirar()
+            return {'ok': False, 'causa': 'exportar', 'error': 'Premiere Pro no terminó de exportar el audio de la secuencia.'}
+        time.sleep(0.25)
+
+
+def _nombre_archivo(nombre):
+    limpio = ''.join(ch for ch in str(nombre or '') if ch not in '<>:"/\\|?*' and ord(ch) >= 32).strip(' .')[:80]
+    return limpio or 'Secuencia'
+
+
+def armar_pedido(video, capa, sfx, nombre_estilo='', musica=None, piezas=None, secuencia=None):
     """El pedido para el panel. capa: lo que devuelve render_sin_resolve.renderizar_capa; sfx / musica: [(t, ruta[, dur])] (sonido_de_go).
-    v5.85: piezas = premiere_textos.preparar (textos editables + imágenes) en vez de la capa (capa = None)."""
+    v5.85: piezas = premiere_textos.preparar (textos editables + imágenes) en vez de la capa (capa = None).
+    v5.94: secuencia = lo que devolvió traer_secuencia: se coloca en una COPIA de esa secuencia (sin video ni proyecto nuevo)."""
+    p = _armar_pedido(video, capa, sfx, nombre_estilo, musica, piezas)
+    if secuencia:
+        p.update(en_secuencia=str(secuencia.get('id_secuencia') or ''), solo_audio=False, proyecto_nuevo=None,
+                 secuencia=f"{secuencia.get('secuencia') or Path(video).stem} (CineCaptions)")
+    return p
+
+
+def _armar_pedido(video, capa, sfx, nombre_estilo='', musica=None, piezas=None):
     video = Path(video)
     sonidos = _sonidos(sfx)
     if piezas:
@@ -624,6 +780,19 @@ def colocar(pedido, cancelado=None, aviso=None, espera_abrir_s=ESPERA_ABRIR_S, e
         return {'ok': False, 'causa': 'sin_premiere',
                 'error': 'No encuentro Adobe Premiere Pro en este equipo. Instálalo (o elige «Usar con DaVinci Resolve» en Ajustes > General).'}
     estaba_abierto = abierto()
+    # v5.94: Premiere abierto desde antes de instalarse el panel (ahora, desde Ajustes o en un GO anterior): hay que reiniciarlo
+    reiniciar = estaba_abierto and not panel_vivo() and (bool(inst.get('instalado')) or falta_reiniciar())
+    texto_reiniciar = ('Cierra Premiere Pro y vuelve a abrirlo: el panel de CineCaptions se acaba de instalar y Premiere solo lo carga al '
+                       'arrancar. Luego pulsa GO otra vez.')
+
+    def detalle():                                   # (para el informe del error: qué se vio)
+        lat = latido() or {}
+        try:
+            edad = f"{time.time() - float(lat.get('t') or 0) / 1000.0:.0f} s" if lat else 'nunca'
+        except (TypeError, ValueError):
+            edad = '?'
+        return (f"Premiere {'abierto' if estaba_abierto else 'cerrado'} al empezar, {'abierto' if abierto() else 'cerrado'} al final · "
+                f"{Path(exe).parent.name if exe else 'sin ejecutable'} · último latido: {edad} · rev del panel: {lat.get('rev') or '?'}")
     proyecto = None
     if not estaba_abierto and not panel_vivo() and pedido.get('proyecto_nuevo'):
         # v5.85: Premiere cerrado → se abre YA con el proyecto nuevo (sin proyecto se queda en su pantalla de inicio y el panel no carga)
@@ -651,7 +820,9 @@ def colocar(pedido, cancelado=None, aviso=None, espera_abrir_s=ESPERA_ABRIR_S, e
     pedido['proyectos_cc'] = list(_CREADOS)          # (el panel guarda al terminar los proyectos que escribió CineCaptions, no los del usuario)
     id_pedido = enviar(pedido)
     if not panel_vivo():
-        if estaba_abierto:
+        if reiniciar:
+            decir(texto_reiniciar)
+        elif estaba_abierto:
             decir('Esperando a Premiere Pro…')
         else:
             decir('Abriendo Adobe Premiere Pro…')
@@ -662,7 +833,7 @@ def colocar(pedido, cancelado=None, aviso=None, espera_abrir_s=ESPERA_ABRIR_S, e
     ultimo_avance = None
     # v5.87: Premiere abierto en su PANTALLA DE INICIO (sin proyecto el panel no carga ni late): GO le pasa el proyecto junto al video, como
     # un doble clic (Windows lo entrega al Premiere abierto; Mac, `open -a`). Antes se esperaban 4 min y GO fallaba con «Premiere no contestó».
-    sin_inicio_hasta = time.time() + ESPERA_INICIO_S if (estaba_abierto and not panel_vivo() and not inst.get('instalado')
+    sin_inicio_hasta = time.time() + ESPERA_INICIO_S if (estaba_abierto and not panel_vivo() and not reiniciar
                                                           and exe is not None and pedido.get('proyecto_nuevo')) else None
     mirar_proceso, sin_proceso = time.time() + MIRAR_PROCESO_S, 0
     while True:
@@ -715,9 +886,8 @@ def colocar(pedido, cancelado=None, aviso=None, espera_abrir_s=ESPERA_ABRIR_S, e
             if tomado:
                 return {'ok': False, 'causa': 'premiere',
                         'error': 'Premiere Pro tomó el pedido pero no terminó de colocarlo (¿hay una ventana abierta en Premiere?).'}
-            if estaba_abierto and inst.get('instalado'):
-                return {'ok': False, 'causa': 'reiniciar',
-                        'error': 'Cierra Premiere Pro y vuelve a abrirlo: el panel de CineCaptions se acaba de instalar y Premiere solo lo carga al arrancar. Luego pulsa GO otra vez.'}
-            return {'ok': False, 'causa': 'sin_panel',
+            if reiniciar:
+                return {'ok': False, 'causa': 'reiniciar', 'detalle': detalle(), 'error': texto_reiniciar}
+            return {'ok': False, 'causa': 'sin_panel', 'detalle': detalle(),
                     'error': 'Premiere Pro no contestó. Ábrelo con un proyecto y, si no se conecta, abre una vez Ventana > Extensiones > CineCaptions. Luego pulsa GO otra vez.'}
         time.sleep(0.25)

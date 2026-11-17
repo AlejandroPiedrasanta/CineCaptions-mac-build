@@ -8680,9 +8680,16 @@ class SubtitleApp(QWidget):
         self._go_decir_edicion()
         self._precargar_motores()          # v5.3: la voz y la IA de texto se cargan y se calientan mientras Resolve da el audio
         archivo = getattr(self, '_go_archivo', None)
+        self._go_secuencia = None                         # v5.94: la secuencia de Premiere de ESTE GO (premiere.traer_secuencia)
+        usar_sec = ''
         if not archivo and self._go_sin_resolve:          # sin Resolve no hay timeline del que sacar el audio: vale el video ya elegido
             elegido = self.video_var.get().strip().strip('"')
-            if elegido and Path(elegido).is_file():
+            hay_elegido = bool(elegido and Path(elegido).is_file())
+            if getattr(self, '_go_motivo', None) == 'premiere':
+                # v5.94 (un cliente: «agarra un audio de la timeline que no es»): sin un video recién soltado manda la secuencia abierta en
+                # Premiere, no el video que quedó elegido de un GO anterior
+                usar_sec = self._secuencia_premiere(elegido if hay_elegido else None)
+            if hay_elegido and not usar_sec:
                 archivo = elegido
         if archivo:
             self._ultimo_go_archivo = archivo
@@ -8706,7 +8713,8 @@ class SubtitleApp(QWidget):
             _destino = {'premiere': 'no (Premiere Pro)', 'ajuste': 'no (video sin editores)', 'sin_resolve': 'no (no está instalado: video MP4)',
                         'prueba': 'no (video MP4)'}.get(getattr(self, '_go_motivo', None) or ('ajuste' if self._go_sin_resolve else ''))
             registro.info('GO empieza · %s · estilo «%s» · Resolve %s · efectos %s · emojis %s' % (
-                ('video «%s»' % Path(str(archivo)).name) if archivo else 'audio del timeline de Resolve', _pl.nombre_visible(self._plantilla_un_clic()),
+                ('video «%s»' % Path(str(archivo)).name) if archivo else
+                ('secuencia «%s» de Premiere Pro' % usar_sec) if usar_sec else 'audio del timeline de Resolve', _pl.nombre_visible(self._plantilla_un_clic()),
                 _destino or ('Studio (MCP)' if hay_mcp else 'Free (Puente)'),
                 'sí' if _fxl.activado() else 'no',
                 'sí' if _epl.emojis_permitidos(self._plantilla_un_clic()) else 'no'), 'GO')
@@ -8742,6 +8750,9 @@ class SubtitleApp(QWidget):
                 self._go_tl_listo = threading.Event()
                 threading.Thread(target=self._go_timeline_del_video_libre, args=(archivo, medio), daemon=True, name='armar-video-free').start()
             self._go_generar()
+            return
+        if usar_sec:
+            self._go_traer_secuencia()
             return
         if self._go_sin_resolve:
             if getattr(self, '_go_motivo', None) == 'premiere':
@@ -8914,6 +8925,73 @@ class SubtitleApp(QWidget):
         return (tr('Primero arrastra tu video aquí: GO lo subtitula y lo coloca en Premiere Pro') if motivo == 'premiere' else
                 tr('Primero arrastra tu video aquí: GO te lo devuelve con los subtítulos puestos'))
 
+    def _secuencia_premiere(self, elegido):
+        """v5.94 (un cliente: «agarra un audio de la timeline que no es»): con «Usar con Premiere Pro» y sin un video recién soltado, el nombre
+        de la secuencia abierta con la que trabaja GO (como con el timeline de Resolve) o ''. Una secuencia que armó un GO anterior
+        («… (CineCaptions)») ya lleva subtítulos: con un video elegido se repite el video; sin él se usa igual (el aviso lo dice). Barato."""
+        try:
+            import premiere
+            sec = premiere.secuencia_abierta()
+            if sec and elegido and premiere.es_de_cinecaptions(sec):
+                return ''
+            return sec
+        except Exception:
+            return ''
+
+    def _go_traer_secuencia(self):
+        """v5.94: GO sin video con Premiere: el panel exporta el audio de la secuencia abierta (premiere.traer_secuencia, en un hilo) y GO
+        sigue con ese WAV como si fuera el archivo soltado; al colocar va a una copia de la secuencia (self._go_secuencia)."""
+        try:
+            self.go_panel.renombrar_paso('timeline', tr('Traer la secuencia de Premiere'), tr('Trayendo la secuencia'))
+        except Exception:
+            pass
+        self.go_panel.linea.configure(text=tr('Pidiéndole a Premiere Pro el audio de la secuencia…'))
+        est = {'r': None}
+
+        def trabajo():
+            try:
+                import premiere
+                est['r'] = premiere.traer_secuencia(cancelado=lambda: bool(getattr(self, '_cancelar_go', False)))
+            except BaseException as e:
+                registro.excepcion(origen='GO · secuencia de Premiere Pro')
+                est['r'] = {'ok': False, 'error': f'{type(e).__name__}: {e}'}
+        hilo = threading.Thread(target=trabajo, daemon=True, name='go-secuencia-premiere')
+        hilo.start()
+
+        def revisar():
+            if hilo.is_alive():
+                if vivo(self):
+                    despues(200, revisar, self)
+                return
+            r = est['r'] or {}
+            if r.get('cancelado'):
+                self._go_cancelado()
+                return
+            if not r.get('ok'):
+                self._go_fallo('timeline', tr('No pude traer la secuencia de Premiere Pro: {e}', e=tr(str(r.get('error') or '')) or tr('error desconocido')),
+                               diagnostico=f"causa: {r.get('causa') or '?'} · panel: {r.get('version') or '?'} · {r.get('dicho') or ''}")
+                return
+            self._go_secuencia = r
+            archivo = r['ruta']
+            try:
+                import premiere
+                if premiere.es_de_cinecaptions(r.get('secuencia')):
+                    registro.aviso(tr('La secuencia abierta en Premiere Pro («{s}») la armó un GO anterior y ya lleva subtítulos: abre tu secuencia original para no duplicarlos.',
+                                      s=r.get('secuencia') or ''), 'GO · Premiere Pro')
+            except Exception:
+                pass
+            registro.info(tr('Secuencia «{s}» de Premiere Pro ({a}×{b}, {d} s): los subtítulos irán en una copia, la tuya no se toca.',
+                             s=r.get('secuencia') or '', a=r.get('ancho'), b=r.get('alto'), d=int(round(float(r.get('duracion') or 0)))),
+                          'GO · Premiere Pro')
+            self._ultimo_go_archivo = archivo
+            self._marcar_go_en_curso(archivo)
+            self.video_var.set(archivo)
+            self._ancho_timeline, self._alto_timeline = int(r.get('ancho') or 1080), int(r.get('alto') or 1920)
+            self._fps_timeline = float(r.get('fps') or 30.0)
+            self.go_panel.paso('timeline', 'hecho', tr('secuencia «{s}»', s=r.get('secuencia') or ''))
+            self._go_generar()
+        despues(200, revisar, self)
+
     def _go_pide_video(self):
         """v5.85 (informe de un cliente con «Usar con Premiere Pro»: «GO falla en el paso timeline»): con Premiere, el video sin editores o sin
         Resolve, GO trabaja con un video tuyo. Sin ninguno, antes arrancaba y caía en rojo («No se pudo terminar», un error del Registro que
@@ -8926,6 +9004,8 @@ class SubtitleApp(QWidget):
         motivo = self._motivo_mp4()
         if motivo is None:
             return False                                   # con Resolve: GO saca el audio del timeline
+        if motivo == 'premiere' and self._secuencia_premiere(None):
+            return False                                   # v5.94: con Premiere conectado, GO trabaja con la secuencia abierta
         texto = self._texto_pide_video(motivo)
         if motivo == 'premiere':
             detalle = tr('Tienes elegido «Usar con Premiere Pro» (Ajustes > General). Suelta un video en CineCaptions y pulsa GO: lo coloco en Premiere Pro.')
@@ -9862,6 +9942,7 @@ class SubtitleApp(QWidget):
         video = self.video_var.get().strip().strip('"')
         cues = getattr(self, '_go_cues_render', None)
         estilo = getattr(self, '_go_render_estilo', None)
+        sec = getattr(self, '_go_secuencia', None)         # v5.94: la secuencia abierta (video = el WAV de su audio): sus medidas y su copia
         if not cues or not video or not Path(video).is_file():
             self._go_fallo('resolve', tr('No pude preparar los subtítulos para Premiere Pro (¿el video tiene voz?).'))
             return
@@ -9894,7 +9975,7 @@ class SubtitleApp(QWidget):
             import render_sin_resolve
             est.update(fase='capa', f=0.0)
             capa = render_sin_resolve.renderizar_capa(video, cues, progreso=lambda f, t: est.update(f=f), cancelado=parar,
-                                                      emoji_arriba=emoji_arriba, estilo=estilo)
+                                                      emoji_arriba=emoji_arriba, estilo=estilo, medidas=sec)
             if capa.get('ok'):
                 est['capa'] = capa
             return capa
@@ -9910,7 +9991,7 @@ class SubtitleApp(QWidget):
                     if premiere.admite_textos():
                         import premiere_textos
                         est['fase'] = 'textos'
-                        piezas = premiere_textos.preparar(video, cues, emoji_arriba=emoji_arriba, estilo=estilo, cancelado=parar)
+                        piezas = premiere_textos.preparar(video, cues, emoji_arriba=emoji_arriba, estilo=estilo, cancelado=parar, medidas=sec)
                         if piezas.get('cancelado'):
                             est['r'] = piezas
                             return
@@ -9923,6 +10004,9 @@ class SubtitleApp(QWidget):
                             if piezas.get('fuentes_reiniciar'):  # v5.87: instaladas, pero el Premiere abierto no las tiene en su lista
                                 registro.aviso(tr('Premiere Pro aún no ve estas letras (las instaladas mientras estaba abierto o que faltan en su lista de letras): {f}. Esta vez van con Arial del mismo ancho; reinicia Premiere y saldrán con la suya.',
                                                   f=', '.join(piezas['fuentes_reiniciar'])), 'GO · Premiere Pro')
+                    elif premiere.plantilla_texto() is None:     # v5.94: antes decía «panel anterior» aunque la causa fuera esta
+                        registro.aviso(tr('No encuentro la plantilla de texto de Premiere Pro («Basic Title.mogrt», Gráficos esenciales): sin ella los textos no pueden ir editables. Esta vez van como una capa de video.'),
+                                       'GO · Premiere Pro', detalle=f'Premiere: {premiere.ejecutable()} · latido: {premiere.latido()}')
                     else:
                         registro.info(tr('Premiere Pro tiene abierto el panel anterior de CineCaptions: reinícialo una vez para que los textos lleguen editables. Esta vez van como una capa de video.'),
                                       'GO · Premiere Pro')
@@ -9947,7 +10031,7 @@ class SubtitleApp(QWidget):
                     except Exception:
                         registro.excepcion(origen='GO en Premiere Pro · sonido')
                 sfx, musica = premiere.sonido_de_go(cues, res_sonido)
-                pedido = premiere.armar_pedido(video, capa, sfx, nombre_estilo, musica=musica, piezas=piezas)
+                pedido = premiere.armar_pedido(video, capa, sfx, nombre_estilo, musica=musica, piezas=piezas, secuencia=sec)
                 r = premiere.colocar(pedido, cancelado=parar, aviso=lambda t: est.update(texto=t))
                 if piezas is not None and not r.get('ok') and r.get('causa') == 'textos':
                     registro.aviso(tr('Premiere Pro no dejó poner los textos ({e}): esta vez van como una capa de video.', e=tr(str(r.get('error') or ''))),
@@ -9957,7 +10041,7 @@ class SubtitleApp(QWidget):
                         est['r'] = capa
                         return
                     est['fase'] = 'premiere'
-                    r = premiere.colocar(premiere.armar_pedido(video, capa, sfx, nombre_estilo, musica=musica), cancelado=parar,
+                    r = premiere.colocar(premiere.armar_pedido(video, capa, sfx, nombre_estilo, musica=musica, secuencia=sec), cancelado=parar,
                                          aviso=lambda t: est.update(texto=t))
                 est['r'] = r
             except BaseException as e:
@@ -9986,7 +10070,8 @@ class SubtitleApp(QWidget):
                                      r=est['capa'].get('ruta')), 'GO · Premiere Pro')
                 motivo = est['error'] or tr(str(r.get('error') or '')) or tr('error desconocido')
                 self._go_fallo('resolve', tr('No pude colocar en Premiere Pro: {e}', e=motivo),
-                               diagnostico=f"causa: {r.get('causa') or '?'} · panel: {r.get('version') or '?'}")
+                               diagnostico=f"causa: {r.get('causa') or '?'} · panel: {r.get('version') or '?'}"
+                                           + (f" · {r['detalle']}" if r.get('detalle') else ''))
                 return
             sec = str(r.get('secuencia') or '')
             n_sfx, total_sfx = int(r.get('sfx') or 0), int(r.get('sfx_total') or 0)

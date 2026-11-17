@@ -678,6 +678,19 @@ def medir_video(ruta):
         entrada.close()
 
 
+def medidas_de(video, medidas=None):
+    """v5.94: lo mismo que medir_video, pero con `medidas` ({'ancho', 'alto', 'fps', 'duracion'}: las de la secuencia abierta de Premiere,
+    cuando `video` es solo el WAV de su audio) no se mira el archivo: los subtítulos van al tamaño y la cadencia de la secuencia."""
+    if not medidas:
+        return medir_video(video)
+    fps = Fraction(float(medidas.get('fps') or 30.0)).limit_denominator(1001)
+    dur = float(medidas.get('duracion') or 0.0)
+    if dur <= 0.0 or fps <= 0:
+        raise RuntimeError('la secuencia no tiene una duración que se pueda leer')
+    return {'ancho': int(medidas.get('ancho') or 1080), 'alto': int(medidas.get('alto') or 1920), 'fps': fps,
+            'cuadros': max(1, int(round(dur * float(fps)))), 'duracion': dur, 'solo_audio': False}
+
+
 def planos_yuva10(arr):
     """RGBA uint8 (sin premultiplicar) → los 4 planos de yuva444p10le (uint16) en BT.709 de rango limitado, con numpy. NO con swscale
     (frame.reformat): su conversión por franjas pone alfa 512/1023 en los 8 primeros píxeles de la primera fila de cada franja (medido con
@@ -730,7 +743,7 @@ def _abrir_codificador_alfa(out, fps, ancho, alto):
         return vs, 'qtrle', None
 
 
-def renderizar_capa(video, cues, salida=None, progreso=None, cancelado=None, emoji_arriba=True, estilo=None):
+def renderizar_capa(video, cues, salida=None, progreso=None, cancelado=None, emoji_arriba=True, estilo=None, medidas=None):
     """v5.78 (GO en Adobe Premiere Pro): SOLO los subtítulos del estilo (con sus emojis) sobre TRANSPARENTE, del tamaño, la cadencia y la
     duración del video, en un .mov ProRes 4444 con alfa, para ponerlo en V2 encima del video. Mismo dibujo que renderizar (preparar /
     render_temas). Con un audio suelto: 1080×1920 a 30 fps con el fondo de fondo_solo_audio (opaco), que en Premiere hace de imagen.
@@ -752,7 +765,7 @@ def renderizar_capa(video, cues, salida=None, progreso=None, cancelado=None, emo
             except Exception:
                 pass
 
-    m = medir_video(video)
+    m = medidas_de(video, medidas)
     ancho, alto, fps, total = m['ancho'], m['alto'], m['fps'], m['cuadros']
     tb = Fraction(fps.denominator, fps.numerator)
     out = None

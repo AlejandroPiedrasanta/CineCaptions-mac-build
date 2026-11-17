@@ -4835,6 +4835,19 @@
     "1 posición marcada": "1 posizione segnata",
     "{n} posiciones marcadas": "{n} posizioni segnate",
     "Sin marcar: GO elige dónde, según tu video. Con «Posición» lo marcas tú.": "Non segnato: GO sceglie dove, in base al tuo video. Con «Posizione» lo segni tu.",
-    "Página Efectos nueva: cada efecto en su pestaña con iconos animados, el ejemplo en grande en el centro y todas sus opciones a la vista; pasa por encima de una para verla y elígela con «Usar».": "Nuova pagina Effetti: ogni effetto nella sua scheda con icone animate, l’esempio in grande al centro e tutte le opzioni in vista; passa sopra a una per vederla e sceglila con «Usa»."
+    "Página Efectos nueva: cada efecto en su pestaña con iconos animados, el ejemplo en grande en el centro y todas sus opciones a la vista; pasa por encima de una para verla y elígela con «Usar».": "Nuova pagina Effetti: ogni effetto nella sua scheda con icone animate, l’esempio in grande al centro e tutte le opzioni in vista; passa sopra a una per vederla e sceglila con «Usa».",
+    "Traer la secuencia de Premiere": "Prendere la sequenza di Premiere",
+    "Trayendo la secuencia": "Prendo la sequenza",
+    "Pidiéndole a Premiere Pro el audio de la secuencia…": "Chiedo a Premiere Pro l'audio della sequenza…",
+    "secuencia «{s}»": "sequenza «{s}»",
+    "No pude traer la secuencia de Premiere Pro: {e}": "Non sono riuscito a prendere la sequenza di Premiere Pro: {e}",
+    "Secuencia «{s}» de Premiere Pro ({a}×{b}, {d} s): los subtítulos irán en una copia, la tuya no se toca.": "Sequenza «{s}» di Premiere Pro ({a}×{b}, {d} s): i sottotitoli vanno in una copia, la tua non viene toccata.",
+    "La secuencia abierta en Premiere Pro («{s}») la armó un GO anterior y ya lleva subtítulos: abre tu secuencia original para no duplicarlos.": "La sequenza aperta in Premiere Pro («{s}») è stata creata da un GO precedente e ha già i sottotitoli: apri la tua sequenza originale per non duplicarli.",
+    "No encuentro la plantilla de texto de Premiere Pro («Basic Title.mogrt», Gráficos esenciales): sin ella los textos no pueden ir editables. Esta vez van como una capa de video.": "Non trovo il modello di testo di Premiere Pro («Basic Title.mogrt», Grafica essenziale): senza di esso i testi non possono essere modificabili. Questa volta vanno come livello video.",
+    "Premiere Pro no está conectado. Ábrelo con tu proyecto y tu secuencia, o arrastra un video a CineCaptions.": "Premiere Pro non è connesso. Aprilo con il tuo progetto e la tua sequenza, oppure trascina un video in CineCaptions.",
+    "Cierra Premiere Pro y vuelve a abrirlo una vez (carga el panel nuevo de CineCaptions), o arrastra un video a CineCaptions.": "Chiudi Premiere Pro e riaprilo una volta (carica il nuovo pannello CineCaptions), oppure trascina un video in CineCaptions.",
+    "Premiere Pro no terminó de exportar el audio de la secuencia.": "Premiere Pro non ha finito di esportare l'audio della sequenza.",
+    "Premiere Pro: GO trabaja con la secuencia que tienes abierta, sin arrastrar el video. Los subtítulos y los sonidos van a una copia de tu secuencia; la tuya queda intacta.": "Premiere Pro: GO lavora con la sequenza che hai aperta, senza trascinare il video. Sottotitoli e suoni vanno in una copia della tua sequenza; la tua resta intatta.",
+    "Premiere Pro: si hace falta cerrar y volver a abrir Premiere para conectar, GO te lo dice al momento en vez de esperar varios minutos.": "Premiere Pro: se serve chiudere e riaprire Premiere per connettersi, GO te lo dice subito invece di aspettare diversi minuti."
   }
 }

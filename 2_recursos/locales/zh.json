@@ -4763,6 +4763,13 @@
     "1 posición marcada": "已标记 1 个位置",
     "{n} posiciones marcadas": "已标记 {n} 个位置",
     "Sin marcar: GO elige dónde, según tu video. Con «Posición» lo marcas tú.": "未标记：GO 会根据你的视频选择位置。用「位置」可自行标记。",
-    "Página Efectos nueva: cada efecto en su pestaña con iconos animados, el ejemplo en grande en el centro y todas sus opciones a la vista; pasa por encima de una para verla y elígela con «Usar».": "全新效果页面：每个效果都有带动画图标的标签页，中间大图预览，所有选项一目了然；悬停即可预览，点「使用」即可选择。"
+    "Página Efectos nueva: cada efecto en su pestaña con iconos animados, el ejemplo en grande en el centro y todas sus opciones a la vista; pasa por encima de una para verla y elígela con «Usar».": "全新效果页面：每个效果都有带动画图标的标签页，中间大图预览，所有选项一目了然；悬停即可预览，点「使用」即可选择。",
+    "Traer la secuencia de Premiere": "获取 Premiere 序列",
+    "Trayendo la secuencia": "正在获取序列",
+    "Pidiéndole a Premiere Pro el audio de la secuencia…": "正在向 Premiere Pro 请求序列音频…",
+    "secuencia «{s}»": "序列「{s}」",
+    "No pude traer la secuencia de Premiere Pro: {e}": "无法获取 Premiere Pro 序列：{e}",
+    "Premiere Pro: GO trabaja con la secuencia que tienes abierta, sin arrastrar el video. Los subtítulos y los sonidos van a una copia de tu secuencia; la tuya queda intacta.": "Premiere Pro：GO 直接使用你打开的序列，无需拖入视频。字幕和音效会放到序列的副本中，你的原序列保持不变。",
+    "Premiere Pro: si hace falta cerrar y volver a abrir Premiere para conectar, GO te lo dice al momento en vez de esperar varios minutos.": "Premiere Pro：如果需要关闭并重新打开 Premiere 才能连接，GO 会立即告诉你，而不是等待好几分钟。"
   }
 }

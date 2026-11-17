@@ -4763,6 +4763,13 @@
     "1 posición marcada": "Отмечена 1 позиция",
     "{n} posiciones marcadas": "Отмечено позиций: {n}",
     "Sin marcar: GO elige dónde, según tu video. Con «Posición» lo marcas tú.": "Не отмечено: GO сам выберет место по вашему видео. Через «Позиция» можно отметить самому.",
-    "Página Efectos nueva: cada efecto en su pestaña con iconos animados, el ejemplo en grande en el centro y todas sus opciones a la vista; pasa por encima de una para verla y elígela con «Usar».": "Новая страница «Эффекты»: каждый эффект в своей вкладке с анимированными значками, пример крупно в центре и все варианты на виду; наведите, чтобы посмотреть, и выберите кнопкой «Использовать»."
+    "Página Efectos nueva: cada efecto en su pestaña con iconos animados, el ejemplo en grande en el centro y todas sus opciones a la vista; pasa por encima de una para verla y elígela con «Usar».": "Новая страница «Эффекты»: каждый эффект в своей вкладке с анимированными значками, пример крупно в центре и все варианты на виду; наведите, чтобы посмотреть, и выберите кнопкой «Использовать».",
+    "Traer la secuencia de Premiere": "Получить секвенцию Premiere",
+    "Trayendo la secuencia": "Получаю секвенцию",
+    "Pidiéndole a Premiere Pro el audio de la secuencia…": "Запрашиваю у Premiere Pro аудио секвенции…",
+    "secuencia «{s}»": "секвенция «{s}»",
+    "No pude traer la secuencia de Premiere Pro: {e}": "Не удалось получить секвенцию Premiere Pro: {e}",
+    "Premiere Pro: GO trabaja con la secuencia que tienes abierta, sin arrastrar el video. Los subtítulos y los sonidos van a una copia de tu secuencia; la tuya queda intacta.": "Premiere Pro: GO работает с открытой у вас секвенцией, перетаскивать видео не нужно. Субтитры и звуки помещаются в копию секвенции; ваша остаётся нетронутой.",
+    "Premiere Pro: si hace falta cerrar y volver a abrir Premiere para conectar, GO te lo dice al momento en vez de esperar varios minutos.": "Premiere Pro: если для подключения нужно закрыть и снова открыть Premiere, GO сообщает об этом сразу, а не ждёт несколько минут."
   }
 }

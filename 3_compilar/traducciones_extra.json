@@ -15177,5 +15177,139 @@
   "ko": "새 효과 페이지: 효과마다 애니메이션 아이콘이 있는 탭, 가운데에 크게 보이는 예시, 모든 옵션을 한눈에. 마우스를 올려 보고 «사용»으로 선택하세요.",
   "zh": "全新效果页面：每个效果都有带动画图标的标签页，中间大图预览，所有选项一目了然；悬停即可预览，点「使用」即可选择。",
   "ru": "Новая страница «Эффекты»: каждый эффект в своей вкладке с анимированными значками, пример крупно в центре и все варианты на виду; наведите, чтобы посмотреть, и выберите кнопкой «Использовать»."
+ },
+ "Traer la secuencia de Premiere": {
+  "en": "Get the Premiere sequence",
+  "pt": "Trazer a sequência do Premiere",
+  "fr": "Récupérer la séquence de Premiere",
+  "de": "Premiere-Sequenz holen",
+  "it": "Prendere la sequenza di Premiere",
+  "ja": "Premiereのシーケンスを取得",
+  "ko": "Premiere 시퀀스 가져오기",
+  "zh": "获取 Premiere 序列",
+  "ru": "Получить секвенцию Premiere",
+  "nl": "Premiere-sequentie ophalen",
+  "tr": "Premiere sekansını al",
+  "pl": "Pobierz sekwencję z Premiere"
+ },
+ "Trayendo la secuencia": {
+  "en": "Getting the sequence",
+  "pt": "Trazendo a sequência",
+  "fr": "Récupération de la séquence",
+  "de": "Sequenz wird geholt",
+  "it": "Prendo la sequenza",
+  "ja": "シーケンスを取得中",
+  "ko": "시퀀스 가져오는 중",
+  "zh": "正在获取序列",
+  "ru": "Получаю секвенцию",
+  "nl": "Sequentie ophalen",
+  "tr": "Sekans alınıyor",
+  "pl": "Pobieram sekwencję"
+ },
+ "Pidiéndole a Premiere Pro el audio de la secuencia…": {
+  "en": "Asking Premiere Pro for the sequence audio…",
+  "pt": "Pedindo ao Premiere Pro o áudio da sequência…",
+  "fr": "Demande de l'audio de la séquence à Premiere Pro…",
+  "de": "Audio der Sequenz wird von Premiere Pro angefordert…",
+  "it": "Chiedo a Premiere Pro l'audio della sequenza…",
+  "ja": "Premiere Proにシーケンスの音声をリクエスト中…",
+  "ko": "Premiere Pro에 시퀀스 오디오를 요청하는 중…",
+  "zh": "正在向 Premiere Pro 请求序列音频…",
+  "ru": "Запрашиваю у Premiere Pro аудио секвенции…",
+  "nl": "Audio van de sequentie opvragen bij Premiere Pro…",
+  "tr": "Premiere Pro'dan sekansın sesi isteniyor…",
+  "pl": "Proszę Premiere Pro o dźwięk sekwencji…"
+ },
+ "secuencia «{s}»": {
+  "en": "sequence “{s}”",
+  "pt": "sequência «{s}»",
+  "fr": "séquence « {s} »",
+  "de": "Sequenz „{s}“",
+  "it": "sequenza «{s}»",
+  "ja": "シーケンス「{s}」",
+  "ko": "시퀀스 «{s}»",
+  "zh": "序列「{s}」",
+  "ru": "секвенция «{s}»",
+  "nl": "sequentie “{s}”",
+  "tr": "sekans «{s}»",
+  "pl": "sekwencja „{s}”"
+ },
+ "No pude traer la secuencia de Premiere Pro: {e}": {
+  "en": "I couldn't get the Premiere Pro sequence: {e}",
+  "pt": "Não consegui trazer a sequência do Premiere Pro: {e}",
+  "fr": "Je n'ai pas pu récupérer la séquence de Premiere Pro : {e}",
+  "de": "Ich konnte die Premiere-Pro-Sequenz nicht holen: {e}",
+  "it": "Non sono riuscito a prendere la sequenza di Premiere Pro: {e}",
+  "ja": "Premiere Proのシーケンスを取得できませんでした：{e}",
+  "ko": "Premiere Pro 시퀀스를 가져오지 못했습니다: {e}",
+  "zh": "无法获取 Premiere Pro 序列：{e}",
+  "ru": "Не удалось получить секвенцию Premiere Pro: {e}",
+  "nl": "Ik kon de Premiere Pro-sequentie niet ophalen: {e}",
+  "tr": "Premiere Pro sekansını alamadım: {e}",
+  "pl": "Nie udało się pobrać sekwencji z Premiere Pro: {e}"
+ },
+ "Secuencia «{s}» de Premiere Pro ({a}×{b}, {d} s): los subtítulos irán en una copia, la tuya no se toca.": {
+  "en": "Premiere Pro sequence “{s}” ({a}×{b}, {d} s): the captions go into a copy, yours is left untouched.",
+  "pt": "Sequência «{s}» do Premiere Pro ({a}×{b}, {d} s): as legendas vão para uma cópia, a sua não é alterada.",
+  "fr": "Séquence « {s} » de Premiere Pro ({a}×{b}, {d} s) : les sous-titres iront dans une copie, la tienne reste intacte.",
+  "de": "Premiere-Pro-Sequenz „{s}“ ({a}×{b}, {d} s): Die Untertitel kommen in eine Kopie, deine bleibt unberührt.",
+  "it": "Sequenza «{s}» di Premiere Pro ({a}×{b}, {d} s): i sottotitoli vanno in una copia, la tua non viene toccata."
+ },
+ "La secuencia abierta en Premiere Pro («{s}») la armó un GO anterior y ya lleva subtítulos: abre tu secuencia original para no duplicarlos.": {
+  "en": "The sequence open in Premiere Pro (“{s}”) was built by an earlier GO and already has captions: open your original sequence so they are not duplicated.",
+  "pt": "A sequência aberta no Premiere Pro («{s}») foi montada por um GO anterior e já tem legendas: abra a sua sequência original para não duplicá-las.",
+  "fr": "La séquence ouverte dans Premiere Pro (« {s} ») a été créée par un GO précédent et contient déjà des sous-titres : ouvre ta séquence d’origine pour ne pas les dupliquer.",
+  "de": "Die in Premiere Pro geöffnete Sequenz („{s}“) stammt von einem früheren GO und hat schon Untertitel: Öffne deine ursprüngliche Sequenz, damit sie nicht doppelt erscheinen.",
+  "it": "La sequenza aperta in Premiere Pro («{s}») è stata creata da un GO precedente e ha già i sottotitoli: apri la tua sequenza originale per non duplicarli."
+ },
+ "No encuentro la plantilla de texto de Premiere Pro («Basic Title.mogrt», Gráficos esenciales): sin ella los textos no pueden ir editables. Esta vez van como una capa de video.": {
+  "en": "I can't find Premiere Pro's text template (“Basic Title.mogrt”, Essential Graphics): without it the texts cannot be editable. This time they go as a video layer.",
+  "pt": "Não encontro o modelo de texto do Premiere Pro («Basic Title.mogrt», Gráficos essenciais): sem ele os textos não podem ser editáveis. Desta vez vão como uma camada de vídeo.",
+  "fr": "Je ne trouve pas le modèle de texte de Premiere Pro (« Basic Title.mogrt », Objets graphiques essentiels) : sans lui les textes ne peuvent pas être modifiables. Cette fois ils vont dans un calque vidéo.",
+  "de": "Ich finde die Textvorlage von Premiere Pro („Basic Title.mogrt“, Essential Graphics) nicht: Ohne sie können die Texte nicht bearbeitbar sein. Diesmal kommen sie als Videoebene.",
+  "it": "Non trovo il modello di testo di Premiere Pro («Basic Title.mogrt», Grafica essenziale): senza di esso i testi non possono essere modificabili. Questa volta vanno come livello video."
+ },
+ "Premiere Pro no está conectado. Ábrelo con tu proyecto y tu secuencia, o arrastra un video a CineCaptions.": {
+  "en": "Premiere Pro is not connected. Open it with your project and your sequence, or drag a video into CineCaptions.",
+  "pt": "O Premiere Pro não está conectado. Abra-o com seu projeto e sua sequência, ou arraste um vídeo para o CineCaptions.",
+  "fr": "Premiere Pro n'est pas connecté. Ouvre-le avec ton projet et ta séquence, ou glisse une vidéo dans CineCaptions.",
+  "de": "Premiere Pro ist nicht verbunden. Öffne es mit deinem Projekt und deiner Sequenz oder zieh ein Video in CineCaptions.",
+  "it": "Premiere Pro non è connesso. Aprilo con il tuo progetto e la tua sequenza, oppure trascina un video in CineCaptions."
+ },
+ "Cierra Premiere Pro y vuelve a abrirlo una vez (carga el panel nuevo de CineCaptions), o arrastra un video a CineCaptions.": {
+  "en": "Close Premiere Pro and open it again once (it loads the new CineCaptions panel), or drag a video into CineCaptions.",
+  "pt": "Feche o Premiere Pro e abra-o de novo uma vez (carrega o novo painel do CineCaptions), ou arraste um vídeo para o CineCaptions.",
+  "fr": "Ferme Premiere Pro et rouvre-le une fois (il charge le nouveau panneau CineCaptions), ou glisse une vidéo dans CineCaptions.",
+  "de": "Schließe Premiere Pro und öffne es einmal neu (lädt das neue CineCaptions-Bedienfeld) oder zieh ein Video in CineCaptions.",
+  "it": "Chiudi Premiere Pro e riaprilo una volta (carica il nuovo pannello CineCaptions), oppure trascina un video in CineCaptions."
+ },
+ "Premiere Pro no terminó de exportar el audio de la secuencia.": {
+  "en": "Premiere Pro did not finish exporting the sequence audio.",
+  "pt": "O Premiere Pro não terminou de exportar o áudio da sequência.",
+  "fr": "Premiere Pro n'a pas terminé l'export de l'audio de la séquence.",
+  "de": "Premiere Pro hat den Export des Sequenz-Audios nicht abgeschlossen.",
+  "it": "Premiere Pro non ha finito di esportare l'audio della sequenza."
+ },
+ "Premiere Pro: GO trabaja con la secuencia que tienes abierta, sin arrastrar el video. Los subtítulos y los sonidos van a una copia de tu secuencia; la tuya queda intacta.": {
+  "en": "Premiere Pro: GO works with the sequence you have open, no need to drag the video. Captions and sounds go into a copy of your sequence; yours stays untouched.",
+  "pt": "Premiere Pro: o GO trabalha com a sequência que você tem aberta, sem arrastar o vídeo. As legendas e os sons vão para uma cópia da sua sequência; a sua fica intacta.",
+  "fr": "Premiere Pro : GO travaille avec la séquence que tu as ouverte, sans glisser la vidéo. Les sous-titres et les sons vont dans une copie de ta séquence ; la tienne reste intacte.",
+  "de": "Premiere Pro: GO arbeitet mit der Sequenz, die du geöffnet hast, ohne das Video hineinzuziehen. Untertitel und Sounds kommen in eine Kopie deiner Sequenz; deine bleibt unberührt.",
+  "it": "Premiere Pro: GO lavora con la sequenza che hai aperta, senza trascinare il video. Sottotitoli e suoni vanno in una copia della tua sequenza; la tua resta intatta.",
+  "ja": "Premiere Pro：動画をドラッグしなくても、開いているシーケンスでGOが動きます。字幕とサウンドはシーケンスのコピーに配置され、元のシーケンスはそのままです。",
+  "ko": "Premiere Pro: 동영상을 끌어 놓지 않아도 열려 있는 시퀀스로 GO가 작업합니다. 자막과 사운드는 시퀀스의 복사본에 들어가고 원본은 그대로 유지됩니다.",
+  "zh": "Premiere Pro：GO 直接使用你打开的序列，无需拖入视频。字幕和音效会放到序列的副本中，你的原序列保持不变。",
+  "ru": "Premiere Pro: GO работает с открытой у вас секвенцией, перетаскивать видео не нужно. Субтитры и звуки помещаются в копию секвенции; ваша остаётся нетронутой."
+ },
+ "Premiere Pro: si hace falta cerrar y volver a abrir Premiere para conectar, GO te lo dice al momento en vez de esperar varios minutos.": {
+  "en": "Premiere Pro: if Premiere needs to be closed and reopened to connect, GO tells you right away instead of waiting several minutes.",
+  "pt": "Premiere Pro: se for preciso fechar e reabrir o Premiere para conectar, o GO avisa na hora em vez de esperar vários minutos.",
+  "fr": "Premiere Pro : s'il faut fermer et rouvrir Premiere pour se connecter, GO te le dit tout de suite au lieu d'attendre plusieurs minutes.",
+  "de": "Premiere Pro: Wenn Premiere zum Verbinden geschlossen und neu geöffnet werden muss, sagt GO es dir sofort, statt mehrere Minuten zu warten.",
+  "it": "Premiere Pro: se serve chiudere e riaprire Premiere per connettersi, GO te lo dice subito invece di aspettare diversi minuti.",
+  "ja": "Premiere Pro：接続のためにPremiereの再起動が必要な場合、数分待たずにGOがすぐ知らせます。",
+  "ko": "Premiere Pro: 연결하려면 Premiere를 닫았다가 다시 열어야 할 때, 몇 분씩 기다리지 않고 GO가 바로 알려 줍니다.",
+  "zh": "Premiere Pro：如果需要关闭并重新打开 Premiere 才能连接，GO 会立即告诉你，而不是等待好几分钟。",
+  "ru": "Premiere Pro: если для подключения нужно закрыть и снова открыть Premiere, GO сообщает об этом сразу, а не ждёт несколько минут."
  }
 }
