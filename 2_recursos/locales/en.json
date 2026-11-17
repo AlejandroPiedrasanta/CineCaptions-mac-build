@@ -4976,6 +4976,26 @@
     "Arreglando…": "Fixing…",
     "Sonido con «oído», en todos los estilos: cada efecto cae justo en su cuadro (al milisegundo, aunque Resolve coloque por cuadros) y su volumen sigue al de tu voz en cada video.": "Sound with “ears”, in every style: each effect lands right on its frame (to the millisecond, even though Resolve places by frames) and its volume follows your voice in every video.",
     "La música respira: baja un momento antes de cada golpe fuerte y vuelve en el golpe, como en los anuncios profesionales. Y los sonidos de tu biblioteca se revisan antes de usarlos: fuera los saturados o casi mudos.": "The music breathes: it dips for a moment before each big hit and comes back on the hit, like in professional ads. And your library sounds are checked before use: clipped or near-silent ones are left out.",
-    "Página Sonido: te dice si la mezcla está lista para publicar (volumen, pico y rango en palabras simples), te enseña cada sonido cuadro a cuadro frente a su animación y lo que conviene revisar se arregla con un toque.": "Sound page: it tells you if the mix is ready to publish (loudness, peak and range in plain words), shows each sound frame by frame against its animation, and anything worth reviewing is fixed with one tap."
+    "Página Sonido: te dice si la mezcla está lista para publicar (volumen, pico y rango en palabras simples), te enseña cada sonido cuadro a cuadro frente a su animación y lo que conviene revisar se arregla con un toque.": "Sound page: it tells you if the mix is ready to publish (loudness, peak and range in plain words), shows each sound frame by frame against its animation, and anything worth reviewing is fixed with one tap.",
+    "Lo que GO añade": "What GO adds",
+    "Vista previa · {n}": "Preview · {n}",
+    "Usar {n}": "Use {n}",
+    "Ver otra vez": "Watch again",
+    "El ejemplo de cómo queda; GO lo adapta a tu video.": "An example of how it looks; GO adapts it to your video.",
+    "Apagado": "Off",
+    "Viendo": "Watching",
+    "GO usará": "GO will use",
+    "Apagada": "Off",
+    "Dónde va en tu video": "Where it goes in your video",
+    "{n} opciones": "{n} options",
+    "Pasa por encima para verla en grande · clic para elegirla": "Hover to see it big · click to choose it",
+    "colores propios": "custom colors",
+    "Enciéndela arriba para que GO la ponga": "Turn it on above so GO adds it",
+    "El gancho va siempre en el primer segundo.": "The hook always goes in the first second.",
+    "Suelta un video en Inicio para ver aquí dónde va.": "Drop a video in Home to see here where it goes.",
+    "1 posición marcada": "1 position marked",
+    "{n} posiciones marcadas": "{n} positions marked",
+    "Sin marcar: GO elige dónde, según tu video. Con «Posición» lo marcas tú.": "Not marked: GO chooses where, based on your video. Use “Position” to mark it yourself.",
+    "Página Efectos nueva: cada efecto en su pestaña con iconos animados, el ejemplo en grande en el centro y todas sus opciones a la vista; pasa por encima de una para verla y elígela con «Usar».": "New Effects page: each effect in its own tab with animated icons, the example shown big in the center and all its options in view; hover over one to see it and pick it with “Use”."
   }
 }

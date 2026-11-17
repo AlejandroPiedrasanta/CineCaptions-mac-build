@@ -1633,6 +1633,9 @@ def g_sonido(g):
     yield 1.0
 
 
+_CARTAS_EFECTO = ('TarjetaEfecto', 'TarjetaVertical')   # v5.93: TarjetaVertical, las opciones de la página «Escenario»
+
+
 def g_efectos(g):
     v = g.v
     v.ir_a('efectos', animar=False)
@@ -1642,11 +1645,12 @@ def g_efectos(g):
     if not secciones:
         return
     s1 = secciones[0]
-    cartas = sorted([x for x in s1.findChildren(QWidget) if type(x).__name__ == 'TarjetaEfecto' and x.isVisible()],
-                    key=lambda x: x.mapTo(v, QPoint(0, 0)).x())
-    llave = next(iter(_de_clase(s1, 'Interruptor')), None)
+    # (v5.93 «Escenario»: la sección se reparte en dos columnas que coloca la página: info —con su interruptor— y opciones)
+    cartas = sorted([x for x in getattr(s1, 'opciones', s1).findChildren(QWidget) if type(x).__name__ in _CARTAS_EFECTO and x.isVisible()],
+                    key=lambda x: (x.mapTo(v, QPoint(0, 0)).y(), x.mapTo(v, QPoint(0, 0)).x()))
+    llave = next(iter(_de_clase(getattr(s1, 'info', s1), 'Interruptor')), None)
     yield from g.decir('Aquí eliges los efectos que GO pone solo')
-    g.camara_a(g.rect(s1), 1.0, aire=1.02)
+    g.camara_a(g.rect(pag if hasattr(s1, 'opciones') else s1), 1.0, aire=1.02)
     yield g.esperar_voz(0.2)
     yield from g.decir('El gancho del inicio es el primer segundo de tu video')
     yield g.esperar_voz(0.2)
@@ -1673,6 +1677,28 @@ def g_efectos(g):
         yield g.mover(lambda: g.centro(cartas[elegida], 0, -40), 0.9)
         g.clic()
         yield 0.6
+    barra_lat = getattr(pag, '_barra', None)           # v5.93: la segunda sección se abre en su pestaña
+    fila2 = barra_lat.filas.get(secciones[1].clave) if barra_lat is not None and len(secciones) > 1 else None
+    if fila2 is not None:
+        g.camara_a(None, 1.0)
+        yield from g.decir('Más abajo: captions detrás de ti, emojis y más')
+        yield g.mover(lambda: g.centro(fila2, 0, 0), 1.0)
+        yield 0.2
+        g.clic()
+        yield 0.6
+        s2 = secciones[1]
+        cartas2 = sorted([x for x in getattr(s2, 'opciones', s2).findChildren(QWidget) if type(x).__name__ in _CARTAS_EFECTO and x.isVisible()],
+                         key=lambda x: (x.mapTo(v, QPoint(0, 0)).y(), x.mapTo(v, QPoint(0, 0)).x()))
+        if len(cartas2) > 2:
+            yield g.mover(lambda: g.centro(cartas2[2], 0, 0), 1.0)
+            yield 0.2
+            g.clic()
+            yield g.esperar_voz(0.2)
+            yield from g.decir('GO aplica solo lo que elijas')
+            yield g.mover(lambda: g.centro(cartas2[1], 0, 0), 0.8)
+            g.clic()
+            yield g.esperar_voz(0.6)
+        return
     zona = next((s for s in v.findChildren(QScrollArea) if s.isVisible() and s.height() > 500), None)
     if zona is not None and len(secciones) > 1:
         g.camara_a(None, 1.0)

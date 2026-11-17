@@ -4815,6 +4815,26 @@
     "Arreglando…": "Sistemo…",
     "Sonido con «oído», en todos los estilos: cada efecto cae justo en su cuadro (al milisegundo, aunque Resolve coloque por cuadros) y su volumen sigue al de tu voz en cada video.": "Suono con «orecchio», in tutti gli stili: ogni effetto cade esattamente sul suo fotogramma (al millisecondo, anche se Resolve posiziona per fotogrammi) e il suo volume segue la tua voce in ogni video.",
     "La música respira: baja un momento antes de cada golpe fuerte y vuelve en el golpe, como en los anuncios profesionales. Y los sonidos de tu biblioteca se revisan antes de usarlos: fuera los saturados o casi mudos.": "La musica respira: si abbassa un attimo prima di ogni colpo forte e torna sul colpo, come negli spot professionali. E i suoni della tua libreria vengono controllati prima dell'uso: fuori quelli saturati o quasi muti.",
-    "Página Sonido: te dice si la mezcla está lista para publicar (volumen, pico y rango en palabras simples), te enseña cada sonido cuadro a cuadro frente a su animación y lo que conviene revisar se arregla con un toque.": "Pagina Suono: ti dice se il mix è pronto da pubblicare (volume, picco e gamma in parole semplici), mostra ogni suono fotogramma per fotogramma rispetto alla sua animazione e ciò che conviene rivedere si sistema con un tocco."
+    "Página Sonido: te dice si la mezcla está lista para publicar (volumen, pico y rango en palabras simples), te enseña cada sonido cuadro a cuadro frente a su animación y lo que conviene revisar se arregla con un toque.": "Pagina Suono: ti dice se il mix è pronto da pubblicare (volume, picco e gamma in parole semplici), mostra ogni suono fotogramma per fotogramma rispetto alla sua animazione e ciò che conviene rivedere si sistema con un tocco.",
+    "Lo que GO añade": "Cosa aggiunge GO",
+    "Vista previa · {n}": "Anteprima · {n}",
+    "Usar {n}": "Usa {n}",
+    "Ver otra vez": "Rivedi",
+    "El ejemplo de cómo queda; GO lo adapta a tu video.": "Un esempio di come viene; GO lo adatta al tuo video.",
+    "Apagado": "Spento",
+    "Viendo": "In visione",
+    "GO usará": "GO userà",
+    "Apagada": "Spenta",
+    "Dónde va en tu video": "Dove va nel tuo video",
+    "{n} opciones": "{n} opzioni",
+    "Pasa por encima para verla en grande · clic para elegirla": "Passa sopra per vederla in grande · clic per sceglierla",
+    "colores propios": "colori personalizzati",
+    "Enciéndela arriba para que GO la ponga": "Attivala qui sopra perché GO la aggiunga",
+    "El gancho va siempre en el primer segundo.": "Il gancio va sempre nel primo secondo.",
+    "Suelta un video en Inicio para ver aquí dónde va.": "Trascina un video in Home per vedere qui dove va.",
+    "1 posición marcada": "1 posizione segnata",
+    "{n} posiciones marcadas": "{n} posizioni segnate",
+    "Sin marcar: GO elige dónde, según tu video. Con «Posición» lo marcas tú.": "Non segnato: GO sceglie dove, in base al tuo video. Con «Posizione» lo segni tu.",
+    "Página Efectos nueva: cada efecto en su pestaña con iconos animados, el ejemplo en grande en el centro y todas sus opciones a la vista; pasa por encima de una para verla y elígela con «Usar».": "Nuova pagina Effetti: ogni effetto nella sua scheda con icone animate, l’esempio in grande al centro e tutte le opzioni in vista; passa sopra a una per vederla e sceglila con «Usa»."
   }
 }

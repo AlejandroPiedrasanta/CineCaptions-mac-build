@@ -154,6 +154,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         la sección «Más efectos» de la página Efectos: números, pegatinas, énfasis, ambiente, mis efectos y el cierre (outro).
     efectos_pagina.py
         la página «Efectos»: elegir la intro (con su sonido), las transiciones de los cortes y los iconos flotantes (y en qué palabras salen).
+    efectos_panel_ui.py
+        v5.93: las piezas de la página Efectos «Escenario» (propuesta A, elegida por el usuario entre tres reales):
     efectos_pro_ui.py
         v5.20: la página Efectos › «Edición PRO»: una sección por función de la PRO (las del menú lateral de Proyecto) con
     efectos_ui.py

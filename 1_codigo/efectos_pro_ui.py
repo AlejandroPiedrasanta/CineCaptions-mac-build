@@ -204,9 +204,63 @@ class ChipColor(QWidget):
         self._ajustar()
 
     def _ajustar(self):
+        if getattr(self, 'como_fila', False):
+            return
         from PySide6.QtGui import QFontMetricsF
         texto = f'{self.etiqueta}: {self.color or tr("Automático")}'
         self.setFixedWidth(int(46 + QFontMetricsF(ui.fuente(12)).horizontalAdvance(texto)))
+
+    def poner_como_fila(self):
+        """v5.93 (página «Escenario»): una fila entera de «Personaliza»: icono, nombre, el valor a la derecha y su flecha."""
+        from PySide6.QtWidgets import QSizePolicy
+        self.como_fila = True
+        self.setFixedHeight(48)
+        self.setMinimumWidth(0)
+        self.setMaximumWidth(16777215)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.update()
+
+    def _valor(self):
+        return self.color or tr('Automático')
+
+    def _pintar_fila(self, p, icono=None):
+        r = QRectF(0.5, 0.5, self.width() - 1, self.height() - 1)
+        p.setBrush(QColor(255, 255, 255, 14 if (self.activo or self._hover) else 8))
+        p.setPen(QPen(QColor(ui.tc(VERDE)) if self.activo else QColor(255, 255, 255, 18), 1.4 if self.activo else 1.0))
+        p.drawRoundedRect(r, 12, 12)
+        cy = self.height() / 2
+        if getattr(self, 'color', '') and icono is None:
+            p.setBrush(QColor(self.color[:7]))
+            p.setPen(QPen(QColor(255, 255, 255, 90), 1))
+            p.drawEllipse(QRectF(15, cy - 9, 18, 18))
+        elif icono is not None and not icono.isNull():
+            p.drawPixmap(14, int(cy - 10), icono)
+        else:
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.setPen(QPen(QColor(ui.tc('#8EA2C6')), 1.4, Qt.PenStyle.DashLine))
+            p.drawEllipse(QRectF(15, cy - 9, 18, 18))
+        from PySide6.QtGui import QFontMetricsF
+        p.setFont(ui.fuente(13.5))
+        p.setPen(QColor(ui.tc('#D5DEEB')))
+        p.drawText(QRectF(46, 0, self.width() * 0.5, self.height()), int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft), self.etiqueta)
+        p.setFont(ui.fuente(13.5, peso='negrita'))
+        p.setPen(QColor('#FFFFFF'))
+        ancho = self.width() * 0.5 - 40
+        valor = QFontMetricsF(p.font()).elidedText(self._valor(), Qt.TextElideMode.ElideRight, ancho)
+        p.drawText(QRectF(self.width() - 40 - ancho, 0, ancho, self.height()), int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight), valor)
+        p.setPen(QPen(QColor('#7F8CA4'), 1.8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        x = self.width() - 24
+        flecha = QPainterPath()
+        if self.activo:                                  # (su tira está abierta debajo)
+            flecha.moveTo(x - 4, cy - 2)
+            flecha.lineTo(x, cy + 2)
+            flecha.lineTo(x + 4, cy - 2)
+        else:
+            flecha.moveTo(x - 2, cy - 4)
+            flecha.lineTo(x + 2, cy)
+            flecha.lineTo(x - 2, cy + 4)
+        p.drawPath(flecha)
 
     def poner(self, color, activo=None):
         self.color = color or ''
@@ -230,6 +284,17 @@ class ChipColor(QWidget):
     def paintEvent(self, _e):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        pm_auto = None
+        if not self.color and getattr(self, 'icono_auto', None):
+            try:
+                from efectos_panel_ui import icono_ui
+                pm_auto = icono_ui(self.icono_auto, 20 if getattr(self, 'como_fila', False) else 18)
+            except Exception:
+                pm_auto = None
+        if getattr(self, 'como_fila', False):
+            self._pintar_fila(p, pm_auto)
+            p.end()
+            return
         r = QRectF(0.5, 0.5, self.width() - 1, self.height() - 1)
         # (v5.63: el fondo y el borde del chip con el traductor del tema, ui.tc: neutros en Negro profundo; el color elegido, tal cual)
         p.setBrush(QColor(ui.tc('#16233D' if (self.activo or self._hover) else '#101A2E')))
@@ -240,6 +305,8 @@ class ChipColor(QWidget):
             p.setBrush(QColor(self.color[:7]))
             p.setPen(QPen(QColor(255, 255, 255, 90), 1))
             p.drawEllipse(c)
+        elif pm_auto is not None:
+            p.drawPixmap(9, 8, pm_auto)
         else:
             p.setBrush(Qt.BrushStyle.NoBrush)
             p.setPen(QPen(QColor(ui.tc('#8EA2C6')), 1.4, Qt.PenStyle.DashLine))
@@ -258,15 +325,27 @@ class ChipOpcion(ChipColor):
     def __init__(self, hueco, etiqueta, icono, padre=None):
         super().__init__(hueco, etiqueta, padre)
         self.nombre = ''
-        try:
-            self._icono = ui.icono_linea(icono, '#8EA2C6').pixmap(16, 16)
+        self._icono = None
+        try:                                             # v5.93: los iconos nuevos (Higgsfield) si están; si no, los de Phosphor
+            from efectos_panel_ui import icono_ui
+            self._icono = icono_ui({'sonido': 'b_sonido', 'zoom': 'b_zoom'}.get(hueco, ''), 16)
         except Exception:
             self._icono = None
+        if self._icono is None:
+            try:
+                self._icono = ui.icono_linea(icono, '#8EA2C6').pixmap(16, 16)
+            except Exception:
+                self._icono = None
 
     def _texto(self):
         return f'{self.etiqueta}: {getattr(self, "nombre", "") or tr("El de la intro")}'
 
+    def _valor(self):
+        return getattr(self, 'nombre', '') or tr('El de la intro')
+
     def _ajustar(self):
+        if getattr(self, 'como_fila', False):
+            return
         from PySide6.QtGui import QFontMetricsF
         self.setFixedWidth(int(46 + QFontMetricsF(ui.fuente(12)).horizontalAdvance(self._texto())))
 
@@ -280,6 +359,16 @@ class ChipOpcion(ChipColor):
     def paintEvent(self, _e):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        if getattr(self, 'como_fila', False):
+            ico = None
+            try:
+                from efectos_panel_ui import icono_ui
+                ico = icono_ui({'sonido': 'b_sonido', 'zoom': 'b_zoom'}.get(self.hueco, ''), 20)
+            except Exception:
+                ico = None
+            self._pintar_fila(p, ico if ico is not None else self._icono)
+            p.end()
+            return
         r = QRectF(0.5, 0.5, self.width() - 1, self.height() - 1)
         # (v5.63: el fondo y el borde del chip con el traductor del tema, ui.tc: neutros en Negro profundo; el color elegido, tal cual)
         p.setBrush(QColor(ui.tc('#16233D' if (self.activo or self._hover) else '#101A2E')))
@@ -406,12 +495,35 @@ class _Cabecera(QWidget):
         p.end()
 
 
+class _CabeceraPanel(QWidget):
+    """v5.93 (página Efectos «Escenario»): la cabecera de la sección abierta en la columna de la izquierda: título grande e «Activado en
+    GO». Responde a lo mismo que _Cabecera (poner_resumen, poner_abierta) para que SeccionEstilo no cambie."""
+
+    def __init__(self, titulo, padre=None):
+        super().__init__(padre)
+        self.capa = QHBoxLayout(self)
+        self.capa.setContentsMargins(0, 0, 0, 0)
+        self.capa.setSpacing(12)
+        self._titulo = Etiqueta(titulo, 26, peso='extra', color='#FFFFFF', envolver=True)   # (salta de línea si la columna es estrecha)
+        self._titulo.setMinimumWidth(0)
+        self.capa.addWidget(self._titulo, 1)
+
+    def poner_resumen(self, _texto):
+        pass
+
+    def poner_abierta(self, _si):
+        pass
+
+
 # ====================================================================================== una sección (una función de la PRO)
 class SeccionEstilo(Tarjeta):
     cambio = Signal()
+    vista = Signal(str, str)                             # v5.93 (panel): (clave, opción) que hay que enseñar en grande
 
-    def __init__(self, seccion, opcion, padre=None, por_partes=False):
+    def __init__(self, seccion, opcion, padre=None, por_partes=False, panel=False):
         super().__init__(padre, espacio=12, margenes=(22, 18, 22, 18))
+        self._panel = bool(panel)                        # v5.93: la página en tres columnas (cabecera grande, opciones en rejilla 3×3)
+        self.estado_corto = ''
         self._pasos = self._armar(seccion, opcion)       # v5.83: con por_partes=True quien la crea la termina a trozos (armar_paso)
         if not por_partes:
             self.completar()
@@ -428,6 +540,9 @@ class SeccionEstilo(Tarjeta):
         self.s = seccion
         self.clave = seccion['clave']
         self._hueco = None
+        if self._panel:                                  # v5.93: la página Efectos «Escenario» (dos columnas)
+            yield from self._armar_panel(seccion, opcion)
+            return
         self.capa.setContentsMargins(22, 12, 22, 12)
         # ---- la cabecera: siempre a la vista; un clic la abre o la pliega (el interruptor va aparte)
         self._cab = _Cabecera(tr(seccion['titulo']))
@@ -537,6 +652,204 @@ class SeccionEstilo(Tarjeta):
         self._cab.poner_abierta(self._abierta)
         self.refrescar()
 
+    def _armar_panel(self, seccion, opcion):
+        """v5.93 (página Efectos «Escenario», propuesta A elegida por el usuario): la sección se reparte en DOS columnas que la página coloca:
+        `self.info` (título, «Activado en GO», qué es, «GO usará», «Personaliza» en filas y «Dónde va en tu video») y `self.opciones` (sus
+        opciones en tarjetas verticales; ahí también se abre la «Posición»). Esta Tarjeta no se ve: solo guarda el estado y la lógica."""
+        from efectos_panel_ui import LineaDonde, RejillaOpciones, TarjetaUsara, TarjetaVertical, icono_ui
+        # ---- la columna de la izquierda
+        self.info = QWidget()
+        ci = QVBoxLayout(self.info)
+        ci.setContentsMargins(0, 0, 0, 0)
+        ci.setSpacing(0)
+        self._cab = _CabeceraPanel(tr(seccion['titulo']))
+        self._var_on = ui.BooleanVar(False)
+        self._sw = Interruptor(tr('Activado en GO'), self._var_on, self._cambio_on, tam=13, color='#E0EBFB')
+        self._cab.capa.addWidget(self._sw)
+        ci.addWidget(self._cab)
+        ci.addSpacing(10)
+        ci.addWidget(Etiqueta(tr(seccion['detalle']), 14, color=TEXT_MUTED, envolver=True))
+        self._lbl_estado = Etiqueta('', 12, color='#8EA2C6', envolver=True)     # (lo dice «GO usará»: queda oculta, con su texto al día)
+        self._lbl_estado.hide()
+        ci.addWidget(self._lbl_estado)
+        ci.addSpacing(18)
+        self._usara = TarjetaUsara()
+        ci.addWidget(self._usara)
+        ci.addSpacing(22)
+        extras = seccion.get('sonidos') or seccion.get('zooms')
+        ci.addWidget(Etiqueta((tr('Personaliza') if extras else tr('Colores')).upper(), 11, peso='negrita', color='#6F7E98'))
+        ci.addSpacing(8)
+        fila = QWidget()
+        cf = QVBoxLayout(fila)
+        cf.setContentsMargins(0, 0, 0, 0)
+        cf.setSpacing(8)
+        self.chips = {}
+        for k, (hueco, etiqueta) in enumerate(seccion['colores']):
+            ch = ChipColor(hueco, tr(etiqueta))
+            ch.icono_auto = 'b_color_luz' if k == 0 else 'b_segundo_color'       # (sin color propio: el icono, no el aro punteado)
+            ch.poner_como_fila()
+            ch.clic.connect(self._abrir_tira)
+            cf.addWidget(ch)
+            self.chips[hueco] = ch
+        self._chip_sonido = self._chip_zoom = None
+        if seccion.get('sonidos'):
+            self._chip_sonido = ChipOpcion('sonido', tr('Sonido'), 'ph.speaker-high')
+            self._chip_sonido.poner_como_fila()
+            self._chip_sonido.clic.connect(lambda _h='': self._abrir_tira_de('sonido'))
+            cf.addWidget(self._chip_sonido)
+        if seccion.get('zooms'):
+            self._chip_zoom = ChipOpcion('zoom', tr('Zoom'), 'ph.arrows-out')
+            self._chip_zoom.poner_como_fila()
+            self._chip_zoom.clic.connect(lambda _h='': self._abrir_tira_de('zoom'))
+            cf.addWidget(self._chip_zoom)
+        ci.addWidget(fila)
+        self._capa_cuerpo, self._fila_colores = ci, fila           # (las tiras de color, sonido y zoom se abren debajo de las filas)
+        self._tira = None
+        self._muestras = []
+        self._v_hex = StringVar('')
+        yield
+        self._tira_s = self._tira_z = self._b_propio = None
+        self._botones_s, self._botones_z = {}, {}
+        if seccion.get('sonidos'):
+            import intros_gancho
+            ops = ([('', tr('El de la intro'))] + [(v['id'], tr(v['nombre'])) for v in seccion['variantes']]
+                   + [(intros_gancho.SIN_SONIDO, tr('Sin sonido'))])
+            self._tira_s, self._botones_s = self._tira_opciones(ops, self._poner_sonido)
+            self._b_propio = Boton(tr('Tu sonido…'), self._elegir_sonido_propio, tipo='fantasma', alto=30, tam=12)
+            self._tira_s.layout().addWidget(self._b_propio)
+            ci.addSpacing(8)
+            ci.addWidget(self._tira_s)
+        if seccion.get('zooms'):
+            import intros_gancho
+            ops = ([('', tr('El de la intro'))] + [(z, tr(n)) for z, n in intros_gancho.NOMBRES_ZOOM.items()]
+                   + [(intros_gancho.SIN_ZOOM, tr('Sin zoom'))])
+            self._tira_z, self._botones_z = self._tira_opciones(ops, self._poner_zoom)
+            ci.addWidget(self._tira_z)
+        # (Emojis animados: «Dónde» e «Intensidad»; el nombre encima y sus opciones en píldoras que saltan de línea: la columna es estrecha y
+        #  un Segmentado de 4 opciones la desbordaba)
+        self._ajustes, self._botones_aj = [], []
+        for pref, etiqueta, opciones in seccion.get('ajustes') or []:
+            ci.addSpacing(14)
+            ci.addWidget(Etiqueta(tr(etiqueta), 13, color=TEXT_MUTED))
+            ci.addSpacing(6)
+            var = StringVar(tr(opciones[0][1]))
+
+            def elegir(k, p=pref, o=opciones, v=var):
+                v.set(tr(dict(o)[k]))
+                self._cambio_ajuste(p, o, v)
+                self._marcar_ajustes()
+            w, botones = self._tira_opciones([(k, tr(n)) for k, n in opciones], elegir)
+            w.setVisible(True)
+            ci.addWidget(w)
+            self._ajustes.append((pref, opciones, var))
+            self._botones_aj.append((botones, opciones, var))
+        ci.addStretch(1)
+        ci.addSpacing(18)
+        fila_d, cd = caja_h(espacio=8)                   # «Dónde va en tu video» (y «Posición» para marcarlo a mano)
+        cd.addWidget(Etiqueta(tr('Dónde va en tu video').upper(), 11, peso='negrita', color='#6F7E98'))
+        cd.addStretch(1)
+        pm = icono_ui('b_posicion', 16)
+        from PySide6.QtGui import QIcon
+        self._b_pos = Boton(tr('Posición'), self.alternar_posiciones, tipo='neutro', alto=30, tam=12, icono=QIcon(pm) if pm is not None else None)
+        self._b_pos.setVisible(self.clave not in SIN_POSICION)
+        cd.addWidget(self._b_pos)
+        ci.addWidget(fila_d)
+        ci.addSpacing(8)
+        self._donde = LineaDonde()
+        ci.addWidget(self._donde)
+        ci.addSpacing(8)
+        self._lbl_donde = Etiqueta('', 12, color=TEXT_MUTED, envolver=True)
+        ci.addWidget(self._lbl_donde)
+        self._pos = None
+        yield
+        # ---- la columna de la derecha: las opciones en tarjetas verticales
+        self.opciones = QWidget()
+        co = QVBoxLayout(self.opciones)
+        co.setContentsMargins(0, 0, 0, 0)
+        co.setSpacing(0)
+        self._capa_opc = co
+        self._cuerpo = QWidget()                         # (lo que la «Posición» tapa mientras está abierta)
+        cc = QVBoxLayout(self._cuerpo)
+        cc.setContentsMargins(0, 0, 0, 0)
+        cc.setSpacing(0)
+        co.addWidget(self._cuerpo)
+        self.cartas, self._opciones, self._detalles = {}, {}, {}
+        lista = []
+        for ident, nombre, detalle in [('', tr('Automático'), tr('Lo deciden el estilo y el video, como siempre.'))] + \
+                                      [(v['id'], tr(v['nombre']), tr(v['detalle'])) for v in seccion['variantes']]:
+            mp4, jpg = EST.previa(self.clave, ident)
+            self._opciones[ident] = (nombre, mp4, jpg)
+            self._detalles[ident] = detalle
+            c = TarjetaVertical(ident, nombre, detalle, jpg)
+            c.encima.connect(self._ver)
+            c.clic.connect(self._elegir)
+            self.cartas[ident] = c
+            lista.append(c)
+            if len(lista) % 4 == 0:
+                yield
+        cab_o, cco = caja_h(espacio=14)
+        cco.addWidget(Etiqueta(tr('{n} opciones', n=len(lista)).upper(), 11, peso='negrita', color='#6F7E98'))
+        pista = Etiqueta(tr('Pasa por encima para verla en grande · clic para elegirla'), 12, color=TEXT_MUTED, envolver=True)
+        pista.setMinimumWidth(0)
+        cco.addWidget(pista, 1)
+        cc.addWidget(cab_o)
+        cc.addSpacing(16)
+        self.slider = RejillaOpciones(lista)
+        cc.addWidget(self.slider)
+        cc.addStretch(1)
+        self._abierta = True
+        self.refrescar()
+
+    def detalle(self, ident):
+        return (getattr(self, '_detalles', None) or {}).get(ident, '')
+
+    def _marcar_ajustes(self):
+        """Las píldoras de «Dónde» / «Intensidad» (página «Escenario»): verde la que está puesta."""
+        for botones, opciones, var in getattr(self, '_botones_aj', None) or []:
+            actual = str(var.get())
+            for k, b in botones.items():
+                _marcar(b, tr(dict(opciones)[k]) == actual)
+
+    def _refrescar_panel(self, d, nombre, extra_s, propios, on):
+        """«GO usará» y «Dónde va en tu video» (página «Escenario»)."""
+        ident = d.get('v') or ''
+        _n, _mp4, jpg = self.opcion(ident)
+        partes = [x for x in (extra_s or '').split(' · ') if x.strip()]
+        if propios:
+            partes.append(tr('colores propios'))
+        sub = ' · '.join(partes) if partes else self.detalle(ident)
+        if not on:
+            sub = tr('Enciéndela arriba para que GO la ponga')
+        self._usara.poner(jpg, nombre, sub, on)
+        import posiciones_pro as POS
+        from efectos_panel_ui import duracion_video
+        try:
+            ruta = POS.video_actual()
+        except Exception:
+            ruta = None
+        dur = duracion_video(ruta, self, self.refrescar) if ruta else None
+        tramos, texto = [], ''
+        if self.clave == 'gancho':
+            tramos = [(0.0, 1.0, VERDE)]
+            texto = tr('El gancho va siempre en el primer segundo.')
+        elif not ruta:
+            texto = tr('Suelta un video en Inicio para ver aquí dónde va.')
+        else:
+            try:
+                img = POS._imagen_rapida(ruta)
+                m = (POS.leer_linea(ruta, img) if img else POS.leer(ruta)).get(self.clave) or {}
+            except Exception:
+                m = {}
+            ts = list(m.get('ts') or [])
+            tramos = [(t, t + 1.2, '#5EDCF5') for t in ts]
+            if ts:
+                texto = (tr('1 posición marcada') if len(ts) == 1 else tr('{n} posiciones marcadas', n=len(ts))) + \
+                        ('' if m.get('modo', 'solo') == 'solo' else tr(' + automático'))
+            else:
+                texto = tr('Sin marcar: GO elige dónde, según tu video. Con «Posición» lo marcas tú.')
+        self._donde.poner(dur, tramos)
+        self._lbl_donde.setText(texto)
+
     def alternar(self):
         self._abierta = not self._abierta
         en_pos = bool(getattr(self, '_en_pos', False))
@@ -563,12 +876,13 @@ class SeccionEstilo(Tarjeta):
             self._pos.linea.marca_puesta.connect(self._encender_al_marcar)
             self._pos.cambio.connect(self.refrescar)
             self._pos.volver.connect(lambda: self.mostrar_posiciones(False))
-            self.capa.addWidget(self._pos)
+            (self._capa_opc if self._panel else self.capa).addWidget(self._pos)   # (v5.93: en la columna de las opciones)
         if not self._abierta:
             self._abierta = True
             self._cab.poner_abierta(True)
         # v5.32: con el diseño nuevo («detrás de ti») la vista trae su propia cabecera (volver, título, Listo): la de la sección se esconde
-        self._cab.setVisible(not (si and getattr(self._pos, '_nuevo', None) is not None))
+        if not self._panel:                              # (v5.93: en la página «Escenario» la cabecera está en la otra columna: se queda)
+            self._cab.setVisible(not (si and getattr(self._pos, '_nuevo', None) is not None))
         self._cuerpo.setVisible(not si)
         if self._pos is not None:
             self._pos.setVisible(si)
@@ -767,6 +1081,29 @@ class SeccionEstilo(Tarjeta):
         if self._pos is not None and hasattr(self._pos, 'poner_resumen'):
             self._pos.poner_resumen(nombre + (tr(' · colores propios') if propios else '') + extra)
         self._pintar_muestras()
+        # v5.93: lo que dice la barra lateral («Violeta · Riser 1», «Sin efecto» o «Apagado»)
+        sonido = ''
+        if self._chip_sonido is not None and d.get('s'):
+            import intros_gancho
+            sonido = ' · ' + tr(intros_gancho.nombre_sonido(d.get('s')))
+        self.estado_corto = (nombre + sonido) if on else tr('Apagado')
+        if self._panel:
+            self._refrescar_panel(d, nombre, extra_s, propios, on)
+            self._marcar_ajustes()
+
+    # -- v5.93 (panel): la opción que se ve en grande y la que está en uso
+    def elegida(self):
+        return (EST.leer().get(self.clave) or {}).get('v') or ''
+
+    def opcion(self, ident):
+        """(nombre, mp4, jpg) de una opción de esta sección."""
+        return self._opciones.get(ident) or self._opciones.get('') or ('', None, None)
+
+    def _ver(self, ident):
+        for i, c in self.cartas.items():
+            if hasattr(c, 'poner_vista'):
+                c.poner_vista(i == ident)
+        self.vista.emit(self.clave, ident)
 
     def _pintar_muestras(self):
         actual = ((EST.leer().get(self.clave) or {}).get('c') or {}).get(self._hueco or '', '')
@@ -779,6 +1116,8 @@ class SeccionEstilo(Tarjeta):
         EST.guardar_variante(self.clave, ident)
         self.refrescar()
         self.cambio.emit()
+        if self._panel:                                  # v5.93: la vista grande enseña la recién elegida (ya «En uso»)
+            self._ver(ident)
         if self.clave == 'gancho':                       # v5.33: la intro suena al elegirla (su golpe es la mitad de la intro)
             self._oir_gancho(ident)
 
@@ -855,9 +1194,12 @@ class SeccionEstilo(Tarjeta):
         if self._tira is not None:
             return self._tira
         tira = QWidget()
-        ct = QHBoxLayout(tira)
-        ct.setContentsMargins(0, 0, 0, 0)
-        ct.setSpacing(6)
+        if self._panel:                                  # (v5.93: la columna es estrecha: las muestras saltan de línea)
+            ct = ui.FlujoCapa(tira, 6, 6)
+        else:
+            ct = QHBoxLayout(tira)
+            ct.setContentsMargins(0, 0, 0, 0)
+            ct.setSpacing(6)
         ct.addWidget(Boton(tr('Automático'), lambda: self._poner_color(''), tipo='fantasma', alto=30, tam=12))
         for col in EST.MUESTRAS:
             m = Muestra(col)
@@ -868,7 +1210,8 @@ class SeccionEstilo(Tarjeta):
         self._hex.editingFinished.connect(lambda: self._poner_color(str(self._v_hex.get() or '')))
         ct.addWidget(self._hex)
         ct.addWidget(Boton(tr('Cerrar'), self._cerrar_tira, tipo='fantasma', alto=30, tam=12))
-        ct.addStretch(1)
+        if not self._panel:
+            ct.addStretch(1)
         tira.setVisible(False)
         self._capa_cuerpo.insertWidget(self._capa_cuerpo.indexOf(self._fila_colores) + 1, tira)
         self._tira = tira
@@ -912,9 +1255,10 @@ class SeccionEstilosPro(QWidget):
     """Todas las secciones de la PRO, en el orden del menú lateral de Proyecto (las que se ven en este equipo: sin Studio no sale «detrás de ti»)."""
     cambio = Signal()
 
-    def __init__(self, padre=None, por_partes=False):
+    def __init__(self, padre=None, por_partes=False, panel=False):
         super().__init__(padre)
         self.secciones = []
+        self._panel = bool(panel)                        # v5.93: una sección a la vez (la que se toca en la barra lateral)
         self._pasos = self._armar()                      # v5.83: con por_partes=True quien la crea la termina a trozos (armar_paso)
         if not por_partes:
             self.completar()
@@ -926,10 +1270,23 @@ class SeccionEstilosPro(QWidget):
         while armar_paso(self):
             pass
 
+    def seccion(self, clave):
+        return next((s for s in self.secciones if s.clave == clave), None)
+
+    def mostrar(self, clave):
+        """v5.93 (panel): deja a la vista solo la sección `clave`."""
+        s = self.seccion(clave)
+        if s is not None and self._panel:                # (ocultas, no en un QStackedLayout: su heightForWidth toma la MÁS alta aunque no se vea
+            for o in self.secciones:                     #  —Emojis, con sus ajustes— y la sección abierta salía con barra de desplazamiento)
+                if o is not s:
+                    o.hide()
+            s.show()
+        return s
+
     def _armar(self):
         capa = QVBoxLayout(self)
+        capa.setSpacing(0 if self._panel else 18)        # (sin la tarjeta «Edición PRO: estilos» de cabecera: el usuario, «elimina esto»)
         capa.setContentsMargins(0, 0, 0, 0)
-        capa.setSpacing(18)                              # (sin la tarjeta «Edición PRO: estilos» de cabecera: el usuario, «elimina esto»)
         try:
             import pro_lateral_ui as LAT
             visibles = LAT.opciones_visibles()
@@ -941,11 +1298,13 @@ class SeccionEstilosPro(QWidget):
             if visibles and s['clave'] not in por:
                 continue
             yield
-            sec = SeccionEstilo(s, por.get(s['clave']), self, por_partes=True)       # (v5.83: hija desde ya: sin re-colgarla después)
+            sec = SeccionEstilo(s, por.get(s['clave']), self, por_partes=True, panel=self._panel)   # (v5.83: hija desde ya: sin re-colgarla después)
             while sec.armar_paso():
                 yield
             sec.cambio.connect(self.cambio.emit)
             capa.addWidget(sec)
+            if self._panel and self.secciones:           # v5.93: una a la vez (mostrar); la primera queda a la vista
+                sec.hide()
             self.secciones.append(sec)
 
     @property

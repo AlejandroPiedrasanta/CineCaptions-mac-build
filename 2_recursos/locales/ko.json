@@ -4743,6 +4743,26 @@
     "Arreglando…": "수정 중…",
     "Sonido con «oído», en todos los estilos: cada efecto cae justo en su cuadro (al milisegundo, aunque Resolve coloque por cuadros) y su volumen sigue al de tu voz en cada video.": "모든 스타일에 \"귀\"가 있는 사운드: 각 효과음이 제 프레임에 정확히 맞고(Resolve가 프레임 단위로 배치해도 밀리초 단위로), 음량은 영상마다 당신의 목소리를 따라갑니다.",
     "La música respira: baja un momento antes de cada golpe fuerte y vuelve en el golpe, como en los anuncios profesionales. Y los sonidos de tu biblioteca se revisan antes de usarlos: fuera los saturados o casi mudos.": "음악이 숨을 쉽니다: 강한 타격음 직전에 잠깐 줄었다가 타격음에서 돌아옵니다. 전문 광고처럼요. 또한 라이브러리 소리는 사용 전에 점검되어 클리핑되거나 거의 무음인 것은 빠집니다.",
-    "Página Sonido: te dice si la mezcla está lista para publicar (volumen, pico y rango en palabras simples), te enseña cada sonido cuadro a cuadro frente a su animación y lo que conviene revisar se arregla con un toque.": "사운드 페이지: 믹스가 게시할 준비가 되었는지(음량, 피크, 범위를 쉬운 말로) 알려 주고, 각 소리를 애니메이션과 함께 프레임 단위로 보여 주며, 확인할 것은 한 번의 탭으로 고칩니다."
+    "Página Sonido: te dice si la mezcla está lista para publicar (volumen, pico y rango en palabras simples), te enseña cada sonido cuadro a cuadro frente a su animación y lo que conviene revisar se arregla con un toque.": "사운드 페이지: 믹스가 게시할 준비가 되었는지(음량, 피크, 범위를 쉬운 말로) 알려 주고, 각 소리를 애니메이션과 함께 프레임 단위로 보여 주며, 확인할 것은 한 번의 탭으로 고칩니다.",
+    "Lo que GO añade": "GO가 추가하는 것",
+    "Vista previa · {n}": "미리보기 · {n}",
+    "Usar {n}": "{n} 사용",
+    "Ver otra vez": "다시 보기",
+    "El ejemplo de cómo queda; GO lo adapta a tu video.": "어떻게 보이는지 보여 주는 예시입니다. GO가 영상에 맞춰 줍니다.",
+    "Apagado": "꺼짐",
+    "Viendo": "보는 중",
+    "GO usará": "GO가 사용할 것",
+    "Apagada": "꺼짐",
+    "Dónde va en tu video": "영상의 어디에 들어가는지",
+    "{n} opciones": "{n}개 옵션",
+    "Pasa por encima para verla en grande · clic para elegirla": "마우스를 올리면 크게 보기 · 클릭하면 선택",
+    "colores propios": "사용자 색상",
+    "Enciéndela arriba para que GO la ponga": "위에서 켜면 GO가 넣어 줍니다",
+    "El gancho va siempre en el primer segundo.": "훅은 항상 첫 1초에 들어갑니다.",
+    "Suelta un video en Inicio para ver aquí dónde va.": "홈에 영상을 놓으면 여기에서 위치를 볼 수 있습니다.",
+    "1 posición marcada": "1개 위치 지정됨",
+    "{n} posiciones marcadas": "{n}개 위치 지정됨",
+    "Sin marcar: GO elige dónde, según tu video. Con «Posición» lo marcas tú.": "지정 안 함: GO가 영상에 맞춰 위치를 정합니다. «위치»로 직접 지정할 수 있습니다.",
+    "Página Efectos nueva: cada efecto en su pestaña con iconos animados, el ejemplo en grande en el centro y todas sus opciones a la vista; pasa por encima de una para verla y elígela con «Usar».": "새 효과 페이지: 효과마다 애니메이션 아이콘이 있는 탭, 가운데에 크게 보이는 예시, 모든 옵션을 한눈에. 마우스를 올려 보고 «사용»으로 선택하세요."
   }
 }

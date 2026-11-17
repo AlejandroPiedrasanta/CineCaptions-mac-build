@@ -11735,7 +11735,7 @@ class SubtitleApp(QWidget):
     # -- Efectos visuales (v5.4.6): intro, transiciones en los cortes e iconos flotantes -------------------------------------------------------------------
     def _pagina_efectos(self):
         _pag, capa = self._nueva_pagina('efectos', tr('Efectos visuales'), tr('Intro, transiciones en los cortes e iconos flotantes que acompañan a los captions · se aplican al generar con GO'),
-                                        con_barra=False)         # v5.5.10: sin barra de título, como las demás (el Registro va flotando arriba a la derecha)
+                                        desplazable=False, con_barra=False)   # v5.5.10: sin barra de título; v5.93: tres columnas, sin desplazar la página
         self._efectos_capa = capa
         self._efectos_widget = None
         try:                                     # v5.22: la «Posición» de cada efecto se marca sobre el video de Inicio (el que usará GO); v5.27: desde
@@ -11777,7 +11777,7 @@ class SubtitleApp(QWidget):
         return True
 
     # v5.83: lo que cada página importa antes de armarse por partes (uno por vuelta: importar uno cuesta 3-10 ms)
-    _MODULOS_POR_PARTES = {'efectos': ('estilos_pro', 'efectos_visuales', 'efectos_pro_ui', 'efectos_pagina', 'motions_ui', 'efectos_extra_ui'),
+    _MODULOS_POR_PARTES = {'efectos': ('estilos_pro', 'efectos_visuales', 'efectos_pro_ui', 'efectos_panel_ui', 'efectos_pagina', 'motions_ui', 'efectos_extra_ui'),
                            'estilos': ('estilos_slider', 'proyecto_ui', 'pro_lateral_ui', 'un_clic_ui', 'vistas_reales'),
                            'sfx': ('sonido_skill', 'sonido_musica', 'director_sonido_estado', 'sonido_skill_ui'),
                            'fondo': ()}             # v5.84: no es una página: las capas del fondo animado y lo fijo de los cielos
@@ -11806,7 +11806,7 @@ class SubtitleApp(QWidget):
         if clave == 'fondo':
             return
         if clave == 'efectos':
-            self._efectos_capa.addWidget(pag)
+            self._efectos_capa.addWidget(pag, 1)       # (v5.93: llena el alto: tres columnas sin desplazar la página)
             self._efectos_widget = pag
         elif clave == 'estilos':
             self._colocar_estilos(pag)

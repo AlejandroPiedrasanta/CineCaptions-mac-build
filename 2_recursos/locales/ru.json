@@ -4743,6 +4743,26 @@
     "Arreglando…": "Исправляю…",
     "Sonido con «oído», en todos los estilos: cada efecto cae justo en su cuadro (al milisegundo, aunque Resolve coloque por cuadros) y su volumen sigue al de tu voz en cada video.": "Звук со «слухом» во всех стилях: каждый эффект попадает точно в свой кадр (до миллисекунды, хотя Resolve ставит по кадрам), а его громкость подстраивается под ваш голос в каждом видео.",
     "La música respira: baja un momento antes de cada golpe fuerte y vuelve en el golpe, como en los anuncios profesionales. Y los sonidos de tu biblioteca se revisan antes de usarlos: fuera los saturados o casi mudos.": "Музыка «дышит»: на мгновение затихает перед каждым сильным ударом и возвращается на ударе, как в профессиональной рекламе. А звуки вашей библиотеки проверяются перед использованием: перегруженные и почти беззвучные отсеиваются.",
-    "Página Sonido: te dice si la mezcla está lista para publicar (volumen, pico y rango en palabras simples), te enseña cada sonido cuadro a cuadro frente a su animación y lo que conviene revisar se arregla con un toque.": "Страница «Звук»: подскажет, готов ли микс к публикации (громкость, пик и диапазон простыми словами), покажет каждый звук покадрово рядом с его анимацией, а всё, что стоит проверить, исправляется одним нажатием."
+    "Página Sonido: te dice si la mezcla está lista para publicar (volumen, pico y rango en palabras simples), te enseña cada sonido cuadro a cuadro frente a su animación y lo que conviene revisar se arregla con un toque.": "Страница «Звук»: подскажет, готов ли микс к публикации (громкость, пик и диапазон простыми словами), покажет каждый звук покадрово рядом с его анимацией, а всё, что стоит проверить, исправляется одним нажатием.",
+    "Lo que GO añade": "Что добавляет GO",
+    "Vista previa · {n}": "Просмотр · {n}",
+    "Usar {n}": "Использовать {n}",
+    "Ver otra vez": "Посмотреть снова",
+    "El ejemplo de cómo queda; GO lo adapta a tu video.": "Пример того, как это выглядит; GO подстроит его под ваше видео.",
+    "Apagado": "Выключено",
+    "Viendo": "Смотрите",
+    "GO usará": "GO использует",
+    "Apagada": "Выключено",
+    "Dónde va en tu video": "Где это будет в вашем видео",
+    "{n} opciones": "Вариантов: {n}",
+    "Pasa por encima para verla en grande · clic para elegirla": "Наведите, чтобы увидеть крупно · нажмите, чтобы выбрать",
+    "colores propios": "свои цвета",
+    "Enciéndela arriba para que GO la ponga": "Включите выше, чтобы GO это добавил",
+    "El gancho va siempre en el primer segundo.": "Зацепка всегда в первую секунду.",
+    "Suelta un video en Inicio para ver aquí dónde va.": "Перетащите видео на «Главную», чтобы увидеть здесь, где это будет.",
+    "1 posición marcada": "Отмечена 1 позиция",
+    "{n} posiciones marcadas": "Отмечено позиций: {n}",
+    "Sin marcar: GO elige dónde, según tu video. Con «Posición» lo marcas tú.": "Не отмечено: GO сам выберет место по вашему видео. Через «Позиция» можно отметить самому.",
+    "Página Efectos nueva: cada efecto en su pestaña con iconos animados, el ejemplo en grande en el centro y todas sus opciones a la vista; pasa por encima de una para verla y elígela con «Usar».": "Новая страница «Эффекты»: каждый эффект в своей вкладке с анимированными значками, пример крупно в центре и все варианты на виду; наведите, чтобы посмотреть, и выберите кнопкой «Использовать»."
   }
 }

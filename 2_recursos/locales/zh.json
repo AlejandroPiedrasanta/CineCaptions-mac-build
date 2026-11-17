@@ -4743,6 +4743,26 @@
     "Arreglando…": "正在修复…",
     "Sonido con «oído», en todos los estilos: cada efecto cae justo en su cuadro (al milisegundo, aunque Resolve coloque por cuadros) y su volumen sigue al de tu voz en cada video.": "所有风格的声音都有了“耳朵”：每个音效都精准落在它的帧上（即使 Resolve 按帧放置，也精确到毫秒），音量随每个视频里你的人声而定。",
     "La música respira: baja un momento antes de cada golpe fuerte y vuelve en el golpe, como en los anuncios profesionales. Y los sonidos de tu biblioteca se revisan antes de usarlos: fuera los saturados o casi mudos.": "音乐会“呼吸”：每次重击前短暂压低，在重击时恢复，就像专业广告一样。音效库里的声音在使用前也会先检查：削波或几乎无声的会被剔除。",
-    "Página Sonido: te dice si la mezcla está lista para publicar (volumen, pico y rango en palabras simples), te enseña cada sonido cuadro a cuadro frente a su animación y lo que conviene revisar se arregla con un toque.": "声音页面：告诉你混音是否可以发布（响度、峰值和范围用简单的话说明），逐帧展示每个音效与其动画的对齐，需要检查的地方一点即可修复。"
+    "Página Sonido: te dice si la mezcla está lista para publicar (volumen, pico y rango en palabras simples), te enseña cada sonido cuadro a cuadro frente a su animación y lo que conviene revisar se arregla con un toque.": "声音页面：告诉你混音是否可以发布（响度、峰值和范围用简单的话说明），逐帧展示每个音效与其动画的对齐，需要检查的地方一点即可修复。",
+    "Lo que GO añade": "GO 会添加的内容",
+    "Vista previa · {n}": "预览 · {n}",
+    "Usar {n}": "使用 {n}",
+    "Ver otra vez": "再看一遍",
+    "El ejemplo de cómo queda; GO lo adapta a tu video.": "效果示例；GO 会根据你的视频调整。",
+    "Apagado": "已关闭",
+    "Viendo": "正在预览",
+    "GO usará": "GO 将使用",
+    "Apagada": "已关闭",
+    "Dónde va en tu video": "在视频中的位置",
+    "{n} opciones": "{n} 个选项",
+    "Pasa por encima para verla en grande · clic para elegirla": "悬停可放大预览 · 点击即可选择",
+    "colores propios": "自定义颜色",
+    "Enciéndela arriba para que GO la ponga": "在上方开启后 GO 才会添加",
+    "El gancho va siempre en el primer segundo.": "开场钩子总是在第一秒。",
+    "Suelta un video en Inicio para ver aquí dónde va.": "在首页放入视频，即可在此查看位置。",
+    "1 posición marcada": "已标记 1 个位置",
+    "{n} posiciones marcadas": "已标记 {n} 个位置",
+    "Sin marcar: GO elige dónde, según tu video. Con «Posición» lo marcas tú.": "未标记：GO 会根据你的视频选择位置。用「位置」可自行标记。",
+    "Página Efectos nueva: cada efecto en su pestaña con iconos animados, el ejemplo en grande en el centro y todas sus opciones a la vista; pasa por encima de una para verla y elígela con «Usar».": "全新效果页面：每个效果都有带动画图标的标签页，中间大图预览，所有选项一目了然；悬停即可预览，点「使用」即可选择。"
   }
 }

@@ -376,9 +376,46 @@ class PaginaEfectos(QWidget):
             pass
 
     def _armar(self):
-        capa = QVBoxLayout(self)
-        capa.setContentsMargins(0, 0, 0, 0)
-        capa.setSpacing(18)
+        # v5.93 «Escenario» (el usuario eligió la propuesta A entre tres reales; antes, la de tres columnas con barra lateral): las secciones en
+        # PESTAÑAS arriba; debajo, a la izquierda «GO usará», «Personaliza» y «Dónde va en tu video»; en el centro el ejemplo en GRANDE (el
+        # protagonista) con «Ver otra vez» / «Usar …»; a la derecha todas las opciones en tarjetas verticales. La página no se desplaza: cada
+        # columna, si no cabe. Ritmo ocupa todo el ancho. Piezas e iconos (Higgsfield): efectos_panel_ui.
+        from PySide6.QtWidgets import QStackedWidget
+        from efectos_panel_ui import BarraPestanas, PanelVista
+        raiz = QVBoxLayout(self)
+        raiz.setContentsMargins(0, 0, 0, 0)
+        raiz.setSpacing(16)
+        self._tira_pest = Tarjeta(self, espacio=0, margenes=(10, 8, 10, 8))
+        self._barra = BarraPestanas()
+        self._barra.elegida.connect(self._seleccionar)
+        self._tira_pest.capa.addWidget(self._barra)
+        raiz.addWidget(self._tira_pest)
+        self._cuerpo = QStackedWidget(self)                   # (la página PRO en tres columnas · Ritmo a todo el ancho; sin hoja de estilo:
+        # «background: transparent» sin selector se hereda a TODOS los hijos y dejaba sin fondo el botón verde «Usar …»)
+        raiz.addWidget(self._cuerpo, 1)
+        self._pag_pro = QWidget()
+        hp = QHBoxLayout(self._pag_pro)
+        hp.setContentsMargins(0, 0, 0, 0)
+        hp.setSpacing(20)
+        self._izq = Tarjeta(self._pag_pro, espacio=0, margenes=(0, 0, 0, 0))
+        self._pila_info = QStackedWidget()
+        self._izq.capa.addWidget(self._pila_info)
+        hp.addWidget(self._izq)
+        self._centro = QWidget()
+        cc = QVBoxLayout(self._centro)
+        cc.setContentsMargins(0, 0, 0, 0)
+        self._vista = PanelVista()
+        self._vista.usar.connect(self._usar_vista)
+        self._vista.otra_vez.connect(self._otra_vez)
+        cc.addWidget(self._vista)
+        hp.addWidget(self._centro)
+        self._der = Tarjeta(self._pag_pro, espacio=0, margenes=(0, 0, 0, 0))
+        self._pila_opc = QStackedWidget()
+        self._der.capa.addWidget(self._pila_opc)
+        hp.addWidget(self._der, 1)
+        self._cuerpo.addWidget(self._pag_pro)
+        self._paginas_sec = {}                                 # clave → (columna izquierda, columna derecha)
+        self._actual = None
         op = F.opciones_guardadas()
         yield
         # ---- v5.5.7: arriba, los motions de la Edición PRO (carrusel con todos; Automático o solo los elegidos)
@@ -390,12 +427,20 @@ class PaginaEfectos(QWidget):
         yield
         # ---- v5.20: cada función de la PRO con sus 10 estilos y sus colores (efectos_pro_ui / estilos_pro)
         from efectos_pro_ui import SeccionEstilosPro
-        self._estilos_pro = SeccionEstilosPro(self, por_partes=True)        # (v5.83: hija desde ya, sin re-colgarla después, y por partes)
+        self._estilos_pro = SeccionEstilosPro(self, por_partes=True, panel=True)   # (v5.83: hija desde ya y por partes)
+        self._estilos_pro.hide()                       # (v5.93: guarda el estado de cada sección; sus dos columnas las coloca la página)
         while self._estilos_pro.armar_paso():
             yield
         self._estilos_pro.cambio.connect(self._motions.refrescar)
-        capa.addWidget(self._estilos_pro)
+        self._estilos_pro.cambio.connect(self._pintar_barra)
         self._tarjetas.extend(self._estilos_pro.tarjetas)
+        from efectos_panel_ui import PestanaSeccion
+        for sec in self._estilos_pro.secciones:
+            info = self._envolver(self._pila_info, sec.info, (26, 24, 26, 22))
+            opc = self._envolver(self._pila_opc, sec.opciones, (24, 22, 24, 22))
+            self._paginas_sec[sec.clave] = (info, opc)
+            self._barra.agregar(PestanaSeccion(sec.clave, tr(sec.s['titulo']), sec.clave))
+            sec.vista.connect(self._ver)
         yield
         # ---- los efectos clásicos van en su propio bloque: con la Edición PRO activa NO se aplican (la PRO hace la intro, el gancho, los zooms y los
         #      gráficos; sumarlos la estropeaba), así que se esconden. «Ritmo: quitar pausas» sí vale con la PRO y queda fuera.
@@ -487,8 +532,16 @@ class PaginaEfectos(QWidget):
                                      ('normal', tr('Normal'), tr('Las pausas normales y largas.'), False), ('fuerte', tr('Todas'), tr('Todas las pausas, sin respirar.'), False)], op.get('fx_pausas'), 'fx_pausas')
         self._f_saltos = self._fila(t5.capa, 'saltos', tr('Zoom alterno en cada corte'), tr('Con las pausas quitadas, el cuadro se acerca en un tramo sí y en el siguiente no, para que el corte seco parezca intencionado.'),
                                     self._niveles(tr('Sin zoom'), tr('Todos los tramos igual.'), tr('Un acercamiento discreto.'), tr('Un acercamiento claro.'), tr('Un acercamiento grande.')), op.get('fx_zoom_saltos'), 'fx_zoom_saltos')
-        capa.addWidget(t5)
-        capa.addWidget(self._clasicos)
+        self._env_ritmo = self._envolver(self._cuerpo, t5)   # v5.93: «Ritmo» con su pestaña, a todo el ancho. Los clásicos no: lo que les
+        self._clasicos.setParent(self)                   # quedaba (Cierre, Sonido extra) ya estaba quitado de la página (v5.20) y su hueco salía
+        self._clasicos.hide()                            # vacío; siguen armados para que sus ajustes guardados se lean igual
+        try:
+            ico_r = ui.icono_linea('ph.scissors', '#B9C5D8')
+        except Exception:
+            ico_r = None
+        self._barra.agregar(PestanaSeccion('ritmo', tr('Ritmo: quitar pausas'), 'ritmo', icono_qt=ico_r))   # (su icono de Higgsfield; si falta, Phosphor)
+        for c in self._f_pausas.tarjetas:                # (tras la fila, que ya guardó: la barra dice cuántas pausas quita)
+            c.clic.connect(lambda _i: self._pintar_barra())
         yield
         # ---- iconos
         self._iconos = set(op.get('fx_iconos') or [])
@@ -533,12 +586,15 @@ class PaginaEfectos(QWidget):
         self._mas.tarjeta_sonido.setParent(self)          # v5.20: «Sonido extra» quitado de la página (el usuario lo pidió); sus ajustes guardados siguen valiendo
         self._mas.tarjeta_sonido.hide()
         yield
-        capa.addStretch(1)
         self._reloj = QTimer(self)
         self._reloj.setTimerType(Qt.TimerType.PreciseTimer)   # (v5.82: el normal de Windows redondea a 15,6 ms: 40 → 47 ms, los videos a ~21/s)
         self._reloj.setInterval(self.TIC_MS)
         self._reloj.timeout.connect(self._tic)            # v5.5.7: solo mientras la página se ve (showEvent / hideEvent); antes corría siempre
         self._aplicar_pro()
+        self._pintar_barra()
+        primera = next(iter(self._barra.filas), None)
+        if primera:
+            self._seleccionar(primera)
 
     def showEvent(self, e):
         super().showEvent(e)
@@ -550,6 +606,7 @@ class PaginaEfectos(QWidget):
         self._reloj.stop()
         for c in self._tarjetas:
             c.poner_visible(False)
+        self._vista.tic(False)
 
     def _aplicar_pro(self):
         """Con la Edición PRO activa (o «Visuales: no» en Inicio) los efectos clásicos no se aplican y no se enseñan; sin ella, se ven como siempre."""
@@ -559,15 +616,88 @@ class PaginaEfectos(QWidget):
         except Exception:
             pro = False
         pliega = pro or not F.activado()                        # F.activado(): el chip «Visuales» de Inicio
-        self._clasicos.setVisible(not pliega)
         for w in [self._f_saltos] + list(getattr(self._f_saltos, 'etiquetas', [])):     # el zoom alterno es un efecto visual: con la PRO (o «Visuales: no») no se aplica
             w.setVisible(not pliega)
 
+    # -- v5.93 «Escenario»: pestañas + tres columnas
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        izq, centro = getattr(self, '_izq', None), getattr(self, '_centro', None)
+        if izq is None or centro is None:
+            return
+        a = self.width()                                 # (la ventana puede ser estrecha: los lados ceden antes que las opciones)
+        ai, ac = (540, 470) if a >= 2000 else (460, 420) if a >= 1650 else (400, 360) if a >= 1350 else (330, 300)
+        if izq.width() != ai:
+            izq.setFixedWidth(ai)
+        if centro.width() != ac:
+            centro.setFixedWidth(ac)
+
+    def _envolver(self, pila, w, margenes=(0, 0, 0, 0)):
+        """Una columna con su barra de desplazamiento (solo si no cabe: la página entera ya no se desplaza)."""
+        env = ui.Desplazable(pila, margenes=margenes, espacio=0, estirar_final=False)
+        env.agregar(w, 1)
+        pila.addWidget(env)
+        return env
+
+    def _seleccionar(self, clave):
+        """Abre la sección `clave`: sus dos columnas y, en el escenario, su opción en uso (Ritmo, a todo el ancho, sin escenario)."""
+        self._actual = clave
+        self._barra.marcar(clave)
+        sec = self._estilos_pro.seccion(clave)
+        cols = self._paginas_sec.get(clave)
+        if sec is not None and cols is not None:
+            self._cuerpo.setCurrentWidget(self._pag_pro)
+            self._pila_info.setCurrentWidget(cols[0])
+            self._pila_opc.setCurrentWidget(cols[1])
+            cols[0].arriba()
+            cols[1].arriba()
+            sec._ver(sec.elegida())                      # → self._ver
+        else:
+            self._cuerpo.setCurrentWidget(self._env_ritmo)
+            self._env_ritmo.arriba()
+            self._vista.tic(False)
+
+    def _ver(self, clave, ident):
+        if clave != self._actual:
+            return
+        sec = self._estilos_pro.seccion(clave)
+        if sec is None:
+            return
+        nombre, mp4, jpg = sec.opcion(ident)
+        self._vista.poner(ident, nombre, mp4, jpg, en_uso=ident == sec.elegida(), detalle=sec.detalle(ident))
+
+    def _usar_vista(self, ident):
+        sec = self._estilos_pro.seccion(self._actual)
+        if sec is not None:
+            sec._elegir(ident)
+            self._vista.confirmar()                      # v5.93 (ronda 2): el aro y el check de confirmación sobre el ejemplo
+
+    def _otra_vez(self, ident):
+        self._vista.reiniciar()
+        sec = self._estilos_pro.seccion(self._actual)
+        if sec is not None and sec.clave == 'gancho':          # la intro, con su sonido (como al elegirla)
+            sec._oir_gancho(ident)
+
+    def _pintar_barra(self):
+        """Cada pestaña: su punto verde si GO la pone (y su estado: «Violeta · Riser 1», «Apagado» o, en Ritmo, cuántas pausas quita)."""
+        for sec in self._estilos_pro.secciones:
+            f = self._barra.filas.get(sec.clave)
+            if f is not None:
+                f.poner(estado=sec.estado_corto, on=bool(sec._var_on.get()))
+        f = self._barra.filas.get('ritmo')
+        if f is not None:
+            try:
+                p = self._f_pausas.valor()
+            except Exception:
+                p = 'no'
+            f.poner(estado={'suave': tr('Pocas pausas'), 'normal': tr('Normal'), 'fuerte': tr('Todas')}.get(p, tr('Apagado')),
+                    on=p in ('suave', 'normal', 'fuerte'))
+
     # -- construcción
     def _tarjeta(self, titulo, descripcion):
-        t = Tarjeta(espacio=12, margenes=(22, 18, 22, 18))
-        t.capa.addWidget(Etiqueta(titulo, 18, peso='medio', color='#FFFFFF'))
-        t.capa.addWidget(Etiqueta(descripcion, 13, color=TEXT_MUTED, envolver=True))
+        t = Tarjeta(espacio=12, margenes=(28, 24, 28, 22))     # (v5.93: la cabecera grande de la sección abierta, como las de la PRO)
+        t.capa.addWidget(Etiqueta(titulo, 26, peso='extra', color='#FFFFFF'))
+        t.capa.addWidget(Etiqueta(descripcion, 14, color=TEXT_MUTED, envolver=True))
         return t
 
     @staticmethod
@@ -641,6 +771,9 @@ class PaginaEfectos(QWidget):
             self._motions.refrescar()
             self._estilos_pro.refrescar()
             self._aplicar_pro()
+            self._pintar_barra()
+            if self._actual:
+                self._seleccionar(self._actual)
         except Exception:
             pass
 
@@ -752,3 +885,6 @@ class PaginaEfectos(QWidget):
             c.poner_visible(v)
             if v:
                 getattr(c, 'refrescar_vista', c.update)()          # (v5.82: solo la imagen y solo con un cuadro nuevo)
+        self._vista.tic(visible_pagina and self._cuerpo.currentWidget() is self._pag_pro)   # v5.93: el escenario (lo único que se mueve)
+        if visible_pagina:
+            self._barra.tic()                                       # (los iconos animados de la barra: la fila abierta y la de debajo del ratón)

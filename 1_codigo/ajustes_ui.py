@@ -596,6 +596,7 @@ NOTAS_VERSION = [
         'Sonido con «oído», en todos los estilos: cada efecto cae justo en su cuadro (al milisegundo, aunque Resolve coloque por cuadros) y su volumen sigue al de tu voz en cada video.',
         'La música respira: baja un momento antes de cada golpe fuerte y vuelve en el golpe, como en los anuncios profesionales. Y los sonidos de tu biblioteca se revisan antes de usarlos: fuera los saturados o casi mudos.',
         'Página Sonido: te dice si la mezcla está lista para publicar (volumen, pico y rango en palabras simples), te enseña cada sonido cuadro a cuadro frente a su animación y lo que conviene revisar se arregla con un toque.',
+        'Página Efectos nueva: cada efecto en su pestaña con iconos animados, el ejemplo en grande en el centro y todas sus opciones a la vista; pasa por encima de una para verla y elígela con «Usar».',
     ]),
     ('5.92', [
         'Mac: nuevo instalador. Doble clic en «Instalar CineCaptions» y en un minuto queda todo listo, sin contraseña: la app en Aplicaciones y en el Dock, los scripts de Resolve, las tipografías y las actualizaciones.',
