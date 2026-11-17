@@ -5,6 +5,8 @@ Reemplaza a la página del «AI Sound Director» (ya no se muestra).
 v5.67 (el usuario eligió la propuesta C, «Mezclador»): TRES columnas sin desplazar la página: izquierda (Sonido, estado, ESTILO en lista con
 radio, OPCIONES, BIBLIOTECA, Aplicar a Resolve / Rehacer), centro (MEZCLA: la línea de tiempo llena el alto, − / + / Ajustar, y el inspector
 debajo) y derecha (el móvil con el cuadro del momento y la MÚSICA). El aro de tipos y la tira de momentos siguen construidos y escondidos.
+v5.93 (el usuario eligió la C del «Oído»): el inspector es el Oído (sonido_oido.escuchar): «Para revisar» (tocar = arreglar), «Cuadro a
+cuadro» (CuadroACuadro) y el sello con tres medidores (SelloOido); rayas de estado bajo cada bloque de la mezcla.
 Antes (v5.43-v5.66), de arriba a abajo (todo dentro de un desplazable vertical):
 
     cabecera     logo, «Sonido», video · tema · cuántos sonidos, pastilla de estado, «Rehacer» y «Aplicar a Resolve»
@@ -316,6 +318,337 @@ class Onda(QWidget):
         p.end()
 
 
+# ====================================================================================== el «Oído» (v5.93, propuesta C elegida por el usuario)
+# El inspector se vuelve el Oído (sonido_oido.escuchar): a la izquierda lo de siempre + «Para revisar» (4 acciones, tocar = arreglar), en el
+# centro «Cuadro a cuadro» (la onda real del sonido sobre una regla de −4 a +12 cuadros, la zona de ±1 cuadro y la de 100 ms, cuándo empieza
+# la animación y cuándo suena) y a la derecha un sello con el veredicto y tres medidores (volumen, pico, rango) con frases simples.
+VERDE_OK, AMBAR, ROJO = '#24D18F', '#F5C451', '#FF5D73'
+COLOR_ESTADO = {'verde': VERDE_OK, 'ambar': AMBAR, 'rojo': ROJO}
+ETI = '#7E8CA6'
+
+
+def _con_alfa(c, a):
+    q = QColor(c)
+    q.setAlphaF(a)
+    return q
+
+
+def texto_accion(a):
+    """(corto, botón) de una acción del Oído, en palabras simples y traducibles."""
+    tipo = tr(NOMBRE_TIPO.get(a.get('tipo') or '', str(a.get('tipo') or tr('Sonido')).replace('_', ' ').capitalize()))
+    que = a.get('que')
+    if que in ('tarde', 'antes'):
+        return (tr('{t} {n} ms tarde', t=tipo, n=a.get('ms')) if que == 'tarde' else tr('{t} {n} ms antes', t=tipo, n=a.get('ms')),
+                tr('Adelantar') if que == 'tarde' else tr('Atrasar'))
+    if que == 'pisa':
+        return tr('{t} tapa la voz', t=tipo), tr('Bajar {n} dB', n=f"{abs(float(a.get('db') or 0)):g}")
+    if que == 'tapado':
+        return tr('{t} tapado por la música', t=tipo), tr('Subir {n} dB', n=f"{abs(float(a.get('db') or 0)):g}")
+    if que == 'juntos':
+        return tr('Dos sonidos a {n} ms', n=a.get('ms')), tr('Quitar')
+    if que == 'pico_video':
+        return tr('El video ya satura ({n} dB)', n=f"{float(a.get('db') or 0):+.1f}".replace('-', '−')), tr('Al exportar')
+    if que == 'pico':
+        return tr('Pico alto ({n} dB)', n=f"{float(a.get('db') or 0):+.1f}".replace('-', '−')), tr('Al exportar')
+    if que == 'volumen':
+        return tr('Volumen {n} LUFS', n=f"{float(a.get('db') or 0):.0f}".replace('-', '−')), tr('Al exportar')
+    return str(a.get('texto') or ''), ''
+
+
+class ChipAccion(QWidget):
+    """Una acción de «Para revisar»: punto de color, tiempo, qué pasa y, en verde, el arreglo. Tocar = arreglar (si tiene arreglo)."""
+    clic = Signal(object)
+
+    def __init__(self, padre=None):
+        super().__init__(padre)
+        self.a, self._encima = None, False
+        self.setFixedHeight(26)
+        self.setMinimumWidth(160)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setMouseTracking(True)
+
+    def poner(self, a):
+        self.a = a
+        self.setCursor(Qt.CursorShape.PointingHandCursor if a and a.get('arreglo') else Qt.CursorShape.ArrowCursor)
+        self.setVisible(a is not None)
+        self.update()
+
+    def enterEvent(self, _e):
+        self._encima = True
+        self.update()
+
+    def leaveEvent(self, _e):
+        self._encima = False
+        self.update()
+
+    def mousePressEvent(self, _e):
+        if self.a and self.a.get('arreglo'):
+            self.clic.emit(self.a)
+
+    def paintEvent(self, _e):
+        if not self.a:
+            return
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        r = QRectF(self.rect()).adjusted(.5, .5, -.5, -.5)
+        arreglable = bool(self.a.get('arreglo'))
+        p.setPen(QPen(QColor('#3A4A66') if self._encima and arreglable else QColor('#222B3B'), 1))
+        p.setBrush(QColor('#1A2335') if self._encima and arreglable else QColor('#151C29'))
+        p.drawRoundedRect(r, 8, 8)
+        x = 10.0
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QColor(COLOR_ESTADO.get(self.a.get('estado'), AMBAR)))
+        p.drawEllipse(QPointF(x + 4, r.center().y()), 4, 4)
+        x += 14
+        corto, boton = texto_accion(self.a)
+        if self.a.get('tiempo'):
+            p.setFont(ui.fuente(12, peso='negrita'))
+            p.setPen(QColor('#FFFFFF'))
+            t = str(self.a['tiempo'])
+            p.drawText(QRectF(x, 0, 60, self.height()), Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, t)
+            x += p.fontMetrics().horizontalAdvance(t) + 8
+        p.setFont(ui.fuente(12, peso='negrita'))
+        ancho_b = p.fontMetrics().horizontalAdvance(boton) if boton else 0
+        p.setPen(QColor(VERDE_OK if arreglable else MUT))
+        p.drawText(QRectF(r.right() - 10 - ancho_b, 0, ancho_b, self.height()), Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight, boton)
+        p.setFont(ui.fuente(12))
+        p.setPen(QColor('#E8F1FF'))
+        hueco = max(0, int(r.right() - 18 - ancho_b - x))
+        p.drawText(QRectF(x, 0, hueco, self.height()), Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+                   p.fontMetrics().elidedText(corto, Qt.TextElideMode.ElideRight, hueco))
+        p.end()
+
+
+def _pastilla(p, r, col, fuerte, suave):
+    """Una píldora con punto, texto fuerte (de color) y texto suave, alineada a la derecha de r.right()."""
+    p.setFont(ui.fuente(12, peso='negrita'))
+    a1 = p.fontMetrics().horizontalAdvance(fuerte)
+    p.setFont(ui.fuente(12))
+    a2 = p.fontMetrics().horizontalAdvance(suave) if suave else 0
+    ancho = 10 + 8 + 6 + a1 + (6 + a2 if suave else 0) + 10
+    caja = QRectF(r.right() - ancho, r.top(), ancho, r.height())
+    p.setPen(QPen(_con_alfa(col, .4), 1))
+    p.setBrush(_con_alfa(col, .12))
+    p.drawRoundedRect(caja, caja.height() / 2, caja.height() / 2)
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor(col))
+    p.drawEllipse(QPointF(caja.left() + 14, caja.center().y()), 4, 4)
+    p.setFont(ui.fuente(12, peso='negrita'))
+    p.setPen(QColor(col))
+    p.drawText(QRectF(caja.left() + 24, caja.top(), a1, caja.height()), Qt.AlignmentFlag.AlignVCenter, fuerte)
+    if suave:
+        p.setFont(ui.fuente(12))
+        p.setPen(QColor(MUT))
+        p.drawText(QRectF(caja.left() + 30 + a1, caja.top(), a2, caja.height()), Qt.AlignmentFlag.AlignVCenter, suave)
+
+
+class CuadroACuadro(QWidget):
+    """«Cuadro a cuadro»: la onda real del sonido elegido colocado como en Resolve, sobre una regla de cuadros (−4 a +12) desde el 1.er cuadro
+    de su animación; zona verde = ±1 cuadro de donde debe sonar, ámbar = hasta 100 ms; línea blanca = empieza la animación; discontinua =
+    suena. Los datos los da sonido_oido.escuchar (s['onda'], 'suena_ms', 'esperado_ms', 'estado')."""
+    F0, F1 = -4, 12
+
+    def __init__(self, padre=None):
+        super().__init__(padre)
+        self.s, self.fps, self.col, self.aviso = None, 30.0, QColor('#B07CFF'), ''
+        self.setMinimumWidth(260)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
+    def poner(self, s, fps=None, col=None, aviso=''):
+        self.s, self.fps, self.aviso = s, float(fps or 30.0), aviso
+        if col is not None:
+            self.col = col
+        self.update()
+
+    def paintEvent(self, _e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        w, h = float(self.width()), float(self.height())
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QColor('#0B1424'))
+        p.drawRoundedRect(QRectF(0, 0, w, h), 10, 10)
+        p.setFont(ui.fuente(11, peso='negrita'))
+        p.setPen(QColor(ETI))
+        titulo = tr('Cuadro a cuadro').upper()
+        p.drawText(QRectF(14, 6, w, 20), Qt.AlignmentFlag.AlignVCenter, titulo)
+        x = 14 + p.fontMetrics().horizontalAdvance(titulo) + 14
+        p.setFont(ui.fuente(10))
+        for col, a, txt in ((VERDE_OK, .45, tr('±1 cuadro')), (AMBAR, .3, tr('hasta 100 ms'))):
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(_con_alfa(col, a))
+            p.drawRoundedRect(QRectF(x, 12, 10, 8), 2, 2)
+            p.setPen(QColor(MUT))
+            p.drawText(QRectF(x + 14, 6, 120, 20), Qt.AlignmentFlag.AlignVCenter, txt)
+            x += 14 + p.fontMetrics().horizontalAdvance(txt) + 12
+        s = self.s
+        if not s:
+            p.setFont(ui.fuente(12))
+            p.setPen(QColor(MUT))
+            p.drawText(QRectF(0, 30, w, h - 30), Qt.AlignmentFlag.AlignCenter, self.aviso or tr('Elige un sonido'))
+            p.end()
+            return
+        estado = s.get('estado') or 'verde'
+        suena = s.get('suena_ms')
+        col_e = COLOR_ESTADO.get(estado, VERDE_OK)
+        fuerte = {'verde': tr('Al cuadro'), 'ambar': tr('Casi'), 'rojo': tr('Fuera de cuadro')}.get(estado, '')
+        if suena is None:
+            fuerte, col_e = tr('Sin sonido'), ROJO
+        _pastilla(p, QRectF(0, 6, w - 14, 22), col_e, fuerte, '' if suena is None else f'{float(suena):+.0f} ms')
+        gx0, gx1, gy0, gy1 = 16.0, w - 16.0, 52.0, h - 26.0      # (las etiquetas de las marcas van en su propia fila, encima)
+        if gx1 - gx0 < 40 or gy1 - gy0 < 20:
+            p.end()
+            return
+
+        def fx(fr):
+            return gx0 + (fr - self.F0) / (self.F1 - self.F0) * (gx1 - gx0)
+        esp = float(s.get('esperado_ms') or 0) / 1000.0 * self.fps     # dónde debe sonar, en cuadros
+        a100 = 0.1 * self.fps
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(_con_alfa(AMBAR, .07))
+        p.drawRect(QRectF(fx(max(self.F0, esp - a100)), gy0, fx(min(self.F1, esp + a100)) - fx(max(self.F0, esp - a100)), gy1 - gy0))
+        p.setBrush(_con_alfa(VERDE_OK, .13))
+        p.drawRect(QRectF(fx(esp - 1), gy0, fx(esp + 1) - fx(esp - 1), gy1 - gy0))
+        p.setFont(ui.fuente(10))
+        for fr in range(self.F0, self.F1 + 1):
+            xx = fx(fr)
+            p.setPen(QPen(QColor(255, 255, 255, 10), 1))
+            p.drawLine(QPointF(xx, gy0), QPointF(xx, gy1))
+            p.setPen(QPen(QColor('#4D5C77'), 1))
+            p.drawLine(QPointF(xx, gy1), QPointF(xx, gy1 + (6 if fr % 5 else 9)))
+            if fr % 2 == 0:
+                p.setPen(QColor(MUT))
+                p.drawText(QRectF(xx - 14, gy1 + 9, 28, 14), Qt.AlignmentFlag.AlignCenter, f"{'+' if fr > 0 else ''}{fr}")
+        onda = s.get('onda') or []
+        if onda:
+            mid, amp = (gy0 + gy1) / 2, (gy1 - gy0) / 2 - 4
+            paso = (self.F1 - self.F0) / len(onda)
+            ancho = max(1.2, (fx(self.F0 + paso) - fx(self.F0)) * 0.7)
+            barra = QColor(self.col)
+            barra.setAlphaF(.9)
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(barra)
+            for k, v in enumerate(onda):
+                if v > 0.005:
+                    alto = max(1.0, 2 * float(v) * amp)
+                    p.drawRoundedRect(QRectF(fx(self.F0 + k * paso), mid - alto / 2, ancho, alto), 1, 1)
+        xa = fx(0)
+        fila = QRectF(gx0, gy0 - 20, gx1 - gx0, 16)
+        p.setPen(QPen(QColor('#FFFFFF'), 2))
+        p.drawLine(QPointF(xa, fila.top() + 2), QPointF(xa, gy1))
+        p.setFont(ui.fuente(11, peso='negrita'))
+        p.drawText(QRectF(gx0, fila.top(), xa - 6 - gx0, fila.height()), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+                   tr('empieza la animación'))
+        if suena is not None:
+            xs = fx(max(self.F0, min(self.F1, float(suena) / 1000.0 * self.fps)))
+            p.setPen(QPen(QColor('#0B1424'), 5))                  # contorno oscuro: se lee aunque caiga sobre la onda
+            p.drawLine(QPointF(xs, gy0), QPointF(xs, gy1))
+            pen = QPen(QColor(col_e), 2, Qt.PenStyle.CustomDashLine)
+            pen.setDashPattern([2, 1.5])
+            p.setPen(pen)
+            p.drawLine(QPointF(xs, fila.center().y()), QPointF(xs, gy1))
+            p.setPen(QColor(col_e))
+            p.drawText(QRectF(max(xs, xa) + 6, fila.top(), 120, fila.height()), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                       tr('suena'))
+        p.end()
+
+
+class SelloOido(QWidget):
+    """El veredicto como un sello (LISTO / CASI / REVISAR y cuántas cosas revisar) y tres medidores con su zona buena y una frase simple."""
+    # (nombre, clave en 'mezcla', escala min–max, zona buena, formato)
+    MEDIDORES = (('Volumen', 'lufs', (-30.0, -6.0), (-16.0, -12.0), '{:.1f}'), ('Pico', 'tp_db', (-12.0, 3.0), (-12.0, -1.0), '{:.1f} dB'),
+                 ('Rango', 'lra', (0.0, 15.0), (2.0, 10.0), '{:.1f} LU'))
+
+    def __init__(self, padre=None):
+        super().__init__(padre)
+        self.d, self.cargando = None, False
+        self.setFixedWidth(288)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
+
+    def poner(self, d, cargando=False):
+        self.d, self.cargando = d, cargando
+        self.update()
+
+    @staticmethod
+    def nota(clave, v):
+        if clave == 'lufs':
+            return tr('bien para redes') if -16 <= v <= -12 else (tr('bajo para redes') if v < -16 else tr('alto para redes'))
+        if clave == 'tp_db':
+            return tr('sin saturar') if v <= -1 else tr('satura: limita al exportar')
+        return tr('cómodo en el móvil') if v <= 10 else tr('mucha diferencia fuerte / suave')
+
+    def paintEvent(self, _e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        w, h = float(self.width()), float(self.height())
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QColor('#0B1424'))
+        p.drawRoundedRect(QRectF(0, 0, w, h), 10, 10)
+        d = self.d or {}
+        nivel = d.get('nivel')
+        col = {0: VERDE_OK, 1: AMBAR, 2: ROJO}.get(nivel, '#5A6B87')
+        palabra = {0: tr('Listo'), 1: tr('Casi'), 2: tr('Revisar')}.get(nivel, '…').upper()
+        n = len([a for a in d.get('acciones') or []])
+        abajo = (tr('Escuchando…') if self.cargando else tr('Sin datos')) if nivel is None else \
+            (tr('{n} por revisar', n=n) if n else tr('todo en orden'))
+        r = max(30.0, min(56.0, h / 2 - 12))
+        cx, cy = 14 + r, h / 2
+        p.setPen(QPen(QColor(col), 2.5))
+        p.setBrush(_con_alfa(col, .07))
+        p.drawEllipse(QPointF(cx, cy), r, r)
+        pen = QPen(_con_alfa(col, .5), 1, Qt.PenStyle.CustomDashLine)
+        pen.setDashPattern([2, 4])
+        p.setPen(pen)
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.drawEllipse(QPointF(cx, cy), r - 7, r - 7)
+        p.save()
+        p.translate(cx, cy)
+        p.rotate(-8)
+        f = ui.fuente(24, peso='extra')
+        p.setFont(f)
+        while p.fontMetrics().horizontalAdvance(palabra) > 2 * r - 20 and f.pixelSize() > 12:
+            f.setPixelSize(f.pixelSize() - 1)
+            p.setFont(f)
+        p.setPen(QColor(col))
+        p.drawText(QRectF(-r, -r * .55, 2 * r, r * .7), Qt.AlignmentFlag.AlignCenter, palabra)
+        p.setFont(ui.fuente(11))
+        p.setPen(QColor('#E8F1FF'))
+        p.drawText(QRectF(-r + 6, r * .12, 2 * r - 12, 18), Qt.AlignmentFlag.AlignCenter, abajo)
+        p.restore()
+        mx = cx + r + 16
+        ancho = w - mx - 16
+        mezcla = d.get('mezcla') or {}
+        alto_m = max(44.0, (h - 24) / 3)
+        for k, (nombre, clave, (lo, hi), (z0, z1), fmt) in enumerate(self.MEDIDORES):
+            y = 14 + k * alto_m
+            v = mezcla.get(clave)
+            p.setFont(ui.fuente(10, peso='negrita'))
+            p.setPen(QColor(ETI))
+            p.drawText(QRectF(mx, y, ancho, 16), Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, tr(nombre).upper())
+            p.setFont(ui.fuente(12, peso='negrita'))
+            p.setPen(QColor('#E8F1FF'))
+            p.drawText(QRectF(mx, y, ancho, 16), Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight,
+                       '—' if v is None else fmt.format(float(v)).replace('-', '−').replace('.', ','))
+            barra = QRectF(mx, y + 21, ancho, 5)
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QColor('#1E2A42'))
+            p.drawRoundedRect(barra, 2.5, 2.5)
+            fz = lambda val: max(0.0, min(1.0, (val - lo) / (hi - lo)))   # noqa: E731
+            p.setBrush(_con_alfa(VERDE_OK, .22))
+            p.drawRoundedRect(QRectF(barra.left() + fz(z0) * ancho, barra.top(), (fz(z1) - fz(z0)) * ancho, 5), 2.5, 2.5)
+            if v is not None:
+                bien = z0 <= float(v) <= z1 or (clave == 'lra' and float(v) < z0)
+                c2 = VERDE_OK if bien else (ROJO if clave == 'tp_db' else AMBAR)
+                frac = fz(float(v))
+                p.setBrush(QColor(c2))
+                p.drawRoundedRect(QRectF(barra.left(), barra.top(), frac * ancho, 5), 2.5, 2.5)
+                p.setBrush(QColor('#FFFFFF'))
+                p.drawRoundedRect(QRectF(barra.left() + frac * ancho - 1.5, barra.top() - 3, 3, 11), 1.5, 1.5)
+                p.setFont(ui.fuente(10))
+                p.setPen(QColor(MUT))
+                p.drawText(QRectF(mx, y + 30, ancho, 14), Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, self.nota(clave, float(v)))
+        p.end()
+
+
 class LineaTiempo(QWidget):
     """Editor (A): tira de fotogramas, voz, CAPTIONS (cada bloque con su palabra clave y si suena), un carril por pista y la música;
     clic en un bloque o en un caption con sonido = seleccionado(índice en filas)."""
@@ -331,6 +664,7 @@ class LineaTiempo(QWidget):
         self._cajas_cap = []
         self.carriles = list(CARRILES)
         self._cajas = []
+        self.estados = {}                                   # v5.93 (Oído): {índice: 'verde'|'ambar'|'rojo'} → raya de color bajo cada bloque
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
     def poner(self, filas, vis, duracion, musica=None, captions=None):
@@ -350,7 +684,7 @@ class LineaTiempo(QWidget):
         fijo = self.TIRA + (self.CAP if self.captions else 0) + self.REGLA + 30
         libre = max(0.0, float(alto) - fijo)
         n = max(1, self.n_carriles())
-        self.VOZ = int(max(38, min(170, libre * 0.34)))
+        self.VOZ = int(max(38, min(104, libre * 0.34)))     # v5.93 (Oído, C): la voz hasta 104 (antes 170): el inspector crece
         self.ALTO = int(max(34, min(112, (libre - self.VOZ) / n)))
         self._medir()
 
@@ -504,6 +838,18 @@ class LineaTiempo(QWidget):
             if caja.width() > 30:
                 pintar_onda(p, QRectF(caja.left() + caja.height(), caja.top() + 5, caja.width() - caja.height() - 4, caja.height() - 10),
                             ondas.get(f.get('wav')) or [], QColor(11, 18, 32, 140))
+            est = self.estados.get(i)
+            if est:                                         # v5.93 (Oído): raya de su estado; ámbar / rojo además con borde que brilla
+                ce = QColor(COLOR_ESTADO.get(est, VERDE_OK))
+                if est != 'verde':
+                    p.setBrush(Qt.BrushStyle.NoBrush)
+                    p.setPen(QPen(_con_alfa(ce, .28), 6))
+                    p.drawRoundedRect(caja.adjusted(-3, -3, 3, 3), 9, 9)
+                    p.setPen(QPen(ce, 2))
+                    p.drawRoundedRect(caja.adjusted(-3, -3, 3, 3), 9, 9)
+                p.setPen(Qt.PenStyle.NoPen)
+                p.setBrush(ce if est != 'verde' else _con_alfa(ce, .75))
+                p.drawRoundedRect(QRectF(caja.left() + 2, caja.bottom() + 3, max(6.0, caja.width() - 4), 3), 1.5, 1.5)
         # regla y cabezal
         p.setPen(QColor(MUT))
         p.setFont(ui.fuente(11))
@@ -757,8 +1103,20 @@ class PaginaSonido(QWidget):
         ins = QWidget(cen)                                  # el inspector, debajo de la mezcla
         ins.setObjectName('inspSonido')
         ins.setStyleSheet(ui.traducir_hoja('#inspSonido{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px}'))
-        cins = QVBoxLayout(ins)
-        cins.setContentsMargins(16, 12, 16, 12)
+        # v5.93 (el usuario eligió la C del «Oído»): el inspector crece (218) y es el Oído: izquierda lo de siempre + «Para revisar»,
+        # centro «Cuadro a cuadro», derecha el sello y los medidores. En un recuadro estrecho se esconden primero el cuadro y luego el sello.
+        ins.setFixedHeight(218)
+        ins.installEventFilter(self)
+        self._ins = ins
+        cins_h = QHBoxLayout(ins)
+        cins_h.setContentsMargins(14, 12, 14, 12)
+        cins_h.setSpacing(14)
+        izq_i = QWidget(ins)
+        izq_i.setObjectName('insIzq')
+        izq_i.setStyleSheet('#insIzq{background:transparent}')    # (sin selector se heredaba y los botones perdían su color)
+        izq_i.setMinimumWidth(540)
+        cins = QVBoxLayout(izq_i)
+        cins.setContentsMargins(2, 2, 0, 0)
         cins.setSpacing(8)
         top, ct = caja_h(espacio=14)
         self._ico = IconoGrande()
@@ -769,13 +1127,12 @@ class PaginaSonido(QWidget):
         tt.addWidget(self._lbl_sel)
         self._lbl_archivo = Etiqueta('', 12, color=MUT)
         tt.addWidget(self._lbl_archivo)
-        self._lbl_porque = Etiqueta(tr('Toca un sonido de la mezcla para ver por qué suena ahí.'), 13, color='#E8F1FF', envolver=True)
+        self._lbl_porque = Etiqueta(tr('Toca un sonido de la mezcla para ver por qué suena ahí.'), 13, color='#E8F1FF')   # (v5.93: una línea)
+        self._lbl_porque.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         tt.addWidget(self._lbl_porque)
         ct.addLayout(tt, 1)
-        self._onda = Onda(58)
-        self._onda.setMinimumWidth(120)
-        self._onda.setMaximumWidth(300)
-        ct.addWidget(self._onda, 1)
+        self._onda = Onda(58, ins)                          # (v5.93: la onda va en «Cuadro a cuadro»; esta queda construida y escondida)
+        self._onda.hide()
         cins.addWidget(top)
         bot, cb = caja_h(espacio=8)
         self._b_oir = Boton(tr('▶ Escuchar'), self._oir, tipo='primario', alto=36, tam=13)
@@ -787,8 +1144,30 @@ class PaginaSonido(QWidget):
             cb.addWidget(b)
         cb.addStretch(1)
         cins.addWidget(bot)
+        self._lbl_para = Etiqueta(tr('Para revisar').upper(), 11, peso='negrita', color=ETI)
+        cins.addWidget(self._lbl_para)
+        from PySide6.QtWidgets import QGridLayout
+        rejilla = QGridLayout()
+        rejilla.setContentsMargins(0, 0, 0, 0)
+        rejilla.setHorizontalSpacing(8)
+        rejilla.setVerticalSpacing(6)
+        self._chips = []
+        for k in range(4):
+            chip = ChipAccion(izq_i)
+            chip.clic.connect(self._arreglar_accion)
+            chip.hide()
+            rejilla.addWidget(chip, k // 2, k % 2)
+            self._chips.append(chip)
+        cins.addLayout(rejilla)
         self._lbl_revision = Etiqueta('', 12, color=MUT, envolver=True)
         cins.addWidget(self._lbl_revision)
+        cins.addStretch(1)
+        cins_h.addWidget(izq_i, 5)
+        self._cuadro_oido = CuadroACuadro(ins)
+        cins_h.addWidget(self._cuadro_oido, 4)
+        self._sello = SelloOido(ins)
+        cins_h.addWidget(self._sello)
+        self._oido, self._oido_n = None, 0
         cen.capa.addWidget(ins)
         externa.addWidget(cen, 1)
         yield
@@ -840,9 +1219,25 @@ class PaginaSonido(QWidget):
         try:
             if ev.type() == QEvent.Type.Resize and obj is self._scroll.viewport() and ev.size().height() != ev.oldSize().height():
                 self._ajustar_linea()
+            elif ev.type() == QEvent.Type.Resize and obj is getattr(self, '_ins', None):
+                self._ajustar_ins(ev.size().width())
         except (AttributeError, RuntimeError):
             pass
         return super().eventFilter(obj, ev)
+
+    def _ajustar_ins(self, ancho):
+        """v5.93: en un recuadro estrecho se esconde primero «Cuadro a cuadro» y después el sello (lo de la izquierda siempre cabe)."""
+        self._sello.setVisible(ancho >= 540 + 288 + 14 + 30)
+        self._cuadro_oido.setVisible(ancho >= 540 + 288 + 260 + 28 + 30)
+        self._rotulo_para()
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(0, self._elidir_porque)            # (cuando la etiqueta ya tomó su nuevo ancho)
+
+    def _elidir_porque(self):
+        texto = getattr(self, '_porque', None)
+        if texto:
+            ancho = max(80, self._lbl_porque.width())
+            self._lbl_porque.setText(self._lbl_porque.fontMetrics().elidedText(texto, Qt.TextElideMode.ElideRight, ancho))
 
     def _ajustar_zoom(self):
         self._linea.ajustar_ancho(self._scroll.viewport().width())
@@ -932,8 +1327,10 @@ class PaginaSonido(QWidget):
             self._ya_ajustado = True
             self._ajustar_zoom()
         self._llenar_momentos(filas)
-        avisos = S.revisar(filas) if filas else []
-        self._lbl_revision.setText(tr('Revisión: todo en orden.') if filas and not avisos else ('Revisión: ' + ' · '.join(avisos[:3]) if avisos else ''))
+        self._avisos = S.revisar(filas) if filas else []
+        self._oido = None                                    # v5.93: el Oído de ESTE diseño llega de un hilo (en caché si no cambió)
+        self._pintar_oido()
+        self._escuchar()
         if not filas:
             self._estado(tr('Haz GO con este video: el sonido sale de tu biblioteca y aquí ves cada decisión.'))
         elif self._res.get('pendiente'):
@@ -941,6 +1338,91 @@ class PaginaSonido(QWidget):
         else:
             self._estado(tr('Al día en Resolve ({f}).', f=self._res.get('en_resolve') or self._res.get('fecha') or ''))
         self._elegir(self._sel if 0 <= self._sel < len(filas) else (0 if filas else -1))
+
+    # ------------------------------------------------------------------ el Oído (v5.93)
+    def _escuchar(self):
+        """sonido_oido.escuchar en un hilo; si mientras tanto cambió el diseño, la respuesta vieja se descarta."""
+        v, filas = self.video(), self._res.get('filas') or []
+        self._oido_n += 1
+        if not v or not filas:
+            return
+        n = self._oido_n
+
+        def trabajo():
+            import sonido_oido as O
+            return O.escuchar(v)
+
+        def fin(r, err=None):
+            if n != self._oido_n:
+                return
+            self._oido = r if err is None else None
+            self._pintar_oido(fallo=err is not None)
+        ui.correr_en_hilo(self, trabajo, fin)
+
+    def _pintar_oido(self, fallo=False):
+        d = self._oido
+        filas = self._res.get('filas') or []
+        self._linea.estados = {int(s['i']): s.get('estado') for s in (d or {}).get('sonidos') or [] if s.get('i') is not None}
+        self._linea.update()
+        acc = (d or {}).get('acciones') or []
+        for k, chip in enumerate(self._chips):
+            chip.poner(acc[k] if k < len(acc) else None)
+        if not filas:
+            texto = ''
+        elif fallo:
+            texto = tr('No pude escuchar la mezcla (detalle en el Registro).')
+        elif d is None:
+            texto = tr('Escuchando la mezcla…')
+        elif not acc:
+            texto = tr('Todo en orden: cada sonido en su cuadro y se oye bien.') + (
+                '  ·  ' + ' · '.join(getattr(self, '_avisos', [])[:2]) if getattr(self, '_avisos', None) else '')
+        else:
+            texto = ''
+        self._lbl_revision.setText(texto)
+        self._lbl_revision.setVisible(bool(texto))
+        self._sello.poner(d, cargando=d is None and bool(filas) and not fallo)
+        self._rotulo_para()
+        self._pintar_cuadro()
+
+    def _rotulo_para(self):
+        """Sin sitio para el sello (ventana estrecha), el veredicto va junto a «Para revisar»."""
+        nivel = (self._oido or {}).get('nivel')
+        texto = tr('Para revisar').upper()
+        if nivel is not None and not self._sello.isVisible():
+            texto += '  ·  ' + {0: tr('Listo'), 1: tr('Casi'), 2: tr('Revisar')}.get(nivel, '').upper()
+        self._lbl_para.setText(texto)
+        self._lbl_para.poner_color({0: VERDE_OK, 1: AMBAR, 2: ROJO}.get(nivel, ETI) if not self._sello.isVisible() else ETI)
+
+    def _pintar_cuadro(self):
+        filas = self._res.get('filas') or []
+        d, i = self._oido, self._sel
+        s = next((x for x in (d or {}).get('sonidos') or [] if x.get('i') == i), None) if d else None
+        f = filas[i] if 0 <= i < len(filas) else None
+        aviso = tr('Escuchando la mezcla…') if d is None and filas else ''
+        self._cuadro_oido.poner(s, (d or {}).get('fps') or FPS, color_de(f) if f else None, aviso)
+
+    def _arreglar_accion(self, a):
+        """Tocar una acción de «Para revisar»: se aplica su arreglo (y los demás de ese sonido) en una sola horneada."""
+        import sonido_skill as S
+        i = (a or {}).get('i')
+        if i is None or not (a or {}).get('arreglo'):
+            return
+        v = self.video()
+        self._sel = int(i)
+
+        def trabajo():
+            import sonido_oido as O
+            ok, msg = O.arreglar(v, solo={int(i)})
+            res = S.resumen(v)
+            return ok, msg, res, S.visual(v, res['filas'])
+
+        def fin(r):
+            ok, msg, res, vis = r
+            if a['arreglo'].get('accion') == 'quitar':
+                self._sel = min(int(i), len(res.get('filas') or []) - 1)
+            self._pintar(res, vis)
+            self._estado(tr('Arreglado · pendiente de «Aplicar a Resolve».') if ok else str(msg))
+        self._trabajar(tr('Arreglando…'), trabajo, fin)
 
     def _musica_linea(self, m):
         """La música elegida para su carril: {'titulo', 'onda', 'dur'} (la onda se lee una vez y queda en memoria)."""
@@ -1042,6 +1524,8 @@ class PaginaSonido(QWidget):
         if not 0 <= i < len(filas):
             self._botones_sel(False)
             self._cuadro.poner(None, '', QColor('#4589FF'))
+            if hasattr(self, '_cuadro_oido'):
+                self._pintar_cuadro()
             return
         f = filas[i]
         col = color_de(f)
@@ -1051,7 +1535,13 @@ class PaginaSonido(QWidget):
         self._lbl_sel.setText(f"{tr(tipo)}  ·  {_mmss(f.get('segundo'))}")
         self._lbl_archivo.setText(f"{nombre}  ·  {next((n for p, n, _ in CARRILES if p == f.get('pista')), '')}")
         self._onda.poner(((self._vis or {}).get('ondas') or {}).get(f.get('wav')) or [], col)
-        self._lbl_porque.setText(tr('Por qué: {p}', p=(f.get('por_que') or '—').replace('caption ', '')))
+        import re
+        # (v5.93: «Tema 1: …» del diseño → «Estilo 1: …»: en la interfaz nunca «tema»; una sola línea con «…»)
+        porque = re.sub(r'\bTema (\d+)', lambda m: tr('Estilo {n}', n=m.group(1)), (f.get('por_que') or '—').replace('caption ', ''))
+        self._porque = tr('Por qué: {p}', p=porque)
+        self._elidir_porque()
+        if hasattr(self, '_cuadro_oido'):
+            self._pintar_cuadro()
         self._cuadro.poner(pixmap(miniatura(self._vis, f.get('segundo'))), f"{tr(tipo).upper()} · {nombre.upper().split()[0][:12]}", col)
         self._botones_sel(True)
         x = int(self._linea.x_de(f.get('segundo') or 0) - self._scroll.viewport().width() / 2)   # el editor se va a ese momento

@@ -49,7 +49,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.92 (sfx marcadores)"
+local VERSION = "5.93 (sfx marcadores)"
 
 -- La ENTREGA del Puente (v1.0.43): ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]

@@ -571,6 +571,7 @@ class Elector:
 
 
 def elegir(ev, estilo):
+    import sonido_oido as O
     cfg = dict(ESTILO[estilo], max10=max10(estilo))
     ev = [dict(e) for e in ev if cfg['chicos'] or e['tipo'] != 'texto_chico']
     # Tema 1: el héroe suena SIEMPRE con su pop al entrar; el acento (sube 0,34 s ANTES de la palabra) sonaba sobre las letras chicas que
@@ -589,6 +590,10 @@ def elegir(ev, estilo):
             p = out[-1]
             gap = cfg['gap_pop'] if e['pool'] in ('pop', 'acento') and p['pool'] in ('pop', 'acento') else 0.25
             if e['segundo'] - p['segundo'] < gap:
+                if O.en_rafaga(p, e, estilo):     # v5.93 (earshot): ráfaga de UI con su separación medida; el último es el acento
+                    p['rafaga'] = True
+                    out.append(e)
+                    continue
                 if _peso(e) > _peso(p):
                     out[-1] = e
                 continue
@@ -604,7 +609,7 @@ def elegir(ev, estilo):
                 out.remove(min(ventana, key=lambda x: (_peso(x), x['fuerza'])))
                 cambio = True
                 break
-    return out
+    return O.cerrar_rafagas(out, cfg['gap_pop'])
 
 
 RELLENO = ('corte', 'corte_fuerte', 'transicion', 'icono', 'foto', 'tarjeta', 'golpe_ref', 'aparicion')
@@ -618,18 +623,22 @@ def _peso(e):
 
 
 def asignar(out, cat, lib=None):
-    pools = pools_de(cat, lib)
+    import sonido_oido as O
+    # v5.93: fuera los archivos con fallos GRAVES de la auditoría (casi mudos, saturados, golpe doble) si su pool tiene otro
+    pools = O.filtrar_pools(pools_de(cat, lib), lib or biblioteca(), cat, 1 + VARIANTES_POR_ROL)
     el = Elector(pools, {r: i.get('familia') for r, i in cat.items() if isinstance(i, dict) and i.get('familia')})
     filas = []
     for e in out:
         archivo = el.elegir(e['pool'] if pools.get(e['pool']) else 'pop')
         if not archivo:
             continue
-        filas.append({'segundo': e['segundo'], 'archivo': archivo, 'tipo': e['tipo'], 'pool': e['pool'], 'por_que': e['detalle']})
+        # 'visual' = el cuadro de SU animación (no cambia al moverlo a mano: el Oído mide contra él)
+        filas.append({'segundo': e['segundo'], 'archivo': archivo, 'tipo': e['tipo'], 'pool': e['pool'], 'por_que': e['detalle'],
+                      'visual': e['segundo'], **({'rafaga': True} if e.get('rafaga') else {})})
         ts = round(e['segundo'] + 0.55, 3)
         if e['pool'] == 'impacto' and pools['shine'] and all(abs(x['segundo'] - ts) >= 0.25 for x in out):   # nunca dos SFX a < 0,25 s
             filas.append({'segundo': ts, 'archivo': el.elegir('shine'), 'tipo': 'barrido_luz', 'pool': 'shine',
-                          'por_que': 'brillo después del impacto (logo)'})
+                          'por_que': 'brillo después del impacto (logo)', 'visual': ts})
     return filas
 
 
@@ -713,8 +722,31 @@ def sin_silencio_inicial(x):
     return y, k / SR
 
 
-def hornear(filas, cat, lib, carpeta, con_voz=True):
-    """Cada SFX recortado, con fundido y su nivel dentro del archivo (Resolve ignora el volumen de clip por script)."""
+def fps_de(ctx):
+    """Los cuadros por segundo del timeline de GO (planes de Efectos / PRO) o, si no, los del video. None si no se saben."""
+    for k in ('plan_efectos', 'plan_pro'):
+        try:
+            v = float(((ctx or {}).get(k) or {}).get('fps') or 0)
+            if v > 0:
+                return v
+        except (TypeError, ValueError):
+            pass
+    try:
+        import av
+        with av.open(str((ctx or {}).get('video'))) as c:
+            if c.streams.video and c.streams.video[0].average_rate:
+                return float(c.streams.video[0].average_rate)
+    except Exception:
+        pass
+    return None
+
+
+def hornear(filas, cat, lib, carpeta, con_voz=True, fps=None, cama=None):
+    """Cada SFX recortado, con fundido y su nivel dentro del archivo (Resolve ignora el volumen de clip por script).
+    v5.93, el «Oído» (sonido_oido, medidas de earshot): cada tipo cae en su punto medido (OFFSET_MS) EXACTO a la muestra aunque Resolve coloque
+    por cuadros (`fps`: el clip empieza en un cuadro y el WAV lleva delante el resto, < 1 cuadro, en silencio); el nivel sigue a la voz medida
+    del video (`cama`, 0 dB en el video donde se afinaron); las ráfagas llevan notas de paso suaves y el acento al final; DC fuera."""
+    import sonido_oido as O
     carpeta = Path(carpeta)
     carpeta.mkdir(parents=True, exist_ok=True)
     eventos, previo, repeticion = [], None, 0
@@ -722,6 +754,7 @@ def hornear(filas, cat, lib, carpeta, con_voz=True):
         info = cat[f['archivo']]
         dur = recorte(info, f.get('duracion'))
         x = leer_audio(Path(lib) / f['archivo'])[:, :int(dur * SR)]
+        x = O.reparar(x, O.fallos_de(lib, f['archivo'], f.get('pool'), medir=False))
         # lo que cae en el cuadro del evento es el PUNTO DE SYNC del catálogo (ataque, pico o fin según el sonido: un riser termina en el
         # evento), igual que la skill; antes era siempre el pico (hasta 5 cuadros de error en un riser)
         sync = float(info.get('punto_sync', info['pico']) or 0.0)
@@ -730,12 +763,16 @@ def hornear(filas, cat, lib, carpeta, con_voz=True):
         # PRIMER sonido audible, no su pico (el usuario: «el video pasa y el sonido después… que empiece justo en la animación»). Los que
         # suben HACIA el momento (whoosh al corte, riser, acento, impacto) siguen con el punto de sync del catálogo.
         sync = max(0.0, sync - inicio) if f['pool'] in SYNC_CATALOGO and f['tipo'] not in ARRANCAN_CON_LA_ANIMACION else 0.0
-        antes = sync - float(f['segundo'])
+        objetivo = max(0.0, float(f['segundo']) + O.OFFSET_MS.get(f['pool'], 0) / 1000.0)   # donde cae su punto de sync (earshot)
+        antes = sync - objetivo
         if antes > 0:                                           # empezaría antes del 0: se recorta el comienzo, el sync sigue en su cuadro
             x = x[:, int(antes * SR):]
             sync -= antes
         if not x.shape[1]:
             x = np.zeros((2, int(0.05 * SR)), np.float32)       # nunca saltar: sfx_plan[i] va con filas[i]
+        if x.shape[1] > 48 and float(np.abs(x[:, 0]).max()) > 0.01 * float(np.abs(x).max() or 1):
+            n = min(48, x.shape[1])                             # empieza sonando en la 1.ª muestra: 1 ms de entrada (sin clic)
+            x[:, :n] *= np.linspace(0.0, 1.0, n, dtype=np.float32)
         variacion_db = 0.0
         repeticion = repeticion + 1 if f['archivo'] == previo else 0
         previo = f['archivo']
@@ -750,15 +787,25 @@ def hornear(filas, cat, lib, carpeta, con_voz=True):
             variacion_db = 0.7 if repeticion % 2 else -0.7
         fade = min(int((pulido or {}).get('fundido', 0.2) * SR), x.shape[1])
         x[:, -fade:] *= np.linspace(1.0, 0.0, fade, dtype=np.float32)
-        g = (info['nivel_db'] - info['max_db'] + (OFFSET_VOZ if con_voz else 0.0) + float(f.get('ganancia_db') or 0.0) + variacion_db)
+        voz = cama.ajuste(float(f['segundo'])) if cama is not None and con_voz else 0.0
+        g = (info['nivel_db'] - info['max_db'] + (OFFSET_VOZ if con_voz else 0.0) + float(f.get('ganancia_db') or 0.0) + variacion_db
+             + voz + O.ganancia_rafaga(filas, i))
         x *= 10 ** (g / 20)
         pk = float(np.abs(x).max() or 1)
         if pk > 0.89:
             x *= 0.89 / pk
+        ini = max(0.0, objetivo - sync)
+        if fps and ini > 0:                                     # Resolve coloca por cuadros (round(ini·fps)): el clip va al cuadro de
+            k = math.floor(ini * fps + 1e-6)                    # antes y el resto (< 1 cuadro) es silencio dentro del WAV → exacto
+            pad = int(round((ini - k / fps) * SR))
+            if pad > 0:
+                x = np.concatenate((np.zeros((x.shape[0], pad), np.float32), x), axis=1)
+                sync += pad / SR
+            ini = k / fps
         destino = carpeta / f"sfx_{i:03d}_{f['pool']}.wav"
         _escribir_wav(destino, x)
         tipo = POOL_A_TIPO.get(f['pool'], 'pop')
-        eventos.append({'tipo': 'sonido', 'pista': PISTA.get(tipo, 'AI SFX UI'), 'ini': round(max(0.0, f['segundo'] - sync), 3),
+        eventos.append({'tipo': 'sonido', 'pista': PISTA.get(tipo, 'AI SFX UI'), 'ini': round(ini, 6),
                         'dur': round(x.shape[1] / SR, 3), 'archivo': str(destino), 'asset': f"{f['tipo']} · {Path(f['archivo']).stem}"[:80],
                         'pico': round(sync, 3), 'ai': {'tipo': tipo, 'ancla': f['segundo'], 'origen': ORIGEN, 'fuente': f['archivo'],
                                                      'por_que': f['por_que']}})
@@ -794,7 +841,10 @@ def preparar(ctx, res=None, al_estado=None, prefs=None):
         t0 = time.time()
         estilo, filas, cat, lib = disenar(ctx, prefs)
         con_voz = bool(ctx.get('palabras'))
-        eventos = hornear(filas, cat, lib, E.carpeta_de(video) / 'sfx_biblioteca', con_voz)
+        import sonido_oido as O                                     # v5.93: el nivel sigue a la voz medida y cae exacto en su cuadro
+        fps = fps_de(ctx)
+        cama = O.Cama.de_video(video, ctx, E.carpeta_de(video)) if con_voz else None
+        eventos = hornear(filas, cat, lib, E.carpeta_de(video) / 'sfx_biblioteca', con_voz, fps=fps, cama=cama)
         res['sfx'] = {'eventos': eventos, 'puestos': [{'tipo': f['tipo'], 'segundo': f['segundo'], 'archivo': f['archivo'],
                                                        'por_que': f['por_que'], 'fuente': 'biblioteca'} for f in filas],
                       'segundos': round(time.time() - t0, 2)}
@@ -811,10 +861,12 @@ def preparar(ctx, res=None, al_estado=None, prefs=None):
                 'bloques': bloques_captions(ctx),
                 'duracion': max([float(p.get('end') or 0) for p in ctx.get('palabras') or []] + [f['segundo'] + 1 for f in filas] + [1.0])}
         estado['sonido_skill'] = {'version': VERSION, 'estilo': estilo, 'biblioteca': str(lib), 'filas': filas, 'con_voz': con_voz,
-                                  'guia': guia, 'fecha': time.strftime('%Y-%m-%d %H:%M:%S')}
+                                  'guia': guia, 'fecha': time.strftime('%Y-%m-%d %H:%M:%S'), 'fps': fps}
         E.guardar(video, estado)
         log(f'{len(eventos)} sonidos de la biblioteca · estilo {NOMBRE_ESTILO.get(estilo, estilo)} · '
-            + (f"música «{musica['candidatos'][0]['titulo']}»" if plan_musica else 'sin música') + f' · {round(time.time() - t0, 2)} s')
+            + (f"música «{musica['candidatos'][0]['titulo']}»" if plan_musica else 'sin música')
+            + (f' · voz {cama.voz:.1f} LUFS (SFX {cama.voz - O.VOZ_REF:+.1f} dB)' if cama is not None and cama.voz is not None else '')
+            + f' · {round(time.time() - t0, 2)} s')
     except Exception:
         try:
             import registro
@@ -964,13 +1016,41 @@ def editar(video, i, accion, valor=None):
         filas[i] = f
         filas.sort(key=lambda x: x['segundo'])
         texto = f"Movido a {f['segundo']:.2f} s"
+    elif accion == 'nivel':                                       # v5.93: MÁS / MENOS (y los arreglos del Oído)
+        f['ganancia_db'] = round(float(f.get('ganancia_db') or 0.0) + float(valor or 0), 1)
+        filas[i] = f
+        texto = f"Nivel {f['ganancia_db']:+.1f} dB"
     else:
         return False, 'Acción desconocida.'
-    eventos = hornear(filas, cat, lib, E.carpeta_de(video) / 'sfx_biblioteca', s.get('con_voz', True))
+    ok, _t = rehornear(video, filas, estado)
+    return ok, texto + ' · pendiente de «Aplicar a Resolve».'
+
+
+def rehornear(video, filas, estado=None):
+    """Hornea `filas` con lo guardado del último GO (biblioteca, voz, fps), rehace la música si cambian sus caídas y deja el diseño pendiente
+    de «Aplicar a Resolve». (ok, texto)."""
+    import director_sonido as D
+    import director_sonido_estado as E
+    import sonido_oido as O
+    estado = estado if estado is not None else E.cargar(video)
+    s = estado.get('sonido_skill') or {}
+    lib = Path(s.get('biblioteca') or biblioteca())
+    cat = catalogo(lib)
+    con_voz = s.get('con_voz', True)
+    ctx = D.cargar_contexto(video)
+    cama = O.Cama.de_video(video, ctx, E.carpeta_de(video)) if con_voz and ctx else None
+    eventos = hornear(filas, cat, lib, E.carpeta_de(video) / 'sfx_biblioteca', con_voz, fps=s.get('fps'), cama=cama)
     s['filas'], s['fecha'] = filas, time.strftime('%Y-%m-%d %H:%M:%S')
     estado['sonido_skill'], estado['sfx_plan'], estado['pendiente_resolve'] = s, eventos, True
+    try:
+        import sonido_musica as M
+        m = estado.get('sonido_musica') or {}
+        if m.get('candidatos') and M.rehacer_caidas(m, filas, lib, ctx):
+            estado['sonido_musica'], estado['music_plan'] = m, M.plan(m)
+    except Exception:
+        log('la música no se pudo rehacer con las nuevas caídas', 'aviso')
     E.guardar(video, estado)
-    return True, texto + ' · pendiente de «Aplicar a Resolve».'
+    return True, f'{len(eventos)} sonidos listos.'
 
 
 def revisar(filas, cat=None):

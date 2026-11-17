@@ -592,6 +592,11 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.93', [
+        'Sonido con «oído», en todos los estilos: cada efecto cae justo en su cuadro (al milisegundo, aunque Resolve coloque por cuadros) y su volumen sigue al de tu voz en cada video.',
+        'La música respira: baja un momento antes de cada golpe fuerte y vuelve en el golpe, como en los anuncios profesionales. Y los sonidos de tu biblioteca se revisan antes de usarlos: fuera los saturados o casi mudos.',
+        'Página Sonido: te dice si la mezcla está lista para publicar (volumen, pico y rango en palabras simples), te enseña cada sonido cuadro a cuadro frente a su animación y lo que conviene revisar se arregla con un toque.',
+    ]),
     ('5.92', [
         'Mac: nuevo instalador. Doble clic en «Instalar CineCaptions» y en un minuto queda todo listo, sin contraseña: la app en Aplicaciones y en el Dock, los scripts de Resolve, las tipografías y las actualizaciones.',
         'Su ventana enseña el porcentaje y cuánto falta; al terminar abre CineCaptions sola, y el motor de voz e IA se sigue bajando aparte para que el primer GO no lo espere.',

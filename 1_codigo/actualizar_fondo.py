@@ -760,8 +760,11 @@ def correr(info=None):
         if con_tarjeta and pedidos:
             tarjeta = tarjeta_mac('instalando', r, vieja)                  # «Actualizar ahora» o al cerrar el programa: que se vea, desde ya
         try:
-            if pedidos:
-                _sin_freno()                                                # (lo pidió el usuario: «Actualizar» o al cerrar el programa)
+            # v5.93 (el usuario: «en Mac descarga demasiado lento»): SIEMPRE sin freno antes de bajar, no solo con «Actualizar ahora». Al
+            # encontrarla sola, la tarjeta enseña «bajando» con su porcentaje mientras el servicio seguía como proceso de FONDO (plist de la
+            # 5.91 con ProcessType Background y el de root de las 5.87-5.90 con LowPriorityIO: red y disco al mínimo) → ~750 MB a paso de
+            # tortuga delante del usuario. Mirar cada hora sigue siendo una petición pequeña; bajar solo pasa cuando hay versión nueva.
+            _sin_freno()
             ruta = _dmg_del_pedido(pedidos, r['archivo']) if sys.platform == 'darwin' else None
             if ruta is None:
                 # v5.92: con alguien frente a la Mac, el aviso sale YA (mientras baja), no al terminar la descarga

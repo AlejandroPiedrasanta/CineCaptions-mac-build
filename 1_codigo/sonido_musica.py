@@ -221,8 +221,9 @@ def nivel_voz(ctx):
         return None
 
 
-def hornear(cand, lib, dur, palabras, voz_db, destino):
-    """El tramo [ini, ini+dur] con fundidos, ducking suave y su nivel dentro del WAV (Resolve ignora el volumen de clip por script)."""
+def hornear(cand, lib, dur, palabras, voz_db, destino, caidas=None):
+    """El tramo [ini, ini+dur] con fundidos, ducking suave y su nivel dentro del WAV (Resolve ignora el volumen de clip por script).
+    v5.93 (earshot, «stop-down»): antes de cada golpe fuerte de `caidas` la música baja 8 dB 0,4 s y vuelve EN el golpe (sonido_oido)."""
     import ducking
     import sfx_rules
     S = _sk()
@@ -243,6 +244,10 @@ def hornear(cand, lib, dur, palabras, voz_db, destino):
     rms, pico = sfx_rules.nivel_de_audio(seg.T, SR)
     g = min(objetivo - rms, -1.0 - pico)                          # el pico nunca pasa de −1 dBFS
     seg *= 10 ** (g / 20)
+    if caidas:                                                     # después del nivel: solo baja, el pico sigue ≤ −1 dBFS
+        import sonido_oido as O
+        seg *= O.curva_caidas(n, caidas)
+        como += f' · respira antes de {len(caidas)} golpe(s)'
     destino = Path(destino)
     destino.parent.mkdir(parents=True, exist_ok=True)
     S._escribir_wav(destino, seg)
@@ -254,14 +259,16 @@ def preparar(ctx, filas, lib, carpeta, prefs=None, n=3):
     if not activa(prefs):
         return {'candidatos': [], 'elegida': None, 'apagada': True}
     try:
+        import sonido_oido as O
         dur = duracion(ctx, filas)
         cands = candidatos(ctx, filas, lib, dur, n, prefs)
         voz = nivel_voz(ctx)
+        caidas = O.caidas_musica(filas)
         for i, c in enumerate(cands):
             h = hashlib.sha1(f"{c['pista']}|{c['ini']}|{dur}|{voz}".encode()).hexdigest()[:10]
             c['wav'] = str(Path(carpeta) / f'musica_{i}_{h}.wav')
-            c['nivel'] = hornear(c, lib, dur, ctx.get('palabras') or [], voz, c['wav'])
-        return {'candidatos': cands, 'elegida': 0 if cands else None, 'dur': dur}
+            c['nivel'] = hornear(c, lib, dur, ctx.get('palabras') or [], voz, c['wav'], caidas)
+        return {'candidatos': cands, 'elegida': 0 if cands else None, 'dur': dur, 'voz_db': voz, 'caidas': caidas}
     except Exception:
         try:
             import registro
@@ -269,6 +276,21 @@ def preparar(ctx, filas, lib, carpeta, prefs=None, n=3):
         except Exception:
             pass
         return {'candidatos': [], 'elegida': None}
+
+
+def rehacer_caidas(musica, filas, lib, ctx):
+    """La página cambió los sonidos: si cambian los golpes ante los que respira la música, se rehornean sus opciones (mismo tramo y nivel).
+    True si se rehizo algo. Diseños de antes de la v5.93 (sin 'voz_db') no se tocan."""
+    import sonido_oido as O
+    caidas = O.caidas_musica(filas)
+    if 'voz_db' not in musica or caidas == musica.get('caidas'):
+        return False
+    dur = float(musica.get('dur') or 0)
+    for c in musica.get('candidatos') or []:
+        if c.get('wav'):
+            c['nivel'] = hornear(c, lib, dur, (ctx or {}).get('palabras') or [], musica.get('voz_db'), c['wav'], caidas)
+    musica['caidas'] = caidas
+    return True
 
 
 def plan(musica):

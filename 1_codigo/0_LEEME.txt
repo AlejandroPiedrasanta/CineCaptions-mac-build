@@ -404,6 +404,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         escribe <archivo>.lua junto a cada .json (canal de lectura para Resolve Free 21.1).
     sonido_musica.py
         MÚSICA de la biblioteca del autor (5_SFX\02_MUSICA) para la página Sonido (v5.48). Mismo criterio que
+    sonido_oido.py
+        el «Oído» del sonido (v5.93): lo que earshot (github.com/Leonxlnx/earshot, MIT) midió en películas de lanzamiento
     sonido_skill.py
         SONIDO con la biblioteca del autor y las reglas de MAPA_SFX.md (reemplaza el diseño de SFX del «AI Sound Director»).
     sonido_skill_ui.py

@@ -283,6 +283,24 @@ def parte_go(R, salida, env, video, modo, estilos):
             R.anotar(None, 'go', f'{etiqueta} · Registro: {e}')
 
 
+def parte_oido(R, salida, env, video):
+    """v5.93 (el usuario: «verifica que en Mac ya lo traiga con todo lo nuevo»): el «Oído» del sonido en esta máquina: las medidas (sonoridad K,
+    auditoría, la música que respira), un diseño de verdad con la biblioteca que viaja en el programa (cada sonido exacto en su cuadro), la
+    mezcla escuchada (veredicto) y la página Sonido con el inspector nuevo, fotografiada en <salida>/oido_pagina.png."""
+    codigo, seg, txt = correr([sys.executable, str(Path(__file__)), '--oido', str(video), str(salida)], salida / 'oido.txt', env, 900)
+    res = [l for l in txt.splitlines() if l.startswith('RESULTADO_OIDO ')]
+    if not res:
+        R.anotar(False, 'oido', f'no terminó (código {codigo}) · mira oido.txt: ' + ' | '.join(txt.splitlines()[-5:])[:500])
+        return
+    d = json.loads(res[-1].split(' ', 1)[1])
+    for ok, texto in d['comprobaciones']:
+        R.anotar(ok, 'oido', texto)
+    R.anotar(not d['excepciones'], 'oido', f"{len(d['excepciones'])} excepciones · {seg:.0f} s" +
+             (' · ' + ' | '.join(d['excepciones'][:3]) if d['excepciones'] else ''))
+    for e in d['registro_errores'][:8]:
+        R.anotar(None, 'oido', 'Registro: ' + e)
+
+
 # ------------------------------------------------------------------------------------------------------------------ dentro de la app
 def _cargar_app(prefs_extra=None):
     import faulthandler
@@ -467,16 +485,104 @@ def dentro_go(modo, pack, video, salida):
     os._exit(0)
 
 
+def dentro_oido(video, salida):
+    M, app, excepciones = _cargar_app()
+    import numpy as np
+    import director_sonido_estado as E
+    import sonido_oido as O
+    import sonido_skill as S
+    comp = []
+
+    def ok(c, texto):
+        comp.append([bool(c), texto])
+    sr = O.SR
+    try:                                                      # 1) las medidas
+        t = np.arange(int(0.5 * sr)) / sr
+        tono = (np.sin(2 * np.pi * 900 * t) * np.exp(-t * 25)).astype(np.float32)
+        tono[:48] *= np.linspace(0, 1, 48)
+        x = np.vstack([tono, tono])
+        ok(O.auditar(x, 'pop') == [], 'auditoría: un pop limpio pasa')
+        ok('saturado' in O.auditar(np.clip(x * 4, -1, 1), 'pop') and 'silencio' in O.auditar(x * 1e-4, 'pop') and 'dc' in O.auditar(x + 0.05, 'pop'),
+           'auditoría: detecta saturado, casi mudo y DC')
+        s1k = (0.1 * np.sin(2 * np.pi * 1000 * np.arange(2 * sr) / sr)).astype(np.float32)
+        lu = O.lufs(np.vstack([s1k, s1k]))
+        ok(abs(lu + 20.0) < 0.6, f'sonoridad K: un 1 kHz a −20 dBFS en estéreo mide {lu:.2f} LUFS (debe dar −20,0)')
+        g = O.curva_caidas(10 * sr, [4.0])
+        caida = 20 * np.log10(float(g[int(3.8 * sr)]))
+        ok(abs(caida + O.CAIDA_DB) < 0.1 and float(g[int(4.2 * sr)]) == 1.0, f'la música baja {caida:.1f} dB antes del golpe y vuelve en él')
+    except Exception as e:
+        ok(False, f'medidas: {type(e).__name__}: {e}')
+    try:                                                      # 2) un diseño de verdad con la biblioteca que viaja en el programa
+        pal = [{'word': w, 'start': round(0.25 * i + 0.3, 2), 'end': round(0.25 * i + 0.5, 2)} for i, w in enumerate(PALABRAS[:28])]
+        ctx = {'video': str(video), 'palabras': pal, 'bloques': [], 'plan_efectos': {'fps': 30.0, 'eventos': []}, 'plan_pro': None,
+               'pack': 'VIRAL', 'cortes': [1.5, 3.0, 4.5, 6.0], 'idioma': 'es'}
+        S.preparar(ctx, {})
+        st = E.cargar(str(video))
+        s = st.get('sonido_skill') or {}
+        filas, ev = s.get('filas') or [], st.get('sfx_plan') or []
+        ok(len(filas) > 0 and len(filas) == len(ev), f"{len(filas)} sonidos diseñados con la biblioteca «{Path(s.get('biblioteca') or '').name}»"
+           f" ({', '.join(sorted({f['pool'] for f in filas}))})")
+        ok(float(s.get('fps') or 0) == 30.0, f"fps del timeline guardado: {s.get('fps')}")
+        errs = []
+        for f, e in zip(filas, ev):
+            ini = round(float(e['ini']) * 30) / 30                # donde lo pone Resolve (por cuadros)
+            if f['pool'] in S.SYNC_CATALOGO:
+                t_s = ini + float(e['pico'])
+            else:
+                y = S.leer_audio(e['archivo'])
+                m = np.abs(y).max(axis=0)
+                t_s = ini + float(np.argmax(m > m.max() * S.UMBRAL_INICIO)) / sr
+            errs.append(abs(t_s - (float(f['segundo']) + O.OFFSET_MS.get(f['pool'], 0) / 1000.0)) * 1000)
+        ok(bool(errs) and max(errs) <= 3.0, f"cada sonido en su cuadro: error máximo {max(errs or [0]):.1f} ms (tope 3 ms)")
+        mus = st.get('sonido_musica') or {}
+        if mus.get('candidatos'):
+            ok(isinstance(mus.get('caidas'), list), f"música «{mus['candidatos'][0].get('titulo')}» · respira antes de {len(mus.get('caidas') or [])} golpe(s)")
+        aud = O._aud().get('archivos') or {}
+        ok(len(aud) > 0, f"auditoría de la biblioteca: {len(aud)} archivos revisados, {sum(1 for v in aud.values() if v.get('fallos'))} con algún aviso")
+        d = O.escuchar(str(video))
+        ok(bool(d) and d.get('veredicto') in O.VEREDICTOS,
+           f"Oído: {(d or {}).get('veredicto')} · {(d or {}).get('cuenta')} · LUFS {((d or {}).get('mezcla') or {}).get('lufs')} · "
+           f"pico {((d or {}).get('mezcla') or {}).get('tp_db')} dBTP")
+        ok(bool(d) and all(x.get('onda') for x in d.get('sonidos') or []), 'cuadro a cuadro: cada sonido trae su onda')
+    except Exception:
+        ok(False, 'diseño: ' + traceback.format_exc()[-600:].replace('\n', ' ⏎ '))
+    try:                                                      # 3) la página Sonido con el inspector nuevo
+        import sonido_skill_ui as SU
+        pag = SU.PaginaSonido(None, video=lambda: str(video))
+        pag.resize(2293, 960)
+        pag.show()
+        _bombear(app, 1.0)
+        pag.refrescar()
+        t0 = time.time()
+        while time.time() - t0 < 90 and getattr(pag, '_oido', None) is None:
+            _bombear(app, 0.2)
+        pag._elegir(0)
+        _bombear(app, 1.5)
+        png = Path(salida) / 'oido_pagina.png'
+        pag.grab().save(str(png))
+        ok(pag._oido is not None and pag._sello.isVisible() and pag._cuadro_oido.isVisible(),
+           f"página Sonido: sello «{(pag._oido or {}).get('veredicto')}», cuadro a cuadro y «Para revisar» (foto: {png.name})")
+    except Exception:
+        ok(False, 'página: ' + traceback.format_exc()[-600:].replace('\n', ' ⏎ '))
+    print('RESULTADO_OIDO ' + json.dumps({'comprobaciones': comp, 'excepciones': excepciones, 'registro_errores': _errores_registro()},
+                                          ensure_ascii=False, default=str), flush=True)
+    os._exit(0)
+
+
 # ------------------------------------------------------------------------------------------------------------------ principal
 def main():
     if '--opciones' in sys.argv:
         return dentro_opciones(sys.argv[sys.argv.index('--opciones') + 1])
+    if '--oido' in sys.argv:
+        i = sys.argv.index('--oido')
+        return dentro_oido(*sys.argv[i + 1:i + 3])
     if '--go' in sys.argv:
         i = sys.argv.index('--go')
         return dentro_go(*sys.argv[i + 1:i + 5])
     salida = Path([a for a in sys.argv[1:] if not a.startswith('--')][0]).resolve()
     salida.mkdir(parents=True, exist_ok=True)
-    solo = sys.argv[sys.argv.index('--solo') + 1].split(',') if '--solo' in sys.argv else ['simular', 'humo', 'opciones', 'go', 'formatos', 'premiere']
+    solo = sys.argv[sys.argv.index('--solo') + 1].split(',') if '--solo' in sys.argv else ['simular', 'humo', 'opciones', 'oido', 'go', 'formatos',
+                                                                                          'premiere']
     global ESTILOS
     if '--estilos' in sys.argv:                                # (para probar rápido: --estilos Kinetic,Tema4)
         ESTILOS = tuple(sys.argv[sys.argv.index('--estilos') + 1].split(','))
@@ -492,6 +598,7 @@ def main():
         R.anotar(False, 'video', f'no pude hacer el video de prueba: {type(e).__name__}: {e}')
     partes = {'simular': lambda: parte_simular(R, salida, env), 'humo': lambda: parte_humo(R, salida, env),
               'opciones': lambda: parte_opciones(R, salida, env),
+              'oido': lambda: video and parte_oido(R, salida, env, salida / 'zz_oido.mp4' if shutil.copyfile(video, salida / 'zz_oido.mp4') else video),
               'go': lambda: video and parte_go(R, salida, env, video, 'mp4', ESTILOS),
               'formatos': lambda: parte_formatos(R, salida, env),
               'premiere': lambda: video and (parte_go(R, salida, env, video, 'premiere', ESTILOS) or
