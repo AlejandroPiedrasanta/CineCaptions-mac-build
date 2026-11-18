@@ -4805,6 +4805,8 @@
     "Premiere Pro detectado · abierto · pulsa GO": "Premiere Pro 감지됨 · 열림 · GO를 누르세요",
     "Premiere Pro abierto · reinícialo una vez": "Premiere Pro 열림 · 한 번 다시 시작하세요",
     "Premiere Pro abierto": "Premiere Pro 열림",
-    "Listo para GO": "GO 준비 완료"
+    "Listo para GO": "GO 준비 완료",
+    "Mac: después de actualizarse ya no pide la licencia otra vez. Si te pasó, cierra CineCaptions y vuelve a abrirlo: tu licencia sigue ahí.": "Mac: 업데이트 후 라이선스를 다시 묻지 않습니다. 이미 겪었다면 CineCaptions를 종료했다가 다시 여세요. 라이선스는 그대로 있습니다.",
+    "Premiere Pro: se ve en verde en cuanto se detecta, y mientras coloca tus subtítulos dice «colocando…».": "Premiere Pro: 감지되는 즉시 초록색으로 표시되고, 자막을 배치하는 동안 «배치 중…»이라고 표시합니다."
   }
 }

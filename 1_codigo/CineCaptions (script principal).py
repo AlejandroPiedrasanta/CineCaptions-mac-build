@@ -51,6 +51,13 @@ if __name__ == '__main__' and getattr(sys, 'frozen', False):
     # de multiprocessing al bajar el modelo) abría CineCaptions entero, invisible y con el candado: corre su código y sale aquí mismo
     import arranque_seguro
     arranque_seguro.atender_hijo()
+if sys.platform == 'darwin':
+    # v5.96 (Mac: «me piden la licencia otra vez» tras actualizar): antes de que NADA mire la casa del usuario (licencia, preferencias)
+    try:
+        import arranque_seguro
+        _CASA_CORREGIDA = arranque_seguro.casa_del_usuario()
+    except Exception:
+        _CASA_CORREGIDA = None
 os.environ['HF_HUB_DISABLE_SYMLINKS'] = '1'
 import datetime
 import math

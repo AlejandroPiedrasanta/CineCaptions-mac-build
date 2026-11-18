@@ -534,7 +534,11 @@ def _abrir_como_usuario():
     u = usuario_de_la_mac()
     if not u:
         return
-    subprocess.run(['/bin/launchctl', 'asuser', str(u[1]), '/usr/bin/sudo', '-u', u[0], '/usr/bin/open', '-n', APP_MAC], capture_output=True, timeout=60)
+    # v5.96 (captura de la dueña: «Permission denied: '/Library/Application Support/CineCaptions/actualizar/casa/DaVinciSubtitles/licencia'»):
+    # sin -H el sudo de macOS conserva el HOME del servicio (su carpeta «casa») y CineCaptions, ya como el usuario, buscaba ahí su licencia
+    # y sus preferencias. Con -H va la casa del usuario. (El programa además lo corrige al arrancar: arranque_seguro.casa_del_usuario.)
+    subprocess.run(['/bin/launchctl', 'asuser', str(u[1]), '/usr/bin/sudo', '-u', u[0], '-H', '/usr/bin/open', '-n', APP_MAC],
+                   capture_output=True, timeout=60)
 
 
 def _hay_quien_mire():

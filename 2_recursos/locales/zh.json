@@ -4805,6 +4805,8 @@
     "Premiere Pro detectado · abierto · pulsa GO": "已检测到 Premiere Pro · 已打开 · 按 GO",
     "Premiere Pro abierto · reinícialo una vez": "Premiere Pro 已打开 · 请重启一次",
     "Premiere Pro abierto": "Premiere Pro 已打开",
-    "Listo para GO": "可以按 GO 了"
+    "Listo para GO": "可以按 GO 了",
+    "Mac: después de actualizarse ya no pide la licencia otra vez. Si te pasó, cierra CineCaptions y vuelve a abrirlo: tu licencia sigue ahí.": "Mac：更新后不再重新要求输入许可证。如果你遇到过，请退出 CineCaptions 再重新打开：你的许可证还在。",
+    "Premiere Pro: se ve en verde en cuanto se detecta, y mientras coloca tus subtítulos dice «colocando…».": "Premiere Pro：一检测到就显示为绿色，放置字幕时显示“正在放置…”。"
   }
 }

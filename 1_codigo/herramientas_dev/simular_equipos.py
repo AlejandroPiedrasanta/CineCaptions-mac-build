@@ -4143,6 +4143,76 @@ def premiere_panel_se_pone_al_dia_al_abrir_cinecaptions():
             and e2['secuencia'] == 'Mi secuencia' and 'Mi secuencia' in linea[0] and linea[1] == 'ok', f'{antes} {al_dia} {marca} {e1} {e2} {linea}')
 
 
+@caso('Mac: estilos y motores')
+def mac_reabierto_por_el_servicio_usa_la_casa_del_usuario():
+    # v5.96 (la dueña: «en Mac me piden la licencia otra vez»): el servicio de root reabre el programa con `sudo -u`, que en macOS conserva
+    # HOME=/var/root; el programa (ya como el usuario) buscaba la licencia y las preferencias en la casa de root. Se corrige al arrancar.
+    import arranque_seguro
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix='cc_casa_'))
+    (tmp / 'ana').mkdir()
+    (tmp / 'root').mkdir()
+    falso_pwd = types.SimpleNamespace(getpwuid=lambda uid: types.SimpleNamespace(pw_dir=str(tmp / 'ana'), pw_name='ana'))
+    viejo_home, viejo_pwd, tenia = os.environ.get('HOME'), sys.modules.get('pwd'), hasattr(os, 'getuid')
+    viejo_uid = getattr(os, 'getuid', None)
+    sys.modules['pwd'] = falso_pwd
+    try:
+        with parches((sys, 'platform', 'darwin')):
+            os.environ['HOME'] = str(tmp / 'root')
+            os.getuid = lambda: 501
+            puesta = arranque_seguro.casa_del_usuario()
+            home_usuario = os.environ.get('HOME')
+            ya_bien = arranque_seguro.casa_del_usuario()            # con la casa correcta no toca nada
+            os.environ['HOME'] = str(tmp / 'root')
+            os.getuid = lambda: 0                                   # las tareas de root siguen con su casa
+            de_root = arranque_seguro.casa_del_usuario()
+            home_root = os.environ.get('HOME')
+        fuera_de_mac = arranque_seguro.casa_del_usuario()
+    finally:
+        if viejo_home is None:
+            os.environ.pop('HOME', None)
+        else:
+            os.environ['HOME'] = viejo_home
+        if viejo_pwd is None:
+            sys.modules.pop('pwd', None)
+        else:
+            sys.modules['pwd'] = viejo_pwd
+        if tenia:
+            os.getuid = viejo_uid
+        else:
+            del os.getuid
+        __import__('shutil').rmtree(tmp, ignore_errors=True)
+    esperar(puesta == str(tmp / 'ana') and home_usuario == str(tmp / 'ana') and ya_bien is None and de_root is None
+            and home_root == str(tmp / 'root') and (fuera_de_mac is None or sys.platform == 'darwin'),
+            f'{puesta} {home_usuario} {ya_bien} {de_root} {home_root}')
+
+
+@caso('Mac: estilos y motores')
+def licencia_no_se_pierde_si_el_sistema_no_da_su_identificador():
+    # v5.96: si una vez no se puede leer el identificador del equipo (ioreg sin ruta, Mac ocupada), antes se usaba la tarjeta de red, que
+    # cambia: el ID salía distinto y la licencia guardada ya no valía. Ahora vale el ID con el que se guardó la licencia.
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix='cc_lic_'))
+    viejo_cache = dict(licencia._CACHE)
+
+    def falla():
+        raise RuntimeError('sin identificador')
+    try:
+        with parches((licencia, '_carpeta', lambda: tmp)):
+            licencia._CACHE['equipo'] = '3F2A-91BC-04DE-77A1'
+            licencia._guardar({'clave': 'CC-AAAA-BBBB-CCCC-DDDD', 'equipo': '3F2A-91BC-04DE-77A1', 'plataforma': 'cinecaptions', 'ultima_ok': time.time()})
+            licencia._CACHE['equipo'] = None
+            with parches((licencia, '_id_bruto', falla)):
+                con_licencia = licencia.id_equipo()
+                vale = licencia.vigente()
+                licencia._CACHE['equipo'] = None
+                licencia._archivo().unlink()
+                sin_licencia = licencia.id_equipo()                 # sin licencia guardada: el respaldo de siempre (con forma de ID)
+    finally:
+        licencia._CACHE.update(viejo_cache)
+        __import__('shutil').rmtree(tmp, ignore_errors=True)
+    esperar(con_licencia == '3F2A-91BC-04DE-77A1' and vale and re.fullmatch(r'[0-9A-F]{4}(-[0-9A-F]{4}){3}', sin_licencia)
+            and sin_licencia != con_licencia, f'{con_licencia} {vale} {sin_licencia}')
+
+
 @caso('Premiere')
 def premiere_colocando_sigue_conectado_y_en_verde():
     # v5.95 (captura del autor con GO en «70 de 211»: la tarjeta decía «conectando… si no conecta reinícialo»): mientras coloca, el panel no

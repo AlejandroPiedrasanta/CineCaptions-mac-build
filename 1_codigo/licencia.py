@@ -102,11 +102,17 @@ def _id_bruto():
             except OSError:
                 continue
     elif sys.platform == 'darwin':
-        salida = subprocess.run(['ioreg', '-rd1', '-c', 'IOPlatformExpertDevice'], capture_output=True,
-                                text=True, timeout=15).stdout
-        m = re.search(r'"IOPlatformUUID"\s*=\s*"([^"]+)"', salida or '')
-        if m:
-            return m.group(1)
+        # v5.96: por su ruta entera (un PATH sin /usr/sbin, como el de algunos lanzadores, daba «no existe» y el ID cambiaba al de la
+        # tarjeta de red → la licencia guardada ya no era «de este equipo») y con un segundo intento si la Mac está ocupada
+        for orden in ('/usr/sbin/ioreg', 'ioreg', '/usr/sbin/ioreg'):
+            try:
+                salida = subprocess.run([orden, '-rd1', '-c', 'IOPlatformExpertDevice'], capture_output=True,
+                                        text=True, timeout=15).stdout
+            except (OSError, subprocess.SubprocessError):
+                continue
+            m = re.search(r'"IOPlatformUUID"\s*=\s*"([^"]+)"', salida or '')
+            if m:
+                return m.group(1)
     for ruta in ('/etc/machine-id', '/var/lib/dbus/machine-id'):
         try:
             valor = Path(ruta).read_text().strip()
@@ -123,12 +129,29 @@ def id_equipo():
     if not _CACHE['equipo']:
         try:
             bruto = _id_bruto()
-        except Exception:                       # muy raro: la tarjeta de red (también estable)
+        except Exception:
+            # v5.96: el sistema no dio su identificador ESTA vez. Antes se usaba la tarjeta de red, que en la Mac cambia (Wi-Fi apagado,
+            # adaptador USB): el ID salía distinto y la licencia guardada dejaba de valer («me piden la licencia otra vez»). Si este
+            # equipo ya tiene una licencia guardada, vale el ID con el que se activó (su firma lo confirma en local()).
+            guardado = _equipo_guardado()
+            if guardado:
+                _CACHE['equipo'] = guardado
+                return guardado
             import uuid
             bruto = 'red:%012x' % uuid.getnode()
         h = hashlib.sha256(('CineCaptions:%s' % bruto).encode('utf-8')).hexdigest()[:16].upper()
         _CACHE['equipo'] = '-'.join(h[i:i + 4] for i in range(0, 16, 4))
     return _CACHE['equipo']
+
+
+def _equipo_guardado():
+    """El ID de equipo con el que se guardó la licencia de esta computadora ('' si no hay o no tiene la forma de un ID)."""
+    try:
+        import archivos_seguros
+        ident = str((archivos_seguros._leer(_archivo()) or {}).get('datos', {}).get('equipo') or '')
+        return ident if re.fullmatch(r'[0-9A-F]{4}(-[0-9A-F]{4}){3}', ident) else ''
+    except Exception:
+        return ''
 
 
 def nombre_equipo():

@@ -4805,6 +4805,8 @@
     "Premiere Pro detectado · abierto · pulsa GO": "Premiere Pro を検出 · 起動中 · GOを押す",
     "Premiere Pro abierto · reinícialo una vez": "Premiere Pro 起動中 · 一度再起動してください",
     "Premiere Pro abierto": "Premiere Pro 起動中",
-    "Listo para GO": "GOの準備完了"
+    "Listo para GO": "GOの準備完了",
+    "Mac: después de actualizarse ya no pide la licencia otra vez. Si te pasó, cierra CineCaptions y vuelve a abrirlo: tu licencia sigue ahí.": "Mac：アップデート後にライセンスを再度求められなくなりました。もし求められた場合は、CineCaptionsを終了して開き直してください。ライセンスはそのまま残っています。",
+    "Premiere Pro: se ve en verde en cuanto se detecta, y mientras coloca tus subtítulos dice «colocando…».": "Premiere Pro：検出されるとすぐ緑で表示され、字幕の配置中は「配置中…」と表示されます。"
   }
 }

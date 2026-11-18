@@ -29,6 +29,30 @@ _CON_VALOR = {'-X', '-W'}
 _HIJO_EN_LINEA = re.compile(r'CineCaptions(?:\.exe)?(?:\s+(?:-[BSIEsuOqbdvRP]{1,2}|-[XW]\s+\S+))*\s+-[cm]\s', re.I)
 
 
+def casa_del_usuario():
+    """v5.96 (la dueña: «en Mac las licencias no se mantienen, me piden poner la licencia otra vez»): en la Mac, el servicio de root de las
+    instalaciones 5.87-5.90 reabre CineCaptions tras actualizar con `launchctl asuser … sudo -u <usuario> open -n`, y el sudo de macOS
+    CONSERVA el HOME de quien lo llama (/var/root). El programa corría como el usuario pero con la casa de root: `Path.home()` apuntaba a
+    /var/root/DaVinciSubtitles (sin permiso y vacía) → sin licencia, sin preferencias, sin proyectos. Aquí, lo primero al arrancar: si HOME
+    no es la casa del usuario que corre el programa (según el sistema), se corrige. Con root (las tareas del servicio) no se toca.
+    → la casa puesta, o None si no hubo que cambiar nada."""
+    if sys.platform != 'darwin':
+        return None
+    try:
+        import pwd
+        uid = os.getuid()
+        if uid == 0:
+            return None
+        real = pwd.getpwuid(uid).pw_dir
+        actual = os.environ.get('HOME') or ''
+        if real and os.path.isdir(real) and os.path.realpath(actual) != os.path.realpath(real):
+            os.environ['HOME'] = real
+            return real
+    except Exception:
+        pass
+    return None
+
+
 def como_interprete(argv):
     """('-c', código, resto) o ('-m', módulo, resto) si `argv` es una llamada de intérprete (banderas y luego -c/-m); None si es un
     arranque normal del programa (sin argumentos, un video, --tarea, --reinicio…)."""

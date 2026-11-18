@@ -15696,5 +15696,27 @@
   "ko": "GO 준비 완료",
   "zh": "可以按 GO 了",
   "ru": "Готов к GO"
+ },
+ "Mac: después de actualizarse ya no pide la licencia otra vez. Si te pasó, cierra CineCaptions y vuelve a abrirlo: tu licencia sigue ahí.": {
+  "en": "Mac: after updating it no longer asks for your license again. If it happened to you, quit CineCaptions and open it again: your license is still there.",
+  "pt": "Mac: depois de se atualizar já não pede a licença de novo. Se aconteceu com você, feche o CineCaptions e abra-o outra vez: sua licença continua lá.",
+  "fr": "Mac : après une mise à jour, il ne redemande plus la licence. Si cela t’est arrivé, quitte CineCaptions et rouvre-le : ta licence est toujours là.",
+  "de": "Mac: Nach einem Update wird die Lizenz nicht mehr erneut verlangt. Falls es dir passiert ist: CineCaptions beenden und neu öffnen – deine Lizenz ist noch da.",
+  "it": "Mac: dopo l’aggiornamento non chiede più di nuovo la licenza. Se ti è successo, chiudi CineCaptions e riaprilo: la tua licenza è ancora lì.",
+  "ja": "Mac：アップデート後にライセンスを再度求められなくなりました。もし求められた場合は、CineCaptionsを終了して開き直してください。ライセンスはそのまま残っています。",
+  "ko": "Mac: 업데이트 후 라이선스를 다시 묻지 않습니다. 이미 겪었다면 CineCaptions를 종료했다가 다시 여세요. 라이선스는 그대로 있습니다.",
+  "zh": "Mac：更新后不再重新要求输入许可证。如果你遇到过，请退出 CineCaptions 再重新打开：你的许可证还在。",
+  "ru": "Mac: после обновления программа больше не просит лицензию повторно. Если это случилось, закройте CineCaptions и откройте снова: лицензия на месте."
+ },
+ "Premiere Pro: se ve en verde en cuanto se detecta, y mientras coloca tus subtítulos dice «colocando…».": {
+  "en": "Premiere Pro: it shows green as soon as it is detected, and while it places your captions it says “placing…”.",
+  "pt": "Premiere Pro: aparece em verde assim que é detectado e, enquanto coloca suas legendas, diz «colocando…».",
+  "fr": "Premiere Pro : il passe au vert dès qu’il est détecté et, pendant le placement des sous-titres, il indique « placement… ».",
+  "de": "Premiere Pro: wird grün angezeigt, sobald es erkannt ist, und zeigt beim Platzieren der Untertitel „platziert…“.",
+  "it": "Premiere Pro: diventa verde appena viene rilevato e, mentre posiziona i sottotitoli, dice «posiziono…».",
+  "ja": "Premiere Pro：検出されるとすぐ緑で表示され、字幕の配置中は「配置中…」と表示されます。",
+  "ko": "Premiere Pro: 감지되는 즉시 초록색으로 표시되고, 자막을 배치하는 동안 «배치 중…»이라고 표시합니다.",
+  "zh": "Premiere Pro：一检测到就显示为绿色，放置字幕时显示“正在放置…”。",
+  "ru": "Premiere Pro: становится зелёным, как только обнаружен, а во время размещения субтитров показывает «размещаю…»."
  }
 }

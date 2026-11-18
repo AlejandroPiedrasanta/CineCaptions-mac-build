@@ -158,7 +158,9 @@ done
 limpiar_huerfanos
 if [ "$ESTABA_ABIERTO" = 1 ]; then
     echo "-- estaba abierto: abro la versión nueva" >> "$LOG"
-    launchctl asuser "$UID_U" sudo -u "$USUARIO" /usr/bin/open "$APP" >> "$LOG" 2>&1
+    # v5.96: -H = con la CASA del usuario. Sin -H el sudo de macOS conserva el HOME de quien llama (la «casa» del servicio de root que
+    # instala este paquete) y CineCaptions se abría buscando ahí su licencia: «Permission denied: …/actualizar/casa/DaVinciSubtitles/licencia»
+    launchctl asuser "$UID_U" sudo -u "$USUARIO" -H /usr/bin/open "$APP" >> "$LOG" 2>&1
 fi
 chown "$USUARIO" "$LOG" 2>/dev/null
 exit 0

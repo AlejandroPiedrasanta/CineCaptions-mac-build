@@ -592,6 +592,10 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.96', [
+        'Mac: después de actualizarse ya no pide la licencia otra vez. Si te pasó, cierra CineCaptions y vuelve a abrirlo: tu licencia sigue ahí.',
+        'Premiere Pro: se ve en verde en cuanto se detecta, y mientras coloca tus subtítulos dice «colocando…».',
+    ]),
     ('5.95', [
         'Cada estilo tiene ahora sus propios sonidos: la palabra clave, el acento y el corte suenan distinto en cada estilo, con cualquier video.',
         'Estilo 2: los bloques ya no pasan tan rápido cuando se habla deprisa, y no quedan dos bloques seguidos sin palabra grande.',

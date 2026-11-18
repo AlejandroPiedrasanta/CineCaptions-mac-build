@@ -4805,6 +4805,8 @@
     "Premiere Pro detectado · abierto · pulsa GO": "Premiere Pro найден · открыт · нажмите GO",
     "Premiere Pro abierto · reinícialo una vez": "Premiere Pro открыт · перезапустите один раз",
     "Premiere Pro abierto": "Premiere Pro открыт",
-    "Listo para GO": "Готов к GO"
+    "Listo para GO": "Готов к GO",
+    "Mac: después de actualizarse ya no pide la licencia otra vez. Si te pasó, cierra CineCaptions y vuelve a abrirlo: tu licencia sigue ahí.": "Mac: после обновления программа больше не просит лицензию повторно. Если это случилось, закройте CineCaptions и откройте снова: лицензия на месте.",
+    "Premiere Pro: se ve en verde en cuanto se detecta, y mientras coloca tus subtítulos dice «colocando…».": "Premiere Pro: становится зелёным, как только обнаружен, а во время размещения субтитров показывает «размещаю…»."
   }
 }
