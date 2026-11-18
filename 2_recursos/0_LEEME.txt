@@ -11,7 +11,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    biblioteca_sonido\   (67 archivos)
+    biblioteca_sonido\   (116 archivos)
     creativo\   (11 archivos)
         demo_colores.jpg
         demo_colores.mp4

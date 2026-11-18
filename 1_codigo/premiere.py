@@ -48,7 +48,7 @@ from pathlib import Path
 
 PANEL = 'com.cinecaptions.premiere'
 EXE_WIN = 'Adobe Premiere Pro.exe'
-CSXS = range(9, 14)                       # CEP 9 (Premiere 2019) … CEP 12/13 (Premiere 2025-2026)
+CSXS = range(9, 17)                       # CEP 9 (Premiere 2019) … CEP 12/13 (Premiere 2025-2026); v5.95: hasta CSXS.16 (Premiere 2027 y siguientes)
 LATIDO_S = 10.0                           # el panel escribe cada ~3 s; más viejo que esto = Premiere cerrado o sin el panel
 ESPERA_ABRIR_S = 240.0                    # Premiere tarda en arrancar (y el usuario puede tener que elegir un proyecto)
 ESPERA_COLOCAR_S = 300.0                  # importar y colocar (muchos sonidos en un proyecto grande)
@@ -433,6 +433,33 @@ def falta_reiniciar():
         return False
 
 
+_AL_DIA = []
+
+
+def poner_al_dia():
+    """v5.95 (un cliente con la 5.94 y Premiere 2027: «reinicio Premiere y CineCaptions y me sigue apareciendo "reinícialo una vez para
+    estrenar el panel nuevo"… le doy play y me dice "primero arrastra tu video"»): el panel solo se copiaba a las extensiones de Adobe al
+    encender el interruptor de Ajustes o al COLOCAR en un GO con video. Tras actualizar CineCaptions, Premiere seguía cargando el panel de
+    antes por más que se reiniciara, Inicio pedía reiniciar sin fin y GO no podía usar la secuencia abierta. Ahora, con «Usar con Premiere
+    Pro», el panel se pone al día al abrir CineCaptions (una vez por sesión; `instalar_panel` deja la marca que usa `falta_reiniciar`).
+    Desde un hilo. → lo que devolvió instalar_panel (o None si falló)."""
+    if not _AL_DIA:
+        try:
+            _AL_DIA.append(instalar_panel())
+            r = _AL_DIA[0]
+            if r.get('instalado') or not r.get('ok'):
+                import registro
+                from i18n import tr
+                if r.get('ok'):
+                    registro.info(tr('Panel de CineCaptions para Premiere Pro puesto al día. Si Premiere está abierto, reinícialo una vez.'),
+                                  'Premiere Pro')
+                else:
+                    registro.aviso(tr('No pude poner al día el panel de CineCaptions para Premiere Pro.'), 'Premiere Pro', detalle=r.get('texto', ''))
+        except Exception:
+            _AL_DIA.append(None)
+    return _AL_DIA[0]
+
+
 def preparar():
     """Lo que hace Ajustes al encender «Adobe Premiere Pro»: instala el panel. → {'ok', 'premiere' (ruta o None), 'reiniciar', 'texto'}."""
     r = instalar_panel()
@@ -456,6 +483,26 @@ def panel_vivo(max_s=LATIDO_S):
     try:
         return bool(d) and (time.time() - float(d.get('t') or 0) / 1000.0) < max_s
     except (TypeError, ValueError):
+        return False
+
+
+TRABAJANDO_S = 60.0                       # v5.95: el panel escribe progreso.json cada 10 piezas (~4 s); tanto sin avance = ya no trabaja
+
+
+def trabajando(max_s=TRABAJANDO_S):
+    """v5.95 (el usuario, con GO colocando «70 de 211»: «ya abrió pero dice conectando y claramente está abierto»): mientras el panel coloca
+    un pedido su ExtendScript está ocupado y NO escribe el latido: a los 10 s Inicio lo daba por desconectado. Aquí: ¿hay un pedido en curso
+    que avanza? progreso.json reciente (lo escribe cada 10 piezas), o pedido.en_curso.json (el panel lo tomó; su fecha es la del pedido: al
+    empezar aún no hay avance) de menos de 15 min con Premiere abierto. Desde un hilo (en Mac `abierto` lanza pgrep)."""
+    cola, ahora = carpeta_cola(), time.time()
+    try:
+        if ahora - (cola / 'progreso.json').stat().st_mtime < max_s:
+            return True
+    except OSError:
+        pass
+    try:
+        return ahora - (cola / 'pedido.en_curso.json').stat().st_mtime < 900 and abierto()
+    except OSError:
         return False
 
 
@@ -512,12 +559,19 @@ def estado():
     """v5.78 (el usuario: «que en Inicio diga conexión con Premiere Pro, que ya no diga DaVinci Resolve»): lo que Inicio y la barra enseñan
     con «Usar con Premiere Pro». Desde un hilo (en Mac lanza pgrep); barato: archivos, latido y procesos.
     → {'instalado', 'nombre', 'abierto', 'conectado', 'version', 'proyecto'}"""
+    poner_al_dia()                              # v5.95: el panel de ESTE CineCaptions en las extensiones de Adobe (una vez por sesión)
     exe = ejecutable()
-    vivo = panel_vivo()
+    late = panel_vivo()
+    ocupado = not late and trabajando()         # v5.95: colocando un GO el panel no late (ExtendScript ocupado), pero SÍ está conectado
+    vivo = late or ocupado
     lat = (latido() or {}) if vivo else {}
-    return {'instalado': exe is not None or vivo, 'nombre': nombre_de(exe), 'abierto': vivo or (exe is not None and abierto()),
-            'conectado': vivo, 'version': str(lat.get('version') or ''), 'proyecto': str(lat.get('proyecto') or ''),
-            'panel_viejo': vivo and panel_viejo(lat)}
+    trae = late and puede_traer_secuencia()
+    esta_abierto = vivo or (exe is not None and abierto())
+    return {'instalado': exe is not None or vivo, 'nombre': nombre_de(exe), 'abierto': esta_abierto,
+            'reiniciar': esta_abierto and not vivo and falta_reiniciar(),      # v5.95: abierto desde antes de instalarse el panel: no lo cargará
+            'conectado': vivo, 'trabajando': ocupado, 'version': str(lat.get('version') or ''), 'proyecto': str(lat.get('proyecto') or ''),
+            'panel_viejo': vivo and panel_viejo(lat),
+            'trae_secuencia': trae, 'secuencia': str(lat.get('secuencia') or '') if trae else ''}   # v5.95: Inicio dice con qué secuencia trabajará GO
 
 
 def textos_estado(est):
@@ -528,16 +582,32 @@ def textos_estado(est):
     n = est.get('nombre') or 'Adobe Premiere Pro'
     if est.get('conectado'):
         detalle = ' · '.join(x for x in (n, est.get('version'), tr('proyecto «{p}»', p=est['proyecto']) if est.get('proyecto') else '') if x)
+        if est.get('trabajando'):                   # v5.95: colocando un GO (el panel no late mientras trabaja)
+            return (tr('Premiere Pro conectado · colocando…'), 'ok', (tr('Premiere Pro conectado'), tr('Colocando…')))
         if est.get('panel_viejo'):                  # v5.87: CineCaptions se actualizó con Premiere abierto
-            return (tr('{n} conectado · reinícialo una vez para estrenar el panel nuevo', n=n), 'aviso',
-                    (tr('Premiere Pro conectado'), tr('Reinícialo una vez: panel nuevo')))
-        return tr('{n} detectado · conectado', n=n), 'ok', (tr('Premiere Pro conectado'), detalle)
+            # v5.95 (el usuario: «si detectó Premiere y se comunica ya ponlo en verde, porque ya hay comunicación»): conectado = verde;
+            # el texto sigue diciendo que conviene reiniciarlo una vez
+            return (tr('Premiere Pro conectado · reinícialo una vez'), 'ok',
+                    (tr('Premiere Pro conectado'), tr('Reinícialo una vez')))
+        sec = est.get('secuencia') or ''
+        if sec and not es_de_cinecaptions(sec):     # v5.95 (el cliente: «debería detectar en qué secuencia estoy»): se dice cuál usará GO
+            return (tr('Premiere Pro conectado · «{s}» · pulsa GO', s=sec), 'ok',
+                    (tr('Premiere Pro conectado'), tr('secuencia «{s}»', s=sec)))
+        if est.get('trae_secuencia') and not sec:
+            return (tr('Premiere Pro conectado · abre tu secuencia o arrastra un video'), 'ok', (tr('Premiere Pro conectado'), detalle))
+        return tr('Premiere Pro conectado'), 'ok', (tr('Premiere Pro conectado'), detalle)
     if est.get('abierto'):
-        return (tr('{n} abierto · conectando… (si no conecta, reinícialo una vez)', n=n), 'aviso',
-                (tr('Premiere Pro · conectando…'), tr('Si no conecta: reinícialo una vez')))
+        # v5.95 (el usuario: «si ya abrió debe detectar automáticamente»): Premiere abierto = detectado, en verde, aunque su panel aún no
+        # haya dado señal (recién abierto, o en su pantalla de inicio: GO le abre el proyecto). Solo pide algo si de verdad hace falta
+        # reiniciarlo (arrancó antes de instalarse el panel y no lo va a cargar).
+        if est.get('reiniciar'):
+            return (tr('Premiere Pro abierto · reinícialo una vez'), 'aviso', (tr('Premiere Pro abierto'), tr('Reinícialo una vez')))
+        return tr('Premiere Pro detectado · abierto · pulsa GO'), 'ok', (tr('Premiere Pro abierto'), tr('Listo para GO'))
     if est.get('instalado'):
-        return tr('{n} detectado · cerrado: GO lo abre solo', n=n), 'aviso', (tr('Premiere Pro cerrado'), tr('GO lo abre solo'))
-    return (tr('No encuentro Adobe Premiere Pro · instálalo o elige «Usar con DaVinci Resolve» en Ajustes'), 'error',
+        # v5.95 (el usuario: «no me gusta que esté amarillo: si ya se detectó debe estar en verde»): detectado y listo para GO = verde,
+        # aunque esté cerrado (GO lo abre solo). El ámbar queda para lo que pide algo: conectando o reiniciar por el panel nuevo.
+        return tr('Premiere Pro detectado · GO lo abre solo'), 'ok', (tr('Premiere Pro cerrado'), tr('GO lo abre solo'))
+    return (tr('No encuentro Premiere Pro'), 'error',
             (tr('Premiere Pro no encontrado'), tr('¿Está instalado?')))
 
 

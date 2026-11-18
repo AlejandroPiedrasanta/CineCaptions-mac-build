@@ -384,6 +384,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         conexión con Resolve: API externa (Studio), Puente (Free) o paso manual; ejecuta los scripts.
     resolve_mcp.py
         conexión con el MCP oficial de Resolve 21.1+: abrir Resolve, proyecto reciente, ejecutar scripts.
+    retoque_resolve.py
+        «Aplicar correcciones en DaVinci»: lleva a Resolve SOLO las palabras corregidas, sin volver a generar.
     ritmo_ui.py
         Regulador del ritmo de las animaciones: si la interfaz va justa (GO usando CPU/GPU, equipo modesto) baja los fotogramas del fondo y de la esfera para que los clics respondan; los sube al aliviarse.
     rotacion_video.py

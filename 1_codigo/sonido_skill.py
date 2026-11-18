@@ -90,6 +90,13 @@ RESPALDO = {'boton_on': 'mouse', 'boton_off': 'mouse', 'mouse': 'pop', 'kinetic'
             'carga': 'pop', 'notif': 'ding', 'riser': 'swoosh', 'acento': 'pop', 'tarjeta': 'burbuja'}   # pool de 1 familia → el vecino
 _DENS = {}
 SIEMPRE_SU_SONIDO = ('kinetic', 'boton_on')   # MAPA: «el KINETIC va en TODO caption con aro»; un interruptor suena a interruptor (variantes: rotar)
+# v5.95 — cada estilo con SUS sonidos (el usuario, 2026-11-17: «pule todos los estilos y sus SFX, créalos con Higgsfield, los sonidos están
+# fatales»): 01_SFX/21_ESTILOS/ESTILO_N/«ESTILO_N - <rol> <n>.wav». Con un estilo de fábrica, la palabra clave, el acento y el corte suenan con
+# el juego de ESE estilo (el resto —aros, motions, dinero, riser— sigue con la biblioteca general). Solo existe en CineCaptions (como REGLAS_CC).
+CARPETA_ESTILOS = '01_SFX/21_ESTILOS'
+ESTILO_DE_PACK = {'kinetic': 1, 'referencia': 2, 'viral': 3, 'tema4': 4, 'tema5': 5, 'tema6': 6, 'tema7': 7, 'tema8': 8, 'tema9': 9}
+ROL_DE_POOL = {'pop': 'clave', 'acento': 'acento', 'swoosh': 'paso'}
+GRAVES_ESTILO = 40          # los sonidos de un estilo ya vienen limpios: el pulido no les quita el cuerpo (el golpe grave del Estilo 5)
 
 
 def _prefs():
@@ -456,7 +463,8 @@ HECHO_POR_IA = ('/_VARIANTES/', '/_SINTETIZADOS/')   # además del campo 'genera
 
 def hecho_por_ia(rel, info=None):
     """Sonido que hizo una máquina y no es una grabación real: variantes de tono, sintetizados y los de temas armados por la skill.
-    El usuario (2026-10-27): «NO USES SONIDOS CREADOS POR IA»."""
+    El usuario (2026-10-27): «NO USES SONIDOS CREADOS POR IA». Excepción pedida por él (2026-11-17): los juegos por estilo de
+    CARPETA_ESTILOS, hechos con Higgsfield (su catálogo lleva 'hecho_con', no 'generado')."""
     return bool((info or {}).get('generado')) or any(m in '/' + rel.replace('\\', '/') for m in HECHO_POR_IA)
 
 
@@ -512,11 +520,28 @@ def usos_aprobados(lib):
     return c
 
 
-def pools_de(cat, lib=None):
-    """{pool: [archivos curados]} en orden de preferencia: lo que el usuario aprobó y los creadores usan primero, luego por nombre."""
+def numero_estilo(pack):
+    """1…9 si el pack es un estilo de fábrica; None para lo demás (packs propios, mezclas)."""
+    return ESTILO_DE_PACK.get(str(pack or '').strip().lower())
+
+
+def sonidos_de_estilo(cat, n):
+    """{pool: [archivos]} del juego propio del Estilo n (v5.95), en orden de nombre; {} si no tiene."""
+    if not n:
+        return {}
+    base = f'{CARPETA_ESTILOS}/ESTILO_{n}/'
+    return {pool: lista for pool, rol in ROL_DE_POOL.items()
+            if (lista := sorted(r for r in cat if r.startswith(base) and f' - {rol} ' in r and curado(r, cat[r])))}
+
+
+def pools_de(cat, lib=None, pack=None):
+    """{pool: [archivos curados]} en orden de preferencia: lo que el usuario aprobó y los creadores usan primero, luego por nombre.
+    v5.95: con `pack` de fábrica, la clave, el acento y el corte salen del juego de ese estilo (sonidos_de_estilo)."""
     usos = usos_aprobados(lib or biblioteca())
-    return {k: sorted((r for r in cat if re.search(rx, r) and curado(r, cat[r]) and not (k == 'pop' and any(m in r for m in POP_FUERA))),
-                      key=lambda r: (-usos.get(r, 0), r)) for k, rx in POOLS.items()}
+    pools = {k: sorted((r for r in cat if re.search(rx, r) and curado(r, cat[r]) and not (k == 'pop' and any(m in r for m in POP_FUERA))),
+                       key=lambda r: (-usos.get(r, 0), r)) for k, rx in POOLS.items()}
+    pools.update(sonidos_de_estilo(cat, numero_estilo(pack)))
+    return pools
 
 
 class Elector:
@@ -622,10 +647,10 @@ def _peso(e):
     return e['prioridad'] + (0 if e['tipo'] in RELLENO else 10)
 
 
-def asignar(out, cat, lib=None):
+def asignar(out, cat, lib=None, pack=None):
     import sonido_oido as O
     # v5.93: fuera los archivos con fallos GRAVES de la auditoría (casi mudos, saturados, golpe doble) si su pool tiene otro
-    pools = O.filtrar_pools(pools_de(cat, lib), lib or biblioteca(), cat, 1 + VARIANTES_POR_ROL)
+    pools = O.filtrar_pools(pools_de(cat, lib, pack), lib or biblioteca(), cat, 1 + VARIANTES_POR_ROL)
     el = Elector(pools, {r: i.get('familia') for r, i in cat.items() if isinstance(i, dict) and i.get('familia')})
     filas = []
     for e in out:
@@ -777,6 +802,8 @@ def hornear(filas, cat, lib, carpeta, con_voz=True, fps=None, cama=None):
         repeticion = repeticion + 1 if f['archivo'] == previo else 0
         previo = f['archivo']
         pulido = PULIDO.get(f['pool'])
+        if pulido and info.get('estilo'):
+            pulido = dict(pulido, graves=GRAVES_ESTILO)
         if pulido:                                              # aros y pops de caption: cada uno distinto y más limpio (ver PULIDO)
             x, variacion_db = pulir(x, pulido, f"{f['archivo']}|{i}|{f['segundo']}")
         elif repeticion:                                        # el mismo archivo seguido: microvariación (tono ±3 %, ±0,7 dB) para que no suene clonado
@@ -826,7 +853,7 @@ def disenar(ctx, prefs=None):
     # 0,06 s): ese primer golpe ya es el gancho
     if prefs.get(PREF_GANCHO, True) and not intro_con_sonido(ctx) and (primero is None or primero >= GANCHO_MIN):
         ev.append({'segundo': round(primero if primero is not None else 0.5, 3), 'tipo': 'gancho', 'detalle': 'gancho del inicio', 'fuerza': 99})
-    filas = asignar(elegir(ev, estilo), cat, lib)
+    filas = asignar(elegir(ev, estilo), cat, lib, ctx.get('pack'))
     return estilo, filas, cat, lib
 
 
@@ -860,7 +887,7 @@ def preparar(ctx, res=None, al_estado=None, prefs=None):
                 'cortes': [e['segundo'] for e in et if e['tipo'] == 'corte'],
                 'bloques': bloques_captions(ctx),
                 'duracion': max([float(p.get('end') or 0) for p in ctx.get('palabras') or []] + [f['segundo'] + 1 for f in filas] + [1.0])}
-        estado['sonido_skill'] = {'version': VERSION, 'estilo': estilo, 'biblioteca': str(lib), 'filas': filas, 'con_voz': con_voz,
+        estado['sonido_skill'] = {'version': VERSION, 'estilo': estilo, 'pack': ctx.get('pack'), 'biblioteca': str(lib), 'filas': filas, 'con_voz': con_voz,
                                   'guia': guia, 'fecha': time.strftime('%Y-%m-%d %H:%M:%S'), 'fps': fps}
         E.guardar(video, estado)
         log(f'{len(eventos)} sonidos de la biblioteca · estilo {NOMBRE_ESTILO.get(estilo, estilo)} · '
@@ -1007,7 +1034,7 @@ def editar(video, i, accion, valor=None):
         filas.pop(i)
         texto = f"Quitado: {Path(f['archivo']).stem}"
     elif accion == 'variante':
-        lista = pools_de(cat, lib).get(f['pool']) or [f['archivo']]
+        lista = pools_de(cat, lib, s.get('pack')).get(f['pool']) or [f['archivo']]
         f['archivo'] = lista[(lista.index(f['archivo']) + 1) % len(lista)] if f['archivo'] in lista else lista[0]
         filas[i] = f
         texto = f"Ahora suena: {Path(f['archivo']).stem}"

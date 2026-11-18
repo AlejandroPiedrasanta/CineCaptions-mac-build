@@ -592,6 +592,13 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.95', [
+        'Cada estilo tiene ahora sus propios sonidos: la palabra clave, el acento y el corte suenan distinto en cada estilo, con cualquier video.',
+        'Estilo 2: los bloques ya no pasan tan rápido cuando se habla deprisa, y no quedan dos bloques seguidos sin palabra grande.',
+        'Editor: botón «Aplicar correcciones en DaVinci». Corrige una palabra y llévala a tu timeline sin volver a generar (estilos 2 al 9).',
+        'Premiere Pro: el panel se pone al día solo al abrir CineCaptions (antes seguía pidiendo reiniciar Premiere) e Inicio dice con qué secuencia trabajará GO.',
+        '«Video sin editores»: el video sale con los mismos sonidos que en DaVinci Resolve.',
+    ]),
     ('5.94', [
         'Premiere Pro: GO trabaja con la secuencia que tienes abierta, sin arrastrar el video. Los subtítulos y los sonidos van a una copia de tu secuencia; la tuya queda intacta.',
         'Premiere Pro: si hace falta cerrar y volver a abrir Premiere para conectar, GO te lo dice al momento en vez de esperar varios minutos.',

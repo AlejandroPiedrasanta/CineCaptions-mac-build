@@ -414,10 +414,20 @@ def _juntar_cortos(plan, pal, A=AFINADO):
         ks = a['palabras'] + b['palabras']
         return dict(b if b['mains'] else a, palabras=ks, mains=a['mains'] + b['mains'], orig=sorted(o for k in ks for o in pal[k]['orig']))
 
+    def visible(n):
+        """v5.95 (el usuario: «el Estilo 2 va muy rápido»): lo que el bloque se VE de verdad. `dura` le suma el respiro entero, pero con la
+        voz seguida el bloque siguiente entra como mucho 'espera_max' s después de su primera palabra: «de los tercios» contaba 1,27 s y se
+        veía 0,60 (medido: 11 de 34 bloques a < 1 s en un video hablado rápido, ninguno contado como corto)."""
+        b = plan[n]
+        fin = pal[b['palabras'][-1]]['fin'] + A['respiro']
+        if n + 1 < len(plan):
+            fin = min(fin, pal[plan[n + 1]['palabras'][0]]['t'] + A['espera_max'])
+        return fin - pal[b['palabras'][0]]['t']
+
     i = 0
     while i + 1 < len(plan):
         a, b = plan[i], plan[i + 1]
-        corto = min(dura(a), dura(b)) < A['bloque_min']
+        corto = min(visible(i), visible(i + 1)) < A['bloque_min']
         if not corto or not seguidos(a, b) or (a['mains'] and b['mains']) or dura(juntar(a, b)) > A['complejo_s'] + 0.6:
             i += 1
             continue
@@ -433,6 +443,35 @@ def _juntar_cortos(plan, pal, A=AFINADO):
             i = max(0, i - 1)                           # (el bloque nuevo puede juntarse otra vez con el de antes)
         else:
             i += 1
+    return plan
+
+
+def _grande_en_seguidos(plan, pal, A=AFINADO):
+    """v5.95 (el usuario: «el Estilo 2 no es llamativo»): nunca DOS bloques seguidos sin palabra grande. Una frase larga recibe como mucho 3
+    grandes y con la segunda a ≥ 'puntaje_2' (medido: una frase de 27 palabras = 6 bloques con una sola grande, 8 s de texto pequeño). En el
+    segundo bloque seguido sin grande sube su mejor palabra (≥ 'puntaje_seguidos') si el bloque queda bien armado: ≤3 líneas y, debajo de la
+    grande, nada o 2-4 palabras que no acaben en «de/la/y…». Solo cuando elige el planificador (con marcas del usuario mandan ellas)."""
+    MAX = A['max_linea']
+    seguidos = 0
+    for b in plan:
+        if b['mains']:
+            seguidos = 0
+            continue
+        seguidos += 1
+        if seguidos < 2 or len(b['palabras']) < 2:
+            continue
+        pts = puntajes(pal, b['palabras'], False, A)
+        for k in sorted(pts, key=lambda k: (-pts[k], -len(pal[k]['plano']), -k)):
+            if pts[k] < A.get('puntaje_seguidos', 6.0):
+                break
+            antes, despues = [x for x in b['palabras'] if x < k], [x for x in b['palabras'] if x > k]
+            if (len(antes) + MAX - 1) // MAX + 1 + (1 if despues else 0) > 3:
+                continue
+            if despues and (not 2 <= len(despues) <= MAX or _debil(pal, despues[-1])):
+                continue
+            b['mains'] = [k]
+            seguidos = 0
+            break
     return plan
 
 
@@ -705,6 +744,8 @@ def planificar(palabras, idioma='es', pack='Referencia', ancho_tl=1080, ancla='m
         plan = _complejos(plan, pal, A)
     plan = _reglas_lineas(plan, pal, A)
     plan = _juntar_cortos(plan, pal, A)
+    if forzados is None:
+        plan = _grande_en_seguidos(plan, pal, A)
     # ORACIONES: un bloque abre oración nueva si lo anterior acabó en signo fuerte o con una pausa (los signos a veces se pierden por el camino)
     oraciones, o = [], -1
     for n, b in enumerate(plan):

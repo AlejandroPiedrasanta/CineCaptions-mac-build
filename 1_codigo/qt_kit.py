@@ -2651,13 +2651,19 @@ class ZonaSoltar(QFrame):
         if e.mimeData().hasUrls():
             self._encima = True
             self.update()
-            e.acceptProposedAction()
+            e.setDropAction(Qt.DropAction.CopyAction)      # v5.95: SIEMPRE «copiar» (ver dropEvent)
+            e.accept()
 
     def dragLeaveEvent(self, e):
         self._encima = False
         self.update()
 
     def dropEvent(self, e):
+        # v5.95: el video soltado solo se LEE. Si el arrastre se acepta como «mover» (lo que propone el Explorador con Mayús, o según de
+        # dónde venga), Windows da el archivo por movido y BORRA el original al terminar: un video de Descargas apareció en la Papelera
+        # en el minuto en que se soltó, con GO ya transcribiéndolo. Se contesta siempre «copiar».
+        e.setDropAction(Qt.DropAction.CopyAction)
+        e.accept()
         self._encima = False
         self.update()
         for url in e.mimeData().urls():

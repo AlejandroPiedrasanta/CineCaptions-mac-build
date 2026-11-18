@@ -7,7 +7,7 @@ Guarda («guardar») o aplica («cargar») la disposicion de pantalla de Resolve
 la vista expandida. En Studio lo hace el MCP; en Resolve FREE (sin MCP) el Puente la corre con dofile. La orden: vista_orden.json (sidecar .lua en Free).
 ]]
 
-local VERSION = "5.94 (vista)"
+local VERSION = "5.95 (vista)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -771,6 +771,135 @@ local function ajustar_clip(orden)
     print("VISTA " .. RESULTADO)
 end
 
+-- v5.95 — «Aplicar correcciones en DaVinci» (un cliente: «que al corregir lo haga en DaVinci de una vez, sin generar nada»): retoca SOLO los
+-- clips de las palabras corregidas en las pistas «<L>-T…» (estilo guion) y «<L>-K…» (los demás estilos): texto, tamaño, posición, giro y zoom.
+-- No borra ni coloca nada. Cada cambio trae el fotograma (t), el texto que el clip tiene AHORA (antes) y lo nuevo; un clip que no aparece
+-- (lo movieron o lo cambiaron a mano) se cuenta en «faltan» y no se toca. La app ya comprobó que la forma de los bloques no cambia.
+-- Gemela de retoque_resolve.CODIGO_STUDIO (Python dentro de Resolve Studio): mismos pasos y mismas cuentas.
+local function retocar(orden)
+    local proyecto = proyecto_actual()
+    if proyecto == nil then fail("No hay ningun proyecto abierto en Resolve.") end
+    local tl = proyecto:GetCurrentTimeline()
+    if tl == nil then fail("No hay timeline abierto.") end
+    local L = tostring(orden.L or "ES")
+    local fps = tonumber(tl:GetSetting("timelineFrameRate")) or 30
+    local ancho = tonumber(tl:GetSetting("timelineResolutionWidth")) or 1080
+    local alto = tonumber(tl:GetSetting("timelineResolutionHeight")) or 1920
+    local inicio = tonumber(tl:GetStartFrame()) or 0
+    if (tonumber(orden.offset) or 0) > 0 then inicio = tonumber(orden.offset) end
+    local function limpio(s) return (tostring(s or ""):gsub("^%s+", ""):gsub("%s+$", "")) end
+    local function text_plus(it)
+        local tool = nil
+        pcall(function()
+            local comp = it:GetFusionCompByIndex(1)
+            if not comp then return end
+            local p = comp:FindTool("Template")
+            if p and p.ID == "TextPlus" then tool = p; return end
+            for _, h in pairs(comp:GetToolList(false) or {}) do
+                if h.ID == "TextPlus" then tool = h; return end
+            end
+        end)
+        return tool
+    end
+    local function prop(it, k) local ok, v = pcall(function() return it:GetProperty(k) end); return (ok and tonumber(v)) or 0 end
+    local function poner(it, k, v) pcall(function() it:SetProperty(k, v) end) end
+    local por_ini, n_clips = {}, 0
+    for t = 1, tl:GetTrackCount("video") do
+        local nom = tostring(tl:GetTrackName("video", t) or "")
+        local cabeza = nom:sub(1, #L + 2)
+        if (cabeza == L .. "-T" or cabeza == L .. "-K") and tonumber(nom:sub(#L + 3)) then
+            for _, it in ipairs(tl:GetItemListInTrack("video", t) or {}) do
+                local f = tonumber(it:GetStart()) or -1
+                por_ini[f] = por_ini[f] or {}
+                table.insert(por_ini[f], it)
+                n_clips = n_clips + 1
+            end
+        end
+    end
+    local LUXE = { { "sizeCtrl", { "StartSize", "EndSize" } }, { "glow1", { "GlowSize" } }, { "shineGlow1", { "GlowSize" } },
+                   { "positionCtrl", { "StartDistance", "EndDistance" } }, { "blurCtrl", { "RestingBlur", "StartBlur", "EndBlur" } },
+                   { "shineCtrl", { "ShineWidth", "ShineSoftness" } }, { "dropShadow", { "shadowBlur", "ShadowDistance" } },
+                   { "Text1", { "SoftnessX4", "SoftnessY4", "SoftnessX5", "SoftnessY5", "Offset4", "Offset5" } } }
+    local function agrandar(it, z)                  -- (como BARRIDO.agrandar de CineCaptions_Subtitulos.lua, con z = zoom nuevo / zoom de antes)
+        pcall(function()
+            local comp = it:GetFusionCompByIndex(1)
+            local tam = comp and comp:FindTool("sizeCtrl") or nil
+            if not tam then return end
+            local antes = tonumber(tam:GetInput("RestingSize"))
+            if not antes or antes <= 0 then return end
+            tam:SetInput("RestingSize", antes * z)
+            for _, par in ipairs(LUXE) do
+                local h = comp:FindTool(par[1])
+                if h then
+                    for _, e in ipairs(par[2]) do
+                        pcall(function()
+                            local v = h:GetInput(e)
+                            if type(v) == "number" then
+                                if v ~= 0 then h:SetInput(e, v * z) end
+                            elseif type(v) == "table" and tonumber(v[1]) and tonumber(v[2]) then
+                                h:SetInput(e, { v[1] * z, v[2] * z })
+                            end
+                        end)
+                    end
+                end
+            end
+        end)
+    end
+    local function barrido(it, ancho_rel)
+        pcall(function()
+            local comp = it:GetFusionCompByIndex(1)
+            local macro = comp and comp:FindTool("LuxeShine") or nil
+            if macro then macro:SetInput("inputShine", math.max(-0.05, (ancho_rel + 0.16) / 2.17 - 0.193)) end
+        end)
+    end
+    local usados, hechos, faltan = {}, 0, {}
+    for _, c in ipairs(orden.cambios or {}) do
+        local f = inicio + math.floor((tonumber(c.t) or 0) * fps + 0.5)
+        local mejor, tool_m, dist_m = nil, nil, nil
+        for _, it in ipairs(por_ini[f] or {}) do
+            if not usados[it] then
+                local tool = text_plus(it)
+                local vale = true
+                if c.antes ~= nil then
+                    local ok, v = pcall(function() return tool:GetInput("StyledText") end)
+                    vale = tool ~= nil and ok and limpio(v) == limpio(c.antes)
+                end
+                if vale then
+                    local d = math.abs(prop(it, "Pan") - ((tonumber(c.xa) or 0.5) - 0.5) * ancho) + math.abs(prop(it, "Tilt") - (0.5 - (tonumber(c.ya) or 0.5)) * alto)
+                    if (c.antes ~= nil or d <= 4) and (dist_m == nil or d < dist_m) then mejor, tool_m, dist_m = it, tool, d end
+                end
+            end
+        end
+        if mejor == nil then
+            faltan[#faltan + 1] = '"' .. json_escapar(tostring(c.antes or c.texto or "?")) .. '"'
+        else
+            usados[mejor] = true
+            if c.texto ~= nil and tool_m then pcall(function() tool_m:SetInput("StyledText", tostring(c.texto)) end) end
+            if tonumber(c.size) and tool_m then pcall(function() tool_m:SetInput("Size", tonumber(c.size)) end) end
+            if tonumber(c.x) then poner(mejor, "Pan", (tonumber(c.x) - 0.5) * ancho) end
+            if tonumber(c.y) then poner(mejor, "Tilt", (0.5 - tonumber(c.y)) * alto) end
+            if tonumber(c.rot) then poner(mejor, "RotationAngle", tonumber(c.rot)) end
+            if tonumber(c.zx) then poner(mejor, "ZoomX", tonumber(c.zx)) end
+            if tonumber(c.zy) then poner(mejor, "ZoomY", tonumber(c.zy)) end
+            if tonumber(c.zoom) then                 -- estilo guion: el zoom va en el clip o DENTRO del macro Luxe (la grande dibujada ya grande)
+                local z, za = tonumber(c.zoom), tonumber(c.zoom_antes) or 1
+                local dentro = c.main == true and za > 1.005 and math.abs(prop(mejor, "ZoomX") - za) > 0.01
+                if dentro then
+                    if math.abs(z / za - 1) > 0.002 then agrandar(mejor, z / za) end
+                else
+                    poner(mejor, "ZoomX", z)
+                    poner(mejor, "ZoomY", z)
+                end
+                if c.main == true and tonumber(c.ancho_rel) then barrido(mejor, tonumber(c.ancho_rel) * (dentro and z or 1)) end
+            end
+            hechos = hechos + 1
+        end
+    end
+    RESULTADO = string.format('{"ok": true, "accion": "retocar", "hechos": %d, "total": %d, "clips": %d, "faltan": [%s]}',
+        hechos, #(orden.cambios or {}), n_clips, table.concat(faltan, ","))
+    print("VISTA " .. RESULTADO)
+end
+
 local function main()
     local r, diag = obtener_resolve()
     if r == nil then
@@ -791,6 +920,7 @@ local function main()
     if accion == "cabezal" then cabezal_al_inicio(orden); return end
     if accion == "inspeccionar" then inspeccionar(orden); return end
     if accion == "ajustar_clip" then ajustar_clip(orden); return end
+    if accion == "retocar" then retocar(orden); return end
     local lista = resolve:GetLayoutPresetList() or {}
     local existia = false
     for _, n in pairs(lista) do if n == nombre then existia = true end end

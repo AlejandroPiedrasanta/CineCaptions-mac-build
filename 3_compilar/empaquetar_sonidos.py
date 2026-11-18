@@ -27,7 +27,8 @@ CATALOGO = 'catalogo_sfx.json'
 def plan(lib=S.LIB_PROPIA):
     """(catálogo recortado, [rutas relativas]) de lo que debe ir en la copia."""
     cat = S.catalogo(lib)
-    usados = sorted({r for v in S.pools_de(cat, lib).values() for r in v})
+    usados = sorted({r for v in S.pools_de(cat, lib).values() for r in v}
+                    | {r for r in cat if r.startswith(S.CARPETA_ESTILOS + '/') and S.curado(r, cat[r])})   # v5.95: los juegos por estilo
     return {r: cat[r] for r in usados}, usados
 
 

@@ -302,6 +302,95 @@ def parte_oido(R, salida, env, video):
 
 
 # ------------------------------------------------------------------------------------------------------------------ dentro de la app
+def parte_detectar(R, salida, env):
+    """v5.95 (el usuario: «verifica que de verdad lo detecte, y en Mac también»): Premiere Pro ABIERTO se detecta de verdad, con un proceso
+    real que se llama como él (Windows: una copia de cmd.exe «Adobe Premiere Pro.exe»; Mac: un guion «Adobe Premiere Pro 2099» dentro de
+    su .app, que es lo que ve `pgrep -f`). Sin instalar nada: la cola y las extensiones van a una carpeta temporal. Mira cada estado de
+    Inicio: cerrado, abierto, hay que reiniciarlo, colocando, conectado con secuencia y otra vez cerrado."""
+    sys.path.insert(0, str(CODIGO))
+    import premiere
+    base = salida / 'detectar'
+    shutil.rmtree(base, ignore_errors=True)
+    (base / 'cola').mkdir(parents=True)
+    if premiere.abierto():
+        R.anotar(None, 'detectar', 'hay un Premiere Pro de verdad abierto en este equipo: no se puede probar con uno de mentira (ciérralo y repite)')
+        return
+    if sys.platform == 'darwin':
+        app = base / 'Adobe Premiere Pro 2099' / 'Adobe Premiere Pro 2099.app'
+        binario = app / 'Contents' / 'MacOS' / 'Adobe Premiere Pro 2099'
+        binario.parent.mkdir(parents=True)
+        binario.write_text('#!/bin/sh\nsleep 90\n', encoding='utf-8')
+        binario.chmod(0o755)
+        cmd, exe = [str(binario)], app
+    else:
+        exe = base / 'Adobe' / 'Adobe Premiere Pro 2099' / premiere.EXE_WIN
+        exe.parent.mkdir(parents=True)
+        shutil.copyfile(Path(os.environ.get('SystemRoot', r'C:\Windows')) / 'System32' / 'cmd.exe', exe)
+        cmd = [str(exe), '/c', 'ping -n 90 127.0.0.1 >nul']
+    viejo = {k: os.environ.get(k) for k in ('CINECAPTIONS_PREMIERE_COLA', 'CINECAPTIONS_PREMIERE_EXT', 'CINECAPTIONS_PREMIERE_EXE')}
+    os.environ.update(CINECAPTIONS_PREMIERE_COLA=str(base / 'cola'), CINECAPTIONS_PREMIERE_EXT=str(base / 'ext'), CINECAPTIONS_PREMIERE_EXE=str(exe))
+    poner = premiere.poner_al_dia
+    premiere.poner_al_dia = lambda: None
+    proceso = None
+
+    def linea(e):
+        t = premiere.textos_estado(e)
+        return f'«{t[0]}» [{t[1]}]'
+
+    def ver(cond, que, e):
+        R.anotar(bool(cond), 'detectar', f'{que}: {linea(e)}')
+    try:
+        e = premiere.estado()
+        ver(e['instalado'] and not e['abierto'] and premiere.textos_estado(e)[1] == 'ok', 'instalado y cerrado → verde', e)
+        t0 = time.time()
+        proceso = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=str(base))
+        while not premiere.abierto() and time.time() - t0 < 10:
+            time.sleep(0.2)
+        tardo = time.time() - t0
+        e = premiere.estado()
+        ini = premiere._inicio_premiere()
+        ver(e['abierto'] and not e['conectado'] and not e['reiniciar'] and premiere.textos_estado(e)[1] == 'ok',
+            f'abierto → detectado y verde (lo vio en {tardo:.1f} s)', e)
+        R.anotar(ini is not None and abs(ini - t0) < 20, 'detectar', f'sabe cuándo arrancó Premiere (hace {time.time() - (ini or 0):.0f} s)')
+        import archivos_seguros
+        archivos_seguros.escribir_json(premiere._marca_panel(), {'t': time.time() + 300})        # el panel «se instaló después» de abrirlo
+        e = premiere.estado()
+        ver(e['reiniciar'] and premiere.textos_estado(e)[1] == 'aviso', 'abierto antes de instalar el panel → pide reiniciar', e)
+        premiere._marca_panel().unlink()
+        (base / 'cola' / 'progreso.json').write_text(json.dumps({'id': 'x', 'hechos': 70, 'total': 211}), encoding='utf-8')
+        e = premiere.estado()
+        ver(e['conectado'] and e['trabajando'] and premiere.textos_estado(e)[1] == 'ok', 'colocando (el panel no late) → conectado y verde', e)
+        (base / 'cola' / 'progreso.json').unlink()
+        (base / 'cola' / 'latido.json').write_text(json.dumps({'t': time.time() * 1000, 'version': '26.5', 'panel': premiere.PANEL_SECUENCIA,
+                                                              'rev': premiere.rev_instalada(), 'secuencia': 'Mi secuencia'}), encoding='utf-8')
+        e = premiere.estado()
+        ver(e['conectado'] and e['secuencia'] == 'Mi secuencia' and premiere.textos_estado(e)[1] == 'ok', 'el panel late con una secuencia abierta', e)
+        (base / 'cola' / 'latido.json').unlink()
+    finally:
+        if proceso is not None:
+            try:
+                if sys.platform == 'darwin':
+                    subprocess.run(['pkill', '-f', 'Adobe Premiere Pro 2099'], capture_output=True, timeout=10)
+                else:
+                    subprocess.run(['taskkill', '/F', '/T', '/PID', str(proceso.pid)], capture_output=True, timeout=10)
+                proceso.wait(timeout=10)
+            except Exception:
+                pass
+        t1 = time.time()
+        while premiere.abierto() and time.time() - t1 < 10:
+            time.sleep(0.2)
+        try:
+            e = premiere.estado()
+            ver(not e['abierto'] and premiere.textos_estado(e)[1] == 'ok', 'cerrado otra vez', e)
+        finally:
+            premiere.poner_al_dia = poner
+            for k, v in viejo.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+
+
 def _cargar_app(prefs_extra=None):
     import faulthandler
     import importlib.util
@@ -581,8 +670,8 @@ def main():
         return dentro_go(*sys.argv[i + 1:i + 5])
     salida = Path([a for a in sys.argv[1:] if not a.startswith('--')][0]).resolve()
     salida.mkdir(parents=True, exist_ok=True)
-    solo = sys.argv[sys.argv.index('--solo') + 1].split(',') if '--solo' in sys.argv else ['simular', 'humo', 'opciones', 'oido', 'go', 'formatos',
-                                                                                          'premiere']
+    solo = sys.argv[sys.argv.index('--solo') + 1].split(',') if '--solo' in sys.argv else ['simular', 'detectar', 'humo', 'opciones', 'oido', 'go',
+                                                                                          'formatos', 'premiere']
     global ESTILOS
     if '--estilos' in sys.argv:                                # (para probar rápido: --estilos Kinetic,Tema4)
         ESTILOS = tuple(sys.argv[sys.argv.index('--estilos') + 1].split(','))
@@ -597,6 +686,7 @@ def main():
         video = None
         R.anotar(False, 'video', f'no pude hacer el video de prueba: {type(e).__name__}: {e}')
     partes = {'simular': lambda: parte_simular(R, salida, env), 'humo': lambda: parte_humo(R, salida, env),
+              'detectar': lambda: parte_detectar(R, salida, env),
               'opciones': lambda: parte_opciones(R, salida, env),
               'oido': lambda: video and parte_oido(R, salida, env, salida / 'zz_oido.mp4' if shutil.copyfile(video, salida / 'zz_oido.mp4') else video),
               'go': lambda: video and parte_go(R, salida, env, video, 'mp4', ESTILOS),
