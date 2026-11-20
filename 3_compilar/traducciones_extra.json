@@ -16459,5 +16459,27 @@
   "ko": "더 부드러운 시작: 홈 장면의 무거운 부분을 백그라운드에서 준비합니다.",
   "zh": "启动更流畅：首页场景中较重的部分会在后台准备。",
   "ru": "Более плавный запуск: тяжёлые части сцены «Главная» готовятся в фоне."
+ },
+ "Mac con DaVinci Resolve Free: arreglado el fallo que impedía a GO abrir el Puente y traer el audio de tu timeline.": {
+  "en": "Mac with DaVinci Resolve Free: fixed the bug that kept GO from opening the Bridge and bringing in your timeline audio.",
+  "pt": "Mac com DaVinci Resolve Free: corrigida a falha que impedia o GO de abrir a Ponte e trazer o áudio da sua timeline.",
+  "fr": "Mac avec DaVinci Resolve Free : corrigé le problème qui empêchait GO d’ouvrir le Pont et de récupérer l’audio de votre timeline.",
+  "de": "Mac mit DaVinci Resolve Free: Fehler behoben, durch den GO die Brücke nicht öffnen und den Ton deiner Timeline nicht holen konnte.",
+  "it": "Mac con DaVinci Resolve Free: corretto il problema che impediva a GO di aprire il Ponte e prendere l’audio della tua timeline.",
+  "ja": "Mac の DaVinci Resolve Free：GO がブリッジを開けず、タイムラインの音声を取得できなかった不具合を修正しました。",
+  "ko": "Mac의 DaVinci Resolve Free: GO가 브리지를 열지 못하고 타임라인 오디오를 가져오지 못하던 문제를 수정했습니다.",
+  "zh": "Mac 上的 DaVinci Resolve Free：修复了 GO 无法打开桥接并获取时间线音频的问题。",
+  "ru": "Mac с DaVinci Resolve Free: исправлена ошибка, из-за которой GO не мог открыть Мост и получить звук вашего таймлайна."
+ },
+ "Mac: el Registro ya no muestra el aviso de la letra «Consolas».": {
+  "en": "Mac: the Log no longer shows the “Consolas” font warning.",
+  "pt": "Mac: o Registro não mostra mais o aviso da fonte «Consolas».",
+  "fr": "Mac : le Journal n’affiche plus l’avertissement de la police « Consolas ».",
+  "de": "Mac: Das Protokoll zeigt die Warnung zur Schrift „Consolas“ nicht mehr.",
+  "it": "Mac: il Registro non mostra più l’avviso del carattere «Consolas».",
+  "ja": "Mac：ログに「Consolas」フォントの警告が表示されなくなりました。",
+  "ko": "Mac: 기록에 'Consolas' 글꼴 경고가 더 이상 표시되지 않습니다.",
+  "zh": "Mac：日志不再显示“Consolas”字体的警告。",
+  "ru": "Mac: в Журнале больше нет предупреждения о шрифте «Consolas»."
  }
 }

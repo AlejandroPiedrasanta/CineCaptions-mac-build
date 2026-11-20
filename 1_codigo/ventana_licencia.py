@@ -466,7 +466,7 @@ class VentanaLicencia(QDialog):
         self.txt = QLineEdit()
         self.txt.setObjectName('campoClave')
         self.txt.setPlaceholderText('CC-XXXX-XXXX-XXXX-XXXX')
-        mono = QFont('Consolas')
+        mono = QFont('Consolas' if __import__('sys').platform == 'win32' else 'Menlo')   # Mac no tiene Consolas
         mono.setStyleHint(QFont.StyleHint.Monospace)
         mono.setPixelSize(17)
         self.txt.setFont(mono)

@@ -1763,19 +1763,19 @@ def _puente_perdido(mensaje):
 _APPLESCRIPT_PUENTE = '''
 on buscar(m, nivel)
     tell application "System Events"
-        repeat with it in (menu items of m)
+        repeat with elem in (menu items of m)
             set nm to ""
             try
-                set nm to (name of it) as text
+                set nm to (name of elem) as text
             end try
             if nm is "CineCaptions_Puente" then
-                click it
+                click elem
                 return true
             end if
             if nivel < 4 then
                 try
-                    if (count of menus of it) > 0 then
-                        if my buscar(menu 1 of it, nivel + 1) then return true
+                    if (count of menus of elem) > 0 then
+                        if my buscar(menu 1 of elem, nivel + 1) then return true
                     end if
                 end try
             end if

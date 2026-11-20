@@ -389,7 +389,7 @@ class TarjetaEntrada(QFrame):
         self._det.setReadOnly(True)
         self._det.setPlainText((entrada.detalle.strip() or entrada.mensaje))
         f = ui.fuente(11)
-        f.setFamily('Consolas')
+        f.setFamily('Consolas' if __import__('sys').platform == 'win32' else 'Menlo')   # Mac no tiene Consolas (Qt avisaba y tardaba 130 ms)
         self._det.setFont(f)
         self._det.setFixedHeight(130)
         self._det.setStyleSheet(ui.traducir_hoja('QPlainTextEdit { background-color: #070D1A; border: 1px solid #1E2A42; border-radius: 8px; padding: 6px; color: #9FB0CC; }'))

@@ -595,6 +595,10 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('6.01', [
+        'Mac con DaVinci Resolve Free: arreglado el fallo que impedía a GO abrir el Puente y traer el audio de tu timeline.',
+        'Mac: el Registro ya no muestra el aviso de la letra «Consolas».',
+    ]),
     ('6.00', [
         'Más rápido: Estilo se abre al momento la primera vez y las páginas gastan menos al pintarse, en Mac y en Windows.',
         'Cambiar de página ya no da un destello: las tarjetas entran suaves desde el primer momento.',
