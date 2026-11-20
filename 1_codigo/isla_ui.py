@@ -238,6 +238,26 @@ class IslaNav(QWidget):
         caps = QRectF(0.5 + 2, MARGEN + 0.5, self.width() - 5, ALTO - 1)
         radio = caps.height() / 2.0
         acento = QColor(ui.ACCENT_CLARO)
+        # v5.99: la cápsula (sombra, cristal, luces y borde) solo cambia con el tamaño: en un pixmap. En Inicio la isla se repinta con
+        # cada cuadro de la escena de detrás (~50 por segundo) y rehacía sus degradados y su recorte cada vez
+        dpr = self.devicePixelRatioF()
+        clave = (self.width(), self.height(), round(dpr, 3), acento.rgba())
+        capsula = getattr(self, '_capsula', None)
+        if capsula is None or capsula[0] != clave:
+            from PySide6.QtGui import QPixmap
+            pm = QPixmap(max(1, int(self.width() * dpr + 0.999)), max(1, int(self.height() * dpr + 0.999)))
+            pm.setDevicePixelRatio(dpr)
+            pm.fill(Qt.GlobalColor.transparent)
+            q = QPainter(pm)
+            q.setRenderHint(QPainter.RenderHint.Antialiasing)
+            self._pintar_capsula(q, caps, radio, acento)
+            q.end()
+            capsula = self._capsula = (clave, pm)
+        p.drawPixmap(0, 0, capsula[1])
+        self._pintar_contenido(p, _e)
+
+    @staticmethod
+    def _pintar_capsula(p, caps, radio, acento):
         # sombra en capas (de afuera hacia adentro)
         p.setPen(Qt.PenStyle.NoPen)
         for grosor, alfa in ((16, 10), (10, 18), (5, 28)):
@@ -265,6 +285,9 @@ class IslaNav(QWidget):
         p.setPen(QPen(QColor(255, 255, 255, 30), 1.0))
         p.setBrush(Qt.BrushStyle.NoBrush)
         p.drawPath(camino)
+
+    def _pintar_contenido(self, p, _e):
+        acento = QColor(ui.ACCENT_CLARO)
         # la pastilla elegida (desliza entre iconos)
         if self._actual is not None and self._pastilla[1].x > 4:
             pa = QRectF(self._pastilla[0].x, MARGEN + (ALTO - H_ITEM) / 2.0, self._pastilla[1].x, H_ITEM)

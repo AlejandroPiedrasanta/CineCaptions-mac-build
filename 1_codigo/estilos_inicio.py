@@ -220,6 +220,37 @@ def _ruido(n, rng, octavas=(4, 8, 16, 32, 64)):
     return (acc - acc.min()) / max(1e-6, float(acc.max() - acc.min()))
 
 
+# v5.99: las texturas de ruido (numpy, ~45-60 ms entre todas) se hacían en el PRIMER cuadro de Inicio, en el hilo de la interfaz: un
+# parón de ~180 ms al abrir el programa. Ahora un hilo las adelanta al importar el módulo (numpy y QImage valen fuera del hilo de la
+# interfaz; el QPixmap no: se hace al pedirlas, ~1 ms). Si se piden antes de que acabe, se calculan ahí como siempre.
+_PREVIAS = {}
+
+
+def _previa(clave, hacer):
+    img = _PREVIAS.get(clave)
+    if img is None:
+        img = hacer()
+    return QPixmap.fromImage(img)
+
+
+def _adelantar_texturas():
+    """Las de Nebulosa._texturas (que también usa el Astrolabio), en un hilo."""
+    trabajos = [(('nube', 256, 11, (20, 190, 130), (40, 120, 200), 1.0), lambda: _img_nube(256, 11, (20, 190, 130), (40, 120, 200), 1.0)),
+                (('nube', 256, 23, (10, 140, 160), (220, 150, 60), 0.85), lambda: _img_nube(256, 23, (10, 140, 160), (220, 150, 60), 0.85)),
+                (('nube', 256, 37, (60, 230, 170), (20, 90, 140), 0.9), lambda: _img_nube(256, 37, (60, 230, 170), (20, 90, 140), 0.9)),
+                (('haz', 512, 96), lambda: _img_haz(512, 96)),
+                (('nube', 256, 51, (255, 255, 255), (210, 210, 210), 1.0), lambda: _img_nube(256, 51, (255, 255, 255), (210, 210, 210), 1.0)),
+                (('nube', 256, 61, (120, 80, 230), (40, 120, 225), 0.9), lambda: _img_nube(256, 61, (120, 80, 230), (40, 120, 225), 0.9)),
+                (('nube', 256, 71, (1, 6, 8), (0, 3, 6), 1.25), lambda: _img_nube(256, 71, (1, 6, 8), (0, 3, 6), 1.25)),
+                (('disco', 320, 81), lambda: _img_disco(320, 81))]
+    for clave, hacer in trabajos:
+        if clave not in _PREVIAS:
+            try:
+                _PREVIAS[clave] = hacer()
+            except Exception:
+                return
+
+
 def _imagen(rgb, a):
     """numpy rgb (alto, ancho, 3) 0..255 y alfa 0..1 -> QImage ARGB32 premultiplicado."""
     h, w = a.shape
@@ -232,6 +263,10 @@ def _imagen(rgb, a):
 
 
 def _textura_nube(n, semilla, c1, c2, densidad=1.0):
+    return _previa(('nube', n, semilla, tuple(c1), tuple(c2), densidad), lambda: _img_nube(n, semilla, c1, c2, densidad))
+
+
+def _img_nube(n, semilla, c1, c2, densidad=1.0):
     rng = np.random.default_rng(semilla)
     f = _ruido(n, rng)
     g = _ruido(n, rng, (3, 6, 12))
@@ -240,12 +275,16 @@ def _textura_nube(n, semilla, c1, c2, densidad=1.0):
     dens = (np.clip((f - 0.30) * 2.0, 0, 1) ** 1.5) * caida * densidad
     m = np.clip(g * 1.5 - 0.25, 0, 1)[..., None]
     rgb = np.array(c1, np.float32) * (1 - m) + np.array(c2, np.float32) * m
-    return QPixmap.fromImage(_imagen(rgb, np.clip(dens, 0, 1)))
+    return _imagen(rgb, np.clip(dens, 0, 1))
 
 
 def _textura_disco(n=320, semilla=81):
     """v5.49 pulido: un disco de gas visto de frente (un anillo con tres brazos en espiral y grumos), casi blanco para teñirlo. Aplastado
     y girando alrededor del orbe parece un remolino en perspectiva."""
+    return _previa(('disco', n, semilla), lambda: _img_disco(n, semilla))
+
+
+def _img_disco(n=320, semilla=81):
     rng = np.random.default_rng(semilla)
     f = _ruido(n, rng, (4, 8, 16, 32))
     yy, xx = (np.mgrid[0:n, 0:n] / (n - 1)) * 2 - 1
@@ -256,7 +295,7 @@ def _textura_disco(n=320, semilla=81):
     a = np.clip(banda * (0.35 + 0.65 * brazos) * (0.3 + 1.0 * f), 0, 1) * (r < 1)
     calor = np.clip((0.85 - r) * 2.5, 0, 1)[..., None]                  # más claro por dentro
     rgb = np.array((205, 225, 235), np.float32) * (1 - calor) + np.array((255, 255, 250), np.float32) * calor
-    return QPixmap.fromImage(_imagen(rgb, a))
+    return _imagen(rgb, a)
 
 
 def _tenir(pm, hexa):
@@ -274,11 +313,15 @@ def _tenir(pm, hexa):
 
 def _textura_haz(largo=512, ancho=96):
     """Un haz de luz: se apaga a lo largo y es gaussiano a lo ancho (verde claro)."""
+    return _previa(('haz', largo, ancho), lambda: _img_haz(largo, ancho))
+
+
+def _img_haz(largo=512, ancho=96):
     xs = np.linspace(0, 1, largo)[None, :]
     ys = np.linspace(-1, 1, ancho)[:, None]
     a = (1 - xs) ** 1.6 * np.exp(-(ys ** 2) / (0.10 + 0.5 * xs ** 1.2)) * np.clip(xs * 8, 0, 1)
     rgb = np.broadcast_to(np.array((200, 255, 235), np.float32), (ancho, largo, 3))
-    return QPixmap.fromImage(_imagen(rgb, a))
+    return _imagen(rgb, a)
 
 
 class _Escena:
@@ -315,6 +358,7 @@ class Estilo:
     ensambla = True                      # el astrolabio entra pieza a pieza: BotonGo no lo hace crecer
     pasos_lista = True                   # la lista de pasos de la escena (Proceso pone sus tarjetas)
     cometas = True                       # los cometas que llevan cada paso a su etiqueta
+    penumbra_go = 1.0                    # v5.99: cuánta penumbra pone la escena detrás del título y los pasos en GO (EscenaGo._dibujar_penumbra_go)
 
     def __init__(self):
         import orbe_mecanica
@@ -1080,6 +1124,7 @@ class Proceso(Estilo):
     aurora = ('#0B8F5B', '#1D7FA0', '#6B3FB8')
     pasos_lista = False
     cometas = False
+    penumbra_go = 0.55                   # (su fondo ya es oscuro; solo el título y «detectado» sobre el charco de luz)
 
     def __init__(self):
         super().__init__()
@@ -1314,10 +1359,14 @@ class Proceso(Estilo):
             self._t_pal = t
             self._palabras.append((t, FRASE[len(self._palabras) % len(FRASE)], self._rnd.uniform(-0.9, 0.9) + (math.pi if self._rnd.random() < 0.5 else 0), fase))
         self._palabras = [w_ for w_ in self._palabras if t - w_[0] < 2.2]
+        # v5.99: a lo ancho, hasta el borde de dentro de las tarjetas (menos media palabra); antes llegaban a 3,2 radios y se metían
+        # debajo de «Timeline» y «Voz» (las tarjetas empiezan a ~2,05 radios + 150 px, o antes en ventanas estrechas)
+        borde = min(Rs * 2.05 + 120 + 40 * math.cos(math.radians(38)), W / 2 - 258.0 - 24)
+        k_ancho = max(0.55, min(1.0, (borde - 95) / (Rs * 2.55 * 1.25)))
         for (t0, txt, ang, f_) in self._palabras:
             u = (t - t0) / 2.2
             r = Rs * (1.25 + 1.3 * _suave(u))                            # (v5.49 pulido: no llegan a las tarjetas)
-            x, y = c.x() + math.cos(ang) * r * 1.25, c.y() + math.sin(ang) * r * 0.6
+            x, y = c.x() + math.cos(ang) * r * 1.25 * k_ancho, c.y() + math.sin(ang) * r * 0.6
             al = min(1.0, u * 6) * (1 - u) ** 0.7
             if f_ == 'ia':                                               # (v5.49 pulido: más grandes, se leen)
                 _poner(p, self._chip(txt + (' ✨' if len(txt) > 4 else ''), dpr, 20, '#B388FF'), x, y, al, 0.95 + 0.2 * _suave(u))
@@ -1491,3 +1540,7 @@ def miniatura(clave, w=320, h=180, t=2.4, estado='listo', dpr=1.0):
     for _ in range(int(t * 30)):
         est.avanzar(1 / 30.0, 1.0 if estado == 'listo' else 4.0)
     return dibujar_miniatura(est, ctx, w, h, dpr)
+
+# v5.99: las texturas de Inicio se adelantan en un hilo nada más importar (ver _adelantar_texturas)
+if 'PySide6.QtWidgets' in __import__('sys').modules:
+    __import__('threading').Thread(target=_adelantar_texturas, daemon=True, name='texturas-inicio').start()

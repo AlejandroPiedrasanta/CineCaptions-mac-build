@@ -16415,5 +16415,49 @@
   "ko": "모든 페이지 다듬기: 홈의 기술 알림 감소, 설정 정리, 더 부드러운 전환.",
   "zh": "所有页面更精致：首页的技术提示更少，设置更整齐，过渡更流畅。",
   "ru": "Интерфейс аккуратнее на всех страницах: меньше технических уведомлений на Главной, порядок в Настройках и более плавные переходы."
+ },
+ "Más rápido: Estilo se abre al momento la primera vez y las páginas gastan menos al pintarse, en Mac y en Windows.": {
+  "en": "Faster: Style opens instantly the first time and pages use less to draw, on Mac and Windows.",
+  "pt": "Mais rápido: Estilo abre na hora na primeira vez e as páginas gastam menos para desenhar, no Mac e no Windows.",
+  "fr": "Plus rapide : Style s’ouvre aussitôt la première fois et les pages consomment moins à l’affichage, sur Mac et Windows.",
+  "de": "Schneller: Stil öffnet sich beim ersten Mal sofort und die Seiten brauchen weniger zum Zeichnen, auf Mac und Windows.",
+  "it": "Più veloce: Stile si apre subito la prima volta e le pagine consumano meno per disegnarsi, su Mac e Windows.",
+  "ja": "高速化：スタイルが初回からすぐ開き、各ページの描画負荷も軽くなりました（Mac・Windows）。",
+  "ko": "더 빨라짐: 스타일이 처음부터 바로 열리고 페이지를 그리는 부담이 줄었습니다(Mac·Windows).",
+  "zh": "更快：“风格”首次打开即刻完成，页面绘制更省资源（Mac 和 Windows）。",
+  "ru": "Быстрее: «Стиль» открывается сразу с первого раза, а страницы рисуются с меньшей нагрузкой — на Mac и Windows."
+ },
+ "Cambiar de página ya no da un destello: las tarjetas entran suaves desde el primer momento.": {
+  "en": "Switching pages no longer flashes: the cards slide in smoothly from the very first moment.",
+  "pt": "Trocar de página não pisca mais: os cartões entram suaves desde o primeiro instante.",
+  "fr": "Changer de page ne clignote plus : les cartes entrent en douceur dès le premier instant.",
+  "de": "Beim Seitenwechsel blitzt nichts mehr auf: Die Karten gleiten vom ersten Moment an weich herein.",
+  "it": "Cambiare pagina non dà più un lampo: le schede entrano morbide fin dal primo istante.",
+  "ja": "ページ切り替え時のちらつきがなくなり、カードが最初から滑らかに表示されます。",
+  "ko": "페이지를 바꿀 때 깜빡임이 없어지고 카드가 처음부터 부드럽게 들어옵니다.",
+  "zh": "切换页面不再闪烁：卡片从一开始就平滑进入。",
+  "ru": "Смена страницы больше не мигает: карточки плавно появляются с первого мгновения."
+ },
+ "Inicio: durante GO el título, el estado y la lista de pasos se leen mejor sobre la escena.": {
+  "en": "Home: during GO the title, status and step list are easier to read over the scene.",
+  "pt": "Início: durante o GO, o título, o estado e a lista de passos se leem melhor sobre a cena.",
+  "fr": "Accueil : pendant GO, le titre, l’état et la liste des étapes se lisent mieux sur la scène.",
+  "de": "Start: Während GO sind Titel, Status und Schrittliste über der Szene besser lesbar.",
+  "it": "Home: durante GO il titolo, lo stato e l’elenco dei passaggi si leggono meglio sulla scena.",
+  "ja": "ホーム：GO 中、タイトル・状態・ステップ一覧がシーンの上でも読みやすくなりました。",
+  "ko": "홈: GO 중 제목, 상태, 단계 목록이 장면 위에서 더 잘 보입니다.",
+  "zh": "首页：GO 进行中，标题、状态和步骤列表在场景上更易阅读。",
+  "ru": "Главная: во время GO заголовок, статус и список шагов лучше читаются поверх сцены."
+ },
+ "Arranque más fluido: lo pesado de la escena de Inicio se prepara en segundo plano.": {
+  "en": "Smoother startup: the heavy parts of the Home scene are prepared in the background.",
+  "pt": "Abertura mais fluida: o mais pesado da cena de Início é preparado em segundo plano.",
+  "fr": "Démarrage plus fluide : le plus lourd de la scène d’Accueil se prépare en arrière-plan.",
+  "de": "Flüssigerer Start: Das Aufwendige der Start-Szene wird im Hintergrund vorbereitet.",
+  "it": "Avvio più fluido: la parte pesante della scena Home si prepara in background.",
+  "ja": "起動がよりスムーズに：ホーム画面の重い処理をバックグラウンドで準備します。",
+  "ko": "더 부드러운 시작: 홈 장면의 무거운 부분을 백그라운드에서 준비합니다.",
+  "zh": "启动更流畅：首页场景中较重的部分会在后台准备。",
+  "ru": "Более плавный запуск: тяжёлые части сцены «Главная» готовятся в фоне."
  }
 }

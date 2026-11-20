@@ -405,6 +405,7 @@ class PaginaEfectos(QWidget):
         self._izq.capa.addWidget(self._pila_info)
         hp.addWidget(self._izq)
         self._centro = QWidget()
+        self._centro.setProperty('entra_con_tarjetas', True)   # v5.99: el ejemplo entra con las tarjetas (salía solo, antes que ellas)
         cc = QVBoxLayout(self._centro)
         cc.setContentsMargins(0, 0, 0, 0)
         self._vista = PanelVista()

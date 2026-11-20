@@ -595,6 +595,12 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('6.00', [
+        'Más rápido: Estilo se abre al momento la primera vez y las páginas gastan menos al pintarse, en Mac y en Windows.',
+        'Cambiar de página ya no da un destello: las tarjetas entran suaves desde el primer momento.',
+        'Inicio: durante GO el título, el estado y la lista de pasos se leen mejor sobre la escena.',
+        'Arranque más fluido: lo pesado de la escena de Inicio se prepara en segundo plano.',
+    ]),
     ('5.99', [
         'Nueva página Efectos: arriba ves tu video con el icono de cada efecto en el momento en que GO lo pone; clic en uno para cambiarlo.',
         'Las opciones de cada efecto, más grandes y con su nombre encima; caben todas sin desplazar.',

@@ -72,7 +72,7 @@ def _partes(v):
 def corta(v):
     """v5.20: como se ENSEÑA una versión: el manifiesto publica «5.20.0» (los 5.5.x instalados solo entienden x.y.z) y aquí se ve «5.20»."""
     m = re.fullmatch(r'(\d+)\.(\d+)\.0((?:-beta\.?\d+)?)', str(v or '').strip())
-    if m and int(m.group(2)) >= 20:
+    if m and (int(m.group(2)) >= 20 or int(m.group(1)) >= 6):     # (v6.00: «6.00.0» → «6.00»)
         return f'{m.group(1)}.{m.group(2)}{m.group(3)}'
     return str(v or '')
 

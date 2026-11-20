@@ -53,10 +53,21 @@ def _slug(texto):
     return t[:48] or 'pack'
 
 
+_PACKS_CORTO = {}                                      # v5.99: nombre → (cuándo, pack): 2 s
+
+
 def _pack(nombre):
-    if nombre in (None, '', 'auto', 'dinamico'):
-        return plantillas.pack_incorporado()
-    return plantillas.buscar_pack(nombre)
+    """El pack de ese nombre. v5.99: recordado 2 s (cacheadas/recortes lo piden varias veces por pack al abrir Estilo, y cada
+    búsqueda mira el disco: ~1,2 ms; eran ~150 ms en el hilo de la interfaz en la primera visita)."""
+    import time as _t
+    ahora = _t.monotonic()
+    memo = _PACKS_CORTO.get(nombre)
+    if memo is not None and ahora - memo[0] < 2.0:
+        return memo[1]
+    pack = plantillas.pack_incorporado() if nombre in (None, '', 'auto', 'dinamico') else plantillas.buscar_pack(nombre)
+    if pack is not None:                               # (sin recordar «no está»: un pack recién creado se encuentra al momento)
+        _PACKS_CORTO[nombre] = (ahora, pack)
+    return pack
 
 
 def _firma(pack, formato, textos):

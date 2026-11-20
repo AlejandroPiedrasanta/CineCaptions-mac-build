@@ -1191,7 +1191,36 @@ class Tarjeta(QFrame):
                 alfa_c = 228 if not elegida else 236
             except Exception:
                 alfa_c = 255
-        # los colores pasan por el traductor del tema (Noche / Negro / Grafito): las tarjetas siguen al tema elegido
+        # 2-4) el tinte del cristal, la luz del borde de arriba y el reflejo: no cambian mientras la tarjeta no cambie de tamaño ni de
+        # estado. v5.99: se pintan UNA vez en un pixmap y en cada repintado (la aurora de debajo se mueve: ~25 por segundo) solo se copian
+        dpr = self.devicePixelRatioF()
+        clave = (self.width(), self.height(), round(dpr, 3), elegida, apagada, alfa_c)
+        capa = getattr(self, '_capa_cristal', None)
+        if capa is None or capa[0] != clave:
+            pm = QPixmap(max(1, int(math.ceil(self.width() * dpr))), max(1, int(math.ceil(self.height() * dpr))))
+            pm.setDevicePixelRatio(dpr)
+            pm.fill(Qt.GlobalColor.transparent)
+            q = QPainter(pm)
+            q.setRenderHint(QPainter.RenderHint.Antialiasing)
+            self._pintar_cristal(q, r, camino, radio, elegida, apagada, alfa_c)
+            q.end()
+            capa = self._capa_cristal = (clave, pm)
+        p.drawPixmap(0, 0, capa[1])
+        # 5) el borde de 1 px: blanco translucido; elegida = acento; con el mouse encima, se tiñe de acento
+        # v5.7 (pedido: «no me gusta que se resalten las cartas y secciones»): ninguna tarjeta se ilumina al pasar el mouse. Solo la
+        # elegida lleva el acento (fino) y las pulsables aclaran su borde en blanco, sin color.
+        if elegida:
+            p.setPen(QPen(QColor(acento.red(), acento.green(), acento.blue(), 210), 1.6))
+        else:
+            mezcla = 0.09 + (0.10 * max(0.0, min(1.0, self._foco.x)) if self._clicable else 0.0)
+            p.setPen(QPen(QColor(255, 255, 255, int(255 * mezcla)), 1.0))
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.drawPath(camino)
+        p.end()
+
+    @staticmethod
+    def _pintar_cristal(p, r, camino, radio, elegida, apagada, alfa_c):
+        """El tinte (los colores pasan por el traductor del tema: las tarjetas siguen al tema elegido), la luz de arriba y el reflejo."""
         def _cristal(hexa):
             c = QColor(_color(hexa))
             c.setAlpha(alfa_c)
@@ -1222,17 +1251,6 @@ class Tarjeta(QFrame):
             sg.setColorAt(1.0, QColor(255, 255, 255, 0))
             p.fillRect(r, sg)
         p.restore()
-        # 5) el borde de 1 px: blanco translucido; elegida = acento; con el mouse encima, se tiñe de acento
-        # v5.7 (pedido: «no me gusta que se resalten las cartas y secciones»): ninguna tarjeta se ilumina al pasar el mouse. Solo la
-        # elegida lleva el acento (fino) y las pulsables aclaran su borde en blanco, sin color.
-        if elegida:
-            p.setPen(QPen(QColor(acento.red(), acento.green(), acento.blue(), 210), 1.6))
-        else:
-            mezcla = 0.09 + (0.10 * max(0.0, min(1.0, self._foco.x)) if self._clicable else 0.0)
-            p.setPen(QPen(QColor(255, 255, 255, int(255 * mezcla)), 1.0))
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        p.drawPath(camino)
-        p.end()
 
     def enterEvent(self, e):
         self._encima = True

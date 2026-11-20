@@ -12,6 +12,7 @@
     PanelVista                      el escenario: el mp4 de la opción en bucle en un móvil, su nombre, «Ver otra vez» y «Usar …»
 Lo que se elige y se guarda sigue en efectos_pro_ui.SeccionEstilo (estilos_pro): aquí solo cómo se ve. Sin globos ni tooltips.
 """
+import math
 from pathlib import Path
 
 from PySide6.QtCore import QRectF, QSize, Qt, Signal
@@ -525,6 +526,25 @@ class TiraTiempo(QWidget):
         super().resizeEvent(e)
         self._colocar()
 
+    def _pintar_fotos(self, p, pista, solo):
+        """Los fotogramas a lo largo de `pista`, recortados a lo ancho (alto × 1,35) con una raya de 2 px; `solo` = [QRectF]: solo los
+        que tocan esos tramos (los del tramo abierto, encima de la capa guardada)."""
+        n = len(self._fotos)
+        ancho_f = pista.height() * 1.35
+        cuantos = max(1, int(round(pista.width() / ancho_f)))
+        ancho_f = pista.width() / cuantos
+        for i in range(cuantos):
+            r = QRectF(pista.left() + i * ancho_f, pista.top(), ancho_f - 2, pista.height())
+            if solo is not None and not any(r.intersects(t) for t in solo):
+                continue
+            img = self._fotos[min(n - 1, int((i + 0.5) / cuantos * n))]
+            esc = max(r.width() / img.width(), r.height() / img.height())
+            w, h = img.width() * esc, img.height() * esc
+            p.save()
+            p.setClipRect(r, Qt.ClipOperation.IntersectClip)
+            p.drawImage(QRectF(r.center().x() - w / 2, r.center().y() - h * 0.42, w, h), img)
+            p.restore()
+
     def paintEvent(self, _e):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -565,41 +585,43 @@ class TiraTiempo(QWidget):
             tramos.append(QRectF((x0 + max(16.0, x1 - x0) / 2) - ancho / 2, pista.top(), ancho, pista.height()))
         camino = QPainterPath()
         camino.addRoundedRect(pista, 10, 10)
-        p.save()
-        p.setClipPath(camino)
-        p.fillRect(pista, QColor('#0A1220'))
-        if self._fotos:
-            n = len(self._fotos)
-            ancho_f = pista.height() * 1.35            # (los fotogramas de un video vertical, recortados a lo ancho: menos y más legibles)
-            cuantos = max(1, int(round(pista.width() / ancho_f)))
-            ancho_f = pista.width() / cuantos
-            for capa in (0, 1):                        # 0: todos, apagados · 1: los del tramo de la sección abierta, a todo color
-                if capa == 1:
-                    if not tramos:
-                        break
-                    cam_t = QPainterPath()
-                    for r in tramos:
-                        cam_t.addRect(r)
-                    p.setClipPath(cam_t.intersected(camino))
-                p.setOpacity(0.5 if capa == 0 else 0.5 + 0.5 * e)
-                for i in range(cuantos):
-                    img = self._fotos[min(n - 1, int((i + 0.5) / cuantos * n))]
-                    r = QRectF(pista.left() + i * ancho_f, pista.top(), ancho_f - 2, pista.height())
-                    esc = max(r.width() / img.width(), r.height() / img.height())
-                    w, h = img.width() * esc, img.height() * esc
-                    p.save()
-                    p.setClipRect(r, Qt.ClipOperation.IntersectClip)
-                    p.drawImage(QRectF(r.center().x() - w / 2, r.center().y() - h * 0.42, w, h), img)
-                    p.restore()
-            p.setOpacity(1.0)
-        else:
-            p.setPen(QPen(QColor(255, 255, 255, 14), 1))
-            paso = 14.0
-            xx = pista.left()
-            while xx < pista.right():                  # (sin video: la tira rayada)
-                p.drawLine(int(xx), int(pista.top()), int(xx + pista.height() * 0.6), int(pista.bottom()))
-                xx += paso
-        p.restore()
+        # v5.99: la capa de abajo (fondo + fotogramas apagados, o la tira rayada) se pinta UNA vez en un pixmap; en cada repintado solo
+        # se copia (antes, 60 fotogramas recortados y escalados cada vez: ~2,5 ms)
+        dpr = self.devicePixelRatioF()
+        clave = (round(pista.width()), round(pista.height()), round(dpr, 3), id(self._fotos), len(self._fotos))
+        if getattr(self, '_base_tira', (None,))[0] != clave:
+            pm = QPixmap(int(math.ceil(pista.width() * dpr)), int(math.ceil(pista.height() * dpr)))
+            pm.setDevicePixelRatio(dpr)
+            pm.fill(Qt.GlobalColor.transparent)
+            q = QPainter(pm)
+            q.setRenderHint(QPainter.RenderHint.Antialiasing)
+            q.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+            local = QRectF(0, 0, pista.width(), pista.height())
+            cam_l = QPainterPath()
+            cam_l.addRoundedRect(local, 10, 10)
+            q.setClipPath(cam_l)
+            q.fillRect(local, QColor('#0A1220'))
+            if self._fotos:
+                q.setOpacity(0.5)
+                self._pintar_fotos(q, local, None)
+            else:
+                q.setPen(QPen(QColor(255, 255, 255, 14), 1))
+                xx = 0.0
+                while xx < local.right():              # (sin video: la tira rayada)
+                    q.drawLine(int(xx), 0, int(xx + local.height() * 0.6), int(local.bottom()))
+                    xx += 14.0
+            q.end()
+            self._base_tira = (clave, pm)
+        p.drawPixmap(pista.topLeft(), self._base_tira[1])
+        if self._fotos and tramos:                     # los del tramo de la sección abierta, a todo color (solo esos fotogramas)
+            p.save()
+            cam_t = QPainterPath()
+            for r in tramos:
+                cam_t.addRect(r)
+            p.setClipPath(cam_t.intersected(camino))
+            p.setOpacity(0.5 + 0.5 * e)
+            self._pintar_fotos(p, pista, tramos)
+            p.restore()
         p.setBrush(Qt.BrushStyle.NoBrush)
         p.setPen(QPen(QColor(255, 255, 255, 26), 1))
         p.drawRoundedRect(pista.adjusted(0.5, 0.5, -0.5, -0.5), 10, 10)
@@ -749,7 +771,18 @@ class TarjetaVertical(QWidget):
             img = self._poster
             esc = max(mini.width() / img.width(), mini.height() / img.height()) * (1.0 + 0.05 * h)
             w, hh = img.width() * esc, img.height() * esc
-            p.drawImage(QRectF(mini.center().x() - w / 2, mini.center().y() - hh / 2, w, hh), img)
+            destino = QRectF(mini.center().x() - w / 2, mini.center().y() - hh / 2, w, hh)
+            if h < 0.005:                              # v5.99: quieta, el póster ya escalado (antes se reescalaba en cada repintado)
+                dpr = self.devicePixelRatioF()
+                clave = (round(w * dpr), round(hh * dpr))
+                if getattr(self, '_poster_esc', (None,))[0] != clave:
+                    pm = QPixmap.fromImage(img.scaled(clave[0], clave[1], Qt.AspectRatioMode.IgnoreAspectRatio,
+                                                      Qt.TransformationMode.SmoothTransformation))
+                    pm.setDevicePixelRatio(dpr)
+                    self._poster_esc = (clave, pm)
+                p.drawPixmap(destino.topLeft(), self._poster_esc[1])
+            else:
+                p.drawImage(destino, img)
         else:
             p.fillRect(mini, QColor('#0B1424'))
             p.setPen(QColor(MUT))

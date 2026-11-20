@@ -1328,6 +1328,7 @@ class EscenaGo(QWidget):
                     registro.aviso(f'Escena de Inicio ({self.estilo_clave}): {type(ex).__name__}: {ex}', 'escena_go')
                 except Exception:
                     pass
+        self._dibujar_penumbra_go(p, c, Rs, rect, est)
         self._dibujar_chispas_paso(p, c, est.pasos_lista)
         self._dibujar_chispas(p)
         for onda in self._ondas:
@@ -1344,6 +1345,45 @@ class EscenaGo(QWidget):
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(_col('#DFF1FF', 235 * self.destello ** 1.4))
             p.drawRect(QRectF(-10, -10, W + 20, H + 20))
+
+    def _dibujar_penumbra_go(self, p, c, Rs, rect, est):
+        """v5.99 (el usuario: «pule más los estilos de interfaz»): en GO, una penumbra suave detrás del título, la línea de estado y la lista
+        de pasos. Con la escena encendida (la nube de Nebulosa, el anillo horario de Astrolabio) «detectado» y los pasos casi no se leían.
+        Entra y sale despacio (no salta al empezar ni al acabar); cada estilo dice cuánta (`Estilo.penumbra_go`)."""
+        obj = 1.0 if self._estado in ('trabajando', 'explotando') else 0.0
+        a = getattr(self, '_pen_a', 0.0)
+        a += (obj - a) * (0.06 if obj > a else 0.035)
+        self._pen_a = a = 0.0 if a < 0.004 else a
+        fuerza = float(getattr(est, 'penumbra_go', 1.0)) * a
+        if fuerza <= 0.01:
+            return
+        arriba = c.y() + Rs * 0.80                     # desde el borde del orbe (el título y «detectado») …
+        abajo = max(arriba + Rs * 0.8, rect.bottom() + 10)   # … hasta el final de la lista
+        alto = abajo - arriba
+        ancho = max(rect.width() * 1.35, Rs * 3.4)
+        sprite = getattr(EscenaGo, '_PENUMBRA', None)
+        if sprite is None:                             # (el degradado una vez, pequeño; cada cuadro solo se escala: ~1 ms → ~0,3)
+            sprite = QImage(256, 256, QImage.Format.Format_ARGB32_Premultiplied)
+            sprite.fill(0)
+            q = QPainter(sprite)
+            q.setRenderHint(QPainter.RenderHint.Antialiasing)
+            g = QRadialGradient(QPointF(128, 128), 128)
+            g.setColorAt(0.0, _col('#02080C', 205))
+            g.setColorAt(0.5, _col('#02080C', 165))
+            g.setColorAt(0.8, _col('#02080C', 70))
+            g.setColorAt(1.0, _col('#02080C', 0))
+            q.setPen(Qt.PenStyle.NoPen)
+            q.setBrush(g)
+            q.drawEllipse(QPointF(128, 128), 128, 128)
+            q.end()
+            EscenaGo._PENUMBRA = sprite
+        cy = arriba + alto * 0.42                      # (más arriba que el centro: lo que más cuesta leer es el título y el estado)
+        p.save()
+        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
+        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        p.setOpacity(min(1.0, fuerza))
+        p.drawImage(QRectF(c.x() - ancho * 0.5, cy - alto * 0.75, ancho, alto * 1.5), sprite)
+        p.restore()
 
     # ------------------------------------------------------------------ la barra de progreso de abajo
     def _avanzar_barra(self, dt):

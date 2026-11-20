@@ -5108,6 +5108,10 @@
     "Nueva página Efectos: arriba ves tu video con el icono de cada efecto en el momento en que GO lo pone; clic en uno para cambiarlo.": "New Effects page: at the top you see your video with each effect’s icon at the moment GO adds it; click one to change it.",
     "Las opciones de cada efecto, más grandes y con su nombre encima; caben todas sin desplazar.": "Each effect’s options are bigger, with their name on top; they all fit without scrolling.",
     "Permisos: la ventana ya no se cierra hasta que CineCaptions tenga todo lo que necesita en tu Mac o tu PC.": "Permissions: the window no longer closes until CineCaptions has everything it needs on your Mac or PC.",
-    "Interfaz más pulida en todas las páginas: menos avisos técnicos en Inicio, Ajustes mejor ordenado y transiciones más suaves.": "A more polished interface on every page: fewer technical notices on Home, tidier Settings and smoother transitions."
+    "Interfaz más pulida en todas las páginas: menos avisos técnicos en Inicio, Ajustes mejor ordenado y transiciones más suaves.": "A more polished interface on every page: fewer technical notices on Home, tidier Settings and smoother transitions.",
+    "Más rápido: Estilo se abre al momento la primera vez y las páginas gastan menos al pintarse, en Mac y en Windows.": "Faster: Style opens instantly the first time and pages use less to draw, on Mac and Windows.",
+    "Cambiar de página ya no da un destello: las tarjetas entran suaves desde el primer momento.": "Switching pages no longer flashes: the cards slide in smoothly from the very first moment.",
+    "Inicio: durante GO el título, el estado y la lista de pasos se leen mejor sobre la escena.": "Home: during GO the title, status and step list are easier to read over the scene.",
+    "Arranque más fluido: lo pesado de la escena de Inicio se prepara en segundo plano.": "Smoother startup: the heavy parts of the Home scene are prepared in the background."
   }
 }

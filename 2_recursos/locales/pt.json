@@ -4947,6 +4947,10 @@
     "Nueva página Efectos: arriba ves tu video con el icono de cada efecto en el momento en que GO lo pone; clic en uno para cambiarlo.": "Nova página Efeitos: no topo você vê seu vídeo com o ícone de cada efeito no momento em que o GO o coloca; clique em um para mudá-lo.",
     "Las opciones de cada efecto, más grandes y con su nombre encima; caben todas sin desplazar.": "As opções de cada efeito estão maiores e com o nome em cima; cabem todas sem rolar.",
     "Permisos: la ventana ya no se cierra hasta que CineCaptions tenga todo lo que necesita en tu Mac o tu PC.": "Permissões: a janela não fecha até o CineCaptions ter tudo o que precisa no seu Mac ou PC.",
-    "Interfaz más pulida en todas las páginas: menos avisos técnicos en Inicio, Ajustes mejor ordenado y transiciones más suaves.": "Interface mais polida em todas as páginas: menos avisos técnicos em Início, Ajustes mais organizado e transições mais suaves."
+    "Interfaz más pulida en todas las páginas: menos avisos técnicos en Inicio, Ajustes mejor ordenado y transiciones más suaves.": "Interface mais polida em todas as páginas: menos avisos técnicos em Início, Ajustes mais organizado e transições mais suaves.",
+    "Más rápido: Estilo se abre al momento la primera vez y las páginas gastan menos al pintarse, en Mac y en Windows.": "Mais rápido: Estilo abre na hora na primeira vez e as páginas gastam menos para desenhar, no Mac e no Windows.",
+    "Cambiar de página ya no da un destello: las tarjetas entran suaves desde el primer momento.": "Trocar de página não pisca mais: os cartões entram suaves desde o primeiro instante.",
+    "Inicio: durante GO el título, el estado y la lista de pasos se leen mejor sobre la escena.": "Início: durante o GO, o título, o estado e a lista de passos se leem melhor sobre a cena.",
+    "Arranque más fluido: lo pesado de la escena de Inicio se prepara en segundo plano.": "Abertura mais fluida: o mais pesado da cena de Início é preparado em segundo plano."
   }
 }

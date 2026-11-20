@@ -487,8 +487,22 @@ def carpeta_incluida():
     except OSError:
         return None
 _MEMO_INC = {}
+_FIRMA_INC = [0.0, None]                                # v5.99: (cuándo, firma) de la última lectura
+
+
 def _firma_incluidos():
-    """Nombre, tamaño y fecha de cada archivo de plantillas_incluidas (barato: ~55 stat). Cambia si se toca algo."""
+    """Nombre, tamaño y fecha de cada archivo de plantillas_incluidas (barato: ~55 stat). Cambia si se toca algo.
+    v5.99: se reutiliza 2 s (abrir Estilo la pedía ~30 veces seguidas en el hilo de la interfaz: ~1 ms cada una recorriendo carpetas)."""
+    import time as _t
+    ahora = _t.monotonic()
+    if _FIRMA_INC[1] is not None and ahora - _FIRMA_INC[0] < 2.0:
+        return _FIRMA_INC[1]
+    firma = _firma_incluidos_disco()
+    _FIRMA_INC[0], _FIRMA_INC[1] = ahora, firma
+    return firma
+
+
+def _firma_incluidos_disco():
     carpeta = carpeta_incluida()
     if carpeta is None:
         return None

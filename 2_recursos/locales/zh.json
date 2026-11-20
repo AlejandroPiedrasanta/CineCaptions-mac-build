@@ -4869,6 +4869,10 @@
     "Nueva página Efectos: arriba ves tu video con el icono de cada efecto en el momento en que GO lo pone; clic en uno para cambiarlo.": "全新效果页面：顶部显示你的视频，每个效果的图标位于 GO 添加它的时刻；点击即可更改。",
     "Las opciones de cada efecto, más grandes y con su nombre encima; caben todas sin desplazar.": "每个效果的选项更大，名称显示在上面；无需滚动即可全部看到。",
     "Permisos: la ventana ya no se cierra hasta que CineCaptions tenga todo lo que necesita en tu Mac o tu PC.": "权限：在 CineCaptions 获得 Mac 或 PC 上所需的全部权限前，窗口不会关闭。",
-    "Interfaz más pulida en todas las páginas: menos avisos técnicos en Inicio, Ajustes mejor ordenado y transiciones más suaves.": "所有页面更精致：首页的技术提示更少，设置更整齐，过渡更流畅。"
+    "Interfaz más pulida en todas las páginas: menos avisos técnicos en Inicio, Ajustes mejor ordenado y transiciones más suaves.": "所有页面更精致：首页的技术提示更少，设置更整齐，过渡更流畅。",
+    "Más rápido: Estilo se abre al momento la primera vez y las páginas gastan menos al pintarse, en Mac y en Windows.": "更快：“风格”首次打开即刻完成，页面绘制更省资源（Mac 和 Windows）。",
+    "Cambiar de página ya no da un destello: las tarjetas entran suaves desde el primer momento.": "切换页面不再闪烁：卡片从一开始就平滑进入。",
+    "Inicio: durante GO el título, el estado y la lista de pasos se leen mejor sobre la escena.": "首页：GO 进行中，标题、状态和步骤列表在场景上更易阅读。",
+    "Arranque más fluido: lo pesado de la escena de Inicio se prepara en segundo plano.": "启动更流畅：首页场景中较重的部分会在后台准备。"
   }
 }

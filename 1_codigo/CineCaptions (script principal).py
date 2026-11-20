@@ -7495,7 +7495,9 @@ class SubtitleApp(QWidget):
             if animar and cambio and clave != 'inicio':
                 import efectos_ui
                 import mograf_ui
-                despues(10, lambda p=pagina: mograf_ui.entrada_escalonada(efectos_ui.tarjetas_de(p)), self)
+                # v5.99: YA, no 10 ms después: en ese hueco se pintaba un cuadro con la página entera, luego desaparecía y entraba
+                # (un destello al cambiar de página, visto grabando la ventana cada 50 ms)
+                mograf_ui.entrada_escalonada(efectos_ui.tarjetas_de(pagina))
                 titulo_pagina = self._cabeceras.get(clave, (None, None))[0]
                 barra = titulo_pagina.parentWidget() if titulo_pagina is not None else None
                 if hasattr(titulo_pagina, 'revelar') and not (barra is not None and barra.isHidden()):     # (Proyecto y Sonido: barra oculta)

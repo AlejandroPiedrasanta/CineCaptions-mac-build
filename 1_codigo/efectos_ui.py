@@ -878,5 +878,9 @@ def tarjetas_de(pagina, maximo=10):
                 salida.append(w)
         if len(salida) >= maximo:
             break
+    # v5.99: lo que no es tarjeta pero entra con ellas (el ejemplo en grande de Efectos: salía solo, antes que las tarjetas)
+    for w in pagina.findChildren(QWidget):
+        if w.property('entra_con_tarjetas') and w.isVisible() and w not in salida and len(salida) < maximo:
+            salida.append(w)
     salida.sort(key=lambda w: (w.mapTo(pagina, w.rect().topLeft()).y() // 40, w.mapTo(pagina, w.rect().topLeft()).x()))
     return salida
