@@ -8288,6 +8288,13 @@ class SubtitleApp(QWidget):
         despues(8000, self._iniciar_vigia_actualizaciones, self)        # v5.4.2: desde aquí mira cada 10 s si hay una versión nueva y avisa al momento
         despues(5000, self._mostrar_novedades_si_toca, self)            # v5.4.2: recién actualizado, sale el cuadro con TODAS las mejoras
         despues(6500, self._recorrido_auto, self)                      # v5.76: la guía con videos, UNA vez por versión nueva (después de las novedades)
+        despues(9000, self._permisos_auto, self)                       # v5.98: la ventana de permisos tras instalar/actualizar si falta alguno (permisos.py)
+    def _permisos_auto(self):
+        try:
+            import permisos
+            permisos.revisar_al_abrir(self)
+        except Exception:
+            registro.excepcion(origen='permisos al abrir')
     # -- v5.3.5: actualizaciones automáticas (actualizaciones.py) ----------------------------------------------------------
     def _iniciar_vigia_actualizaciones(self):
         """v5.4.2: un reloj que cada 10 s (actualizaciones.INTERVALO_AUTO_S) pregunta por una versión nueva. Con ETag casi no gasta red; sin internet pasa a un

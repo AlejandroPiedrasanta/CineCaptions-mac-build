@@ -681,6 +681,12 @@ def motor_ia_roto():
         return 'no está instalado'
     if not motor_voz.python_motor().exists():        # (las piezas solo se miran con su Python delante)
         return None
+    try:
+        faltan = motor_voz._faltan_requisitos()
+    except Exception:
+        faltan = []
+    if faltan:                                       # (v5.97: aparte: se arregla con completar_requisitos, sin reinstalar todo)
+        return f'faltan {len(faltan)} librerías'
     import salud
     f = salud._fila_motor_qwen(motor_voz)
     if f.get('ok') is False or (f.get('ok') is None and f.get('aviso')):
@@ -714,6 +720,15 @@ def _reparar_motor_ia(motivo, r, espera_s=0.0, sin_espera_dia=False):
                'la voz va con Whisper.', 'motor de voz')
     else:
         r.info(f'Motor de voz e IA: {motivo}. Lo reparo solo en segundo plano; mientras, la voz va con Whisper.', 'motor de voz')
+    if str(motivo).startswith('faltan ') and 'librerías' in str(motivo):
+        # v5.97: solo librerías: primero lo rápido (las que faltan, segundos); el motor entero (GB) solo si así no queda bien
+        try:
+            motor_voz.completar_requisitos()
+            if motor_ia_roto() is None:
+                r.ok('Motor de voz e IA: librerías puestas al día.', 'motor de voz')
+                return 'reparado'
+        except Exception:
+            pass
     try:
         motor_voz.instalar(aviso=None)
         sigue = motor_ia_roto()

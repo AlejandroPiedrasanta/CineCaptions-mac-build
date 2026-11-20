@@ -95,7 +95,11 @@ def _fila_motor_qwen(mv):
         return {'nombre': nombre, 'ok': False, 'detalle': f'es el motor de una versión anterior (Python 3.12): {REPARAR_MOTOR}'}
     faltan = mv._faltan_requisitos()
     if faltan:
-        return {'nombre': nombre, 'ok': False, 'detalle': f'faltan {len(faltan)} librerías: ' + ', '.join(faltan[:3])}
+        # v5.97 (informe de un cliente de Mac tras actualizar a la 5.97: «Falla al iniciar: Motor de IA (Qwen3) — faltan 12 librerías»): las
+        # librerías de una versión nueva se ponen al día SOLAS al abrir (vigilancia.poner_motores_al_dia, a la vez que este chequeo); no es una
+        # falla. Si no lo consiguen, lo dice ese paso y el motor se repara solo (vigilancia._reparar_motor_ia).
+        return {'nombre': nombre, 'ok': None,
+                'detalle': f'{len(faltan)} librerías de esta versión se ponen al día solas en segundo plano ({", ".join(faltan[:3])}…)'}
     torch_v = mv._dist_instalada('torch')
     if not torch_v or not mv._torch_valido(torch_v):
         return {'nombre': nombre, 'ok': False,

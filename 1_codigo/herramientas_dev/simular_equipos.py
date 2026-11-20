@@ -1199,9 +1199,15 @@ def cliente_rtx4070_8gb_sin_ia_de_texto_es_aviso_y_lo_dice():
 
 @caso('Informes de clientes', solo_windows=True)
 def motor_qwen_cada_falta_dice_que_falta():
-    casos = [(dict(python=False), 'versión anterior', 'pieza'), (dict(librerias=['transformers==5.22.2']), 'librerías', 'librerías'),
+    casos = [(dict(python=False), 'versión anterior', 'pieza'),
              (dict(torch='2.9.0+cu126'), 'PyTorch', 'pieza'), (dict(asr=False), 'modelo de voz', 'pieza'), (dict(alineador=False), 'alineador', 'pieza')]
     malas = []
+    # v5.97 (informe de un cliente de Mac tras actualizar): las librerías de una versión nueva se ponen al día solas al abrir: no es «Falla al
+    # iniciar» (ni ningún error del arranque), solo una nota de que se están poniendo al día
+    f = _fila_qwen(texto=('1.7B',), librerias=['transformers==5.22.2'])
+    notas = _anotado_al_arrancar(texto=('1.7B',), librerias=['transformers==5.22.2'])
+    if f['ok'] is not None or 'se ponen al día solas' not in f['detalle'] or any(n[0] == 'error' for n in notas):
+        malas.append(f"librerías: {f['ok']} «{f['detalle']}» → {notas}")
     for estado, en_detalle, en_titulo in casos:
         f = _fila_qwen(texto=('1.7B',), **estado)
         notas = _anotado_al_arrancar(texto=('1.7B',), **estado)

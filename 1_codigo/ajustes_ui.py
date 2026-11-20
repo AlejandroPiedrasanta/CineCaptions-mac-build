@@ -592,6 +592,10 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.98', [
+        'Nueva ventana de permisos: tras instalar o actualizar te dice qué necesita CineCaptions en tu Mac o tu PC y te lleva a activarlo. Si ya está todo, no vuelve a salir.',
+        'Arreglado: tras actualizar ya no sale «Falla al iniciar: Motor de IA» por las librerías nuevas; se ponen al día solas.',
+    ]),
     ('5.97', [
         'Estilo: botones «Usar» y «Modo PRO» más claros. El Modo PRO es de cada estilo, se ve si está apagado y con un clic se enciende y te lleva a Efectos.',
         'Subtítulos mejor agrupados en los estilos 2, 4, 5, 6, 7, 8 y 9: las frases se cortan donde suena natural, sin «de» o «en» colgando al final ni letras sueltas.',

@@ -316,6 +316,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         lee los packs .drt/.drb SIN abrir Resolve (sets, formatos, tipografías).
     pausas.py
         «Quitar pausas» (jump cuts en los silencios) para GO (v5.4.8).
+    permisos.py
+        la ventana «Permisos de CineCaptions» tras instalar o actualizar: qué necesita en este equipo (Mac y Windows) y si ya lo tiene.
     pila_planificador.py
         el Estilo 4 (v5.82): la pila de tres alturas de la referencia del usuario: arriba lo dicho antes de la clave en
     plantillas.py
