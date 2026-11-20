@@ -575,8 +575,14 @@ def poner_motores_al_dia():
                 r.ok(f'Motor de voz e IA: {len(puestas)} librerías puestas al día en segundo plano '
                      f'({", ".join(p.split("==")[0] for p in puestas[:6])}{"…" if len(puestas) > 6 else ""}).', 'arranque')
         except Exception as e:
-            r.aviso(f'Motor de voz e IA: no pude poner al día sus librerías ({type(e).__name__}: {e}). Si la voz falla, «Reparar el motor» '
-                    'en Ajustes.', 'arranque')
+            r.aviso(f'Motor de voz e IA: no pude poner al día sus librerías ({type(e).__name__}: {e}); si sigue mal, lo reparo solo.', 'arranque')
+        try:                                         # v5.97: sin botón «Reparar el motor»: si está roto, se repara solo
+            import motor_compat
+            motivo = motor_ia_roto()
+            if motivo and not motor_compat._appdata_de_claude():
+                _reparar_motor_ia(motivo, r, espera_s=REPARAR_ESPERA_S)
+        except Exception as e:
+            r.aviso(f'Motor de voz e IA: no pude comprobarlo ({type(e).__name__}: {e}).', 'arranque')
     _MOTORES_AL_DIA['v'] = threading.Thread(target=trabajo, daemon=True, name='motores-al-dia')
     _MOTORES_AL_DIA['v'].start()
 
@@ -610,7 +616,7 @@ def _tipografias_al_dia(r):
 
 
 MAC_IA_ESPERA_S = 90                    # tras abrir, antes de empezar la descarga (el arranque y un primer GO van primero)
-MAC_IA_REINTENTO_S = 24 * 3600           # tras un intento fallido, el siguiente automático (con «Instalar» en Ajustes, cuando quiera)
+MAC_IA_REINTENTO_S = 24 * 3600           # tras un intento fallido, el siguiente automático (v5.97: también en Windows y tras fallos en GO)
 MAC_IA_DISCO_GB = 12                     # lo mínimo libre para empezar solo: Python + PyTorch (~1,5 GB), voz y alineador (2,5-5) y la IA de texto ligera (4)
 
 
@@ -641,51 +647,117 @@ def _motor_ia_en_mac():
     r = _registro()
 
     def trabajo():
-        import archivos_seguros
-        marca = motor_voz.carpeta() / 'instalacion_auto.json'
         try:
             info = motor_voz.asegurar_listo()
             if info and info.get('modelo_texto'):
                 puestas = motor_voz.completar_requisitos()
                 if puestas:
                     r.ok(f'Motor de voz e IA: {len(puestas)} librerías puestas al día en segundo plano.', 'arranque')
-                return
-            ultimo = archivos_seguros.leer_json(marca, {}) or {}
-            if time.time() - float(ultimo.get('fallo') or 0) < MAC_IA_REINTENTO_S:
-                return
-            time.sleep(MAC_IA_ESPERA_S)
-            if motor_voz.instalado():
-                return
-            if motor_voz.instalando():                                # (ya la pidió Ajustes en este rato, o v5.92: la dejó bajando el instalador)
-                r.info('Motor de voz e IA: se está bajando en segundo plano; mientras, la voz va con Whisper. El avance se ve en Ajustes › '
-                       'General.', 'arranque')
-                return
-            libre = _gb_libres(Path.home())
-            if libre is not None and libre < MAC_IA_DISCO_GB:
-                # v5.87: sin sitio no se empieza (antes bajaba GB hasta llenar el disco y quedaba a medias); se reintenta mañana
-                archivos_seguros.escribir_json(marca, {'fallo': time.time(), 'motivo': f'disco: {libre:.1f} GB libres'})
-                r.aviso(f'Motor de voz e IA: no lo instalo solo porque en el disco quedan {libre:.1f} GB y necesita unos {MAC_IA_DISCO_GB} GB. '
-                        'Libera espacio y lo intento mañana (o ahora con «Instalar motor Qwen3-ASR» en Ajustes › General). Mientras, la voz va '
-                        'con Whisper.', 'arranque')
-                return
-            r.info('Motor de voz e IA (Qwen3-ASR y la IA de texto): lo instalo en segundo plano, de 4 a 15 GB según la memoria de esta Mac; '
-                   'mientras, la voz va con Whisper. El avance se ve en Ajustes › General.', 'arranque')
-            modelo = motor_voz.instalar(aviso=None)
-            info = motor_voz.info_instalado() or {}
-            if info.get('modelo_texto'):
-                archivos_seguros.escribir_json(marca, {'listo': time.strftime('%Y-%m-%d %H:%M')})
-                r.ok(f'Motor de voz e IA listo: Qwen3-ASR {modelo} + IA de texto ({info.get("gpu") or "Apple Silicon"}).', 'arranque')
-            else:
-                archivos_seguros.escribir_json(marca, {'fallo': time.time(), 'motivo': 'sin la IA de texto'})
+            motivo = motor_ia_roto()
+            if motivo:
+                _reparar_motor_ia(motivo, r, espera_s=MAC_IA_ESPERA_S)
         except Exception as e:
-            try:
-                archivos_seguros.escribir_json(marca, {'fallo': time.time(), 'motivo': f'{type(e).__name__}: {e}'[:300]})
-            except Exception:
-                pass
-            r.aviso(f'Motor de voz e IA: no se pudo instalar solo ({type(e).__name__}: {e}); lo reintento mañana, o ahora con «Instalar '
-                    'motor Qwen3-ASR» en Ajustes › General. Mientras, la voz va con Whisper.', 'arranque')
+            r.aviso(f'Motor de voz e IA: no pude comprobarlo ({type(e).__name__}: {e}); mientras, la voz va con Whisper.', 'arranque')
     _MOTORES_AL_DIA['v'] = threading.Thread(target=trabajo, daemon=True, name='motor-ia-mac')
     _MOTORES_AL_DIA['v'].start()
+
+
+REPARAR_ESPERA_S = 60                    # v5.97 (Windows): tras abrir, antes de reparar el motor (el arranque y un primer GO van primero)
+_REPARANDO = {'hilo': None}
+
+
+def motor_ia_roto():
+    """v5.97 (el usuario: «quita "Reparar el motor" y si falla tú lo detectas y lo autoreparas»): por qué el motor de voz e IA necesita
+    repararse —lo mismo que mira el chequeo de arranque (salud._fila_motor_qwen): sin instalar, Python viejo, PyTorch que no es, falta el
+    modelo de voz, el alineador o la IA de texto— o None si está bien, se está instalando o este equipo no lo usa."""
+    import motor_voz
+    if not getattr(motor_voz, 'SOPORTADO', True) or motor_voz.instalando():
+        return None
+    try:
+        motor_voz.asegurar_listo()                   # (rehace listo.json si se perdió con todo en su sitio: eso no es estar roto)
+    except Exception:
+        pass
+    if not motor_voz.instalado():
+        return 'no está instalado'
+    if not motor_voz.python_motor().exists():        # (las piezas solo se miran con su Python delante)
+        return None
+    import salud
+    f = salud._fila_motor_qwen(motor_voz)
+    if f.get('ok') is False or (f.get('ok') is None and f.get('aviso')):
+        return str(f.get('detalle') or 'incompleto')
+    return None
+
+
+def _reparar_motor_ia(motivo, r, espera_s=0.0, sin_espera_dia=False):
+    """Repara (motor_voz.instalar: lo mismo que hacía el botón) en ESTE hilo, sin preguntar. Tras un intento fallido no lo repite solo hasta
+    pasado un día (motor_qwen/instalacion_auto.json); sin sitio en el disco no empieza. → 'reparado' · 'fallo' · 'espera' · 'disco' ·
+    'instalando'."""
+    import archivos_seguros
+    import motor_voz
+    marca = motor_voz.carpeta() / 'instalacion_auto.json'
+    ultimo = archivos_seguros.leer_json(marca, {}) or {}
+    if not sin_espera_dia and time.time() - float(ultimo.get('fallo') or 0) < MAC_IA_REINTENTO_S:
+        return 'espera'
+    if espera_s:
+        time.sleep(espera_s)
+    if motor_voz.instalando():
+        r.info('Motor de voz e IA: se está instalando en segundo plano; mientras, la voz va con Whisper.', 'motor de voz')
+        return 'instalando'
+    libre = _gb_libres(Path.home())
+    if libre is not None and libre < MAC_IA_DISCO_GB and not motor_voz.instalado():
+        archivos_seguros.escribir_json(marca, {'fallo': time.time(), 'motivo': f'disco: {libre:.1f} GB libres'})
+        r.aviso(f'Motor de voz e IA: no puedo repararlo porque en el disco quedan {libre:.1f} GB y necesita unos {MAC_IA_DISCO_GB} GB. '
+                'Libera espacio: lo intento otra vez mañana. Mientras, la voz va con Whisper.', 'motor de voz')
+        return 'disco'
+    if motivo == 'no está instalado':
+        r.info('Motor de voz e IA (Qwen3-ASR y la IA de texto): lo instalo solo en segundo plano, de 4 a 15 GB según este equipo; mientras, '
+               'la voz va con Whisper.', 'motor de voz')
+    else:
+        r.info(f'Motor de voz e IA: {motivo}. Lo reparo solo en segundo plano; mientras, la voz va con Whisper.', 'motor de voz')
+    try:
+        motor_voz.instalar(aviso=None)
+        sigue = motor_ia_roto()
+        if sigue:
+            raise RuntimeError(sigue)
+    except Exception as e:
+        if motor_voz.instalando():                       # (otra instalación ganó la carrera: no es un fallo)
+            return 'instalando'
+        try:
+            archivos_seguros.escribir_json(marca, {'fallo': time.time(), 'motivo': f'{type(e).__name__}: {e}'[:300]})
+        except Exception:
+            pass
+        r.aviso(f'Motor de voz e IA: no quedó reparado ({type(e).__name__}: {e}); lo intento otra vez mañana. Mientras, la voz va con '
+                'Whisper.', 'motor de voz')
+        return 'fallo'
+    archivos_seguros.escribir_json(marca, {'listo': time.strftime('%Y-%m-%d %H:%M')})
+    try:
+        motor_voz._FALLOS.update(n=0, avisado=False)     # (Qwen3 vuelve a usarse en esta misma sesión)
+    except Exception:
+        pass
+    info = motor_voz.info_instalado() or {}
+    r.ok(' '.join(f'Motor de voz e IA reparado solo: Qwen3-ASR {info.get("modelo") or ""} listo.'.split()), 'motor de voz')
+    return 'reparado'
+
+
+def reparar_motor_ia(motivo):
+    """v5.97: lo pide el motor de voz cuando Qwen3-ASR falla seguido en GO. En un hilo, una vez a la vez; solo en el programa instalado (desde
+    Claude el AppData está virtualizado y pip rompería el motor real) salvo CINECAPTIONS_REPARAR_MOTOR=1 (pruebas). → True si lo lanzó."""
+    if not (getattr(sys, 'frozen', False) or os.environ.get('CINECAPTIONS_REPARAR_MOTOR') == '1'):
+        return False
+    with _LOCK:
+        h = _REPARANDO['hilo']
+        if h is not None and h.is_alive():
+            return False
+        r = _registro()
+
+        def trabajo():
+            try:
+                _reparar_motor_ia(motivo, r)
+            except Exception as e:
+                r.aviso(f'Motor de voz e IA: no pude repararlo ({type(e).__name__}: {e}).', 'motor de voz')
+        _REPARANDO['hilo'] = threading.Thread(target=trabajo, daemon=True, name='reparar-motor-ia')
+        _REPARANDO['hilo'].start()
+    return True
 
 
 def avisar_equipo():

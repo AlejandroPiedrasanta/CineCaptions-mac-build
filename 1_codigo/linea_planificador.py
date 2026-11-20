@@ -46,7 +46,8 @@ LINEA = {'clip': CLIP, 'clip_activa': CLIP_ACTIVA, 'fuente': FUENTE, 'esp': ESP,
 # 1080: Barlow 857, Montserrat 862, DM Serif 861) con la de Anton (1177 + 330 de 1000): 571. Medidas de la referencia (1080×1920): la palabra
 # ~0,05 del alto, el hueco ~0,30 de la altura de la letra, 1-3 palabras por bloque (casi siempre 2), centrada al 75 % de la altura.
 ROJO = dict(LINEA, clip='v rojo', clip_activa='v rojo activa', fuente=('Anton', 'Regular'), esp=1.0, k_px=571.0, cap_em=0.86, cap_ref=0.050,
-            ancho_max=0.86, hueco=0.30, caja_lado=0.0, max_palabras=3, max_segundos=1.6, mayusculas=False, y=0.75)
+            ancho_max=0.86, hueco=0.30, caja_lado=0.0, max_palabras=3, max_segundos=1.6, mayusculas=False, y=0.75,
+            armonico=True)                        # v5.97: cortes armónicos (_lineas_armonicas) y «veinte C» juntas; el Tema 3 (LINEA) sigue igual
 
 
 def perfil_de(clip):
@@ -75,6 +76,8 @@ def _lineas_de_frase(pal, frase, size, ancho_tl, ancho_max=ANCHO_MAX, perfil=LIN
     """Parte una frase (índices) en líneas que caben, de ≤ max_palabras y ≤ max_segundos."""
     maximo = ancho_max * ancho_tl
     cap_px = size * perfil['k_px'] * ancho_tl / 1080.0 * perfil['cap_em']
+    if perfil.get('armonico'):
+        return _lineas_armonicas(pal, frase, size, ancho_tl, maximo, cap_px, perfil)
     lineas, actual, ancho = [], [], 0.0
     for k in frase:
         w = _ancho(_visible(pal[k]['texto'], perfil), size, ancho_tl, perfil)
@@ -92,6 +95,36 @@ def _lineas_de_frase(pal, frase, size, ancho_tl, ancho_max=ANCHO_MAX, perfil=LIN
     if len(lineas) >= 2 and len(lineas[-1]) == 1 and len(lineas[-2]) >= 3:
         lineas[-1].insert(0, lineas[-2].pop())
     return lineas
+
+
+def _lineas_armonicas(pal, frase, size, ancho_tl, maximo, cap_px, perfil):
+    """v5.97 (solo el Estilo 7, perfil['armonico']; el usuario: «agrupaciones más armoniosas» y «sí, púlelo»): en vez de llenar cada línea
+    hasta el tope («que viene en | esta cajita»), la partición de menor coste de tipo_planificador (sin colgantes, en pausas y signos, parejas),
+    con los mismos topes de siempre: que quepa a lo ancho, ≤ max_palabras y ≤ max_segundos."""
+    import tipo_planificador as TP
+    n = len(frase)
+    anchos = [_ancho(_visible(pal[k]['texto'], perfil), size, ancho_tl, perfil) for k in frase]
+    INF = float('inf')
+    mejor, desde = [0.0] + [INF] * n, [0] * (n + 1)
+    ideal = float(perfil['max_palabras'])          # (líneas llenas como la referencia del Estilo 7; los cortes malos los evita el coste)
+    for i in range(1, n + 1):
+        for j in range(max(0, i - perfil['max_palabras']), i):
+            if mejor[j] == INF:
+                continue
+            tam = i - j
+            if tam > 1 and (sum(anchos[j:i]) + perfil['hueco'] * cap_px * (tam - 1) > maximo
+                            or pal[frase[i - 1]]['fin'] - pal[frase[j]]['t'] > perfil['max_segundos']):
+                continue
+            c = mejor[j] + 1.0 + (3.0 if (tam == 1 and n > 1) else 0.3 * (tam - ideal) ** 2)
+            if j > 0:
+                c += TP._coste_corte(pal, frase[j - 1], frase[j])
+            if c < mejor[i]:
+                mejor[i], desde[i] = c, j
+    lineas, i = [], n
+    while i > 0:
+        lineas.append(list(frase[desde[i]:i]))
+        i = desde[i]
+    return lineas[::-1]
 
 
 TURNO_MIN = 0.10      # (s) menos que esto entre dos inicios = la voz los dio «a la vez»
@@ -124,6 +157,9 @@ def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla='bajo',
     clip, clip_activa = perfil['clip'], clip_activa or perfil['clip_activa']
     unidas = VP.unir_fragmentos(palabras, idioma)
     pal = G._preparar(unidas)
+    if perfil.get('armonico'):
+        import tipo_planificador as TP
+        pal = TP.pegar_sueltas(pal)
     if not pal:
         return {'cues': [], 'plan': []}
     horizontal = ancho_tl > alto_tl

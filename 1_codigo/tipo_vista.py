@@ -64,13 +64,26 @@ def dibujar(texto, ancho, alto, t=None, color=(1.0, 1.0, 1.0)):
         else:
             ImageDraw.Draw(serif).text((x, base), vis, font=f, fill=255, anchor='ls')
             ImageDraw.Draw(hueco).text((x, base), vis, font=f, fill=255, anchor='ls', stroke_width=max(1, int(round(HUECO_EM * em))), stroke_fill=255)
+    cajas = [c for c in (grande.getbbox(), serif.getbbox()) if c]
+    if not cajas:
+        return Image.new('RGBA', (ancho, alto), (0, 0, 0, 0))
+    # v5.97: todo se calcula en el recorte de la tinta con margen para el bisel y la sombra (antes, el cuadro entero en cada estado: el Estilo 5
+    # tardaba 28 s en preparar Premiere/«Video sin editores», el 90 % aquí); fuera del margen todo era 0, así que el cuadro sale igual
+    radio = max(1.0, BISEL[0] * (em_g or 0.15 * ancho))
+    op, baja, difu = SOMBRA
+    dy = int(round(baja * alto))
+    m = int(4 * max(radio, difu * ancho)) + 8
+    x0, y0 = max(0, min(c[0] for c in cajas) - m), max(0, min(c[1] for c in cajas) - m)
+    x1, y1 = min(ancho, max(c[2] for c in cajas) + m), min(alto, max(c[3] for c in cajas) + m + max(0, dy))
+    caja = (x0, y0, x1, y1)
+    grande, serif, hueco = grande.crop(caja), serif.crop(caja), hueco.crop(caja)
+    ancho_c = x1 - x0
     g = np.asarray(grande, np.float32) / 255.0
     g = g * (1.0 - np.asarray(hueco, np.float32) / 255.0)
     a = np.maximum(g, np.asarray(serif, np.float32) / 255.0)
     if a.max() <= 0.0:
         return Image.new('RGBA', (ancho, alto), (0, 0, 0, 0))
     # el bisel: la altura es el alfa difuminado; donde sube hacia abajo a la derecha (borde de arriba a la izquierda) da la luz
-    radio = max(1.0, BISEL[0] * (em_g or 0.15 * ancho))
     h = np.asarray(Image.fromarray((a * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(radio)), np.float32) / 255.0
     gy, gx = np.gradient(h)
     s = np.clip((gx + gy) * radio * 1.6, -1.0, 1.0)
@@ -79,14 +92,14 @@ def dibujar(texto, ancho, alto, t=None, color=(1.0, 1.0, 1.0)):
     cara = base_c + luz * BISEL[1] * (1.0 - base_c) - sombra * BISEL[2] * (base_c - TONO_SOMBRA[None, None, :])
     cara = np.clip(cara, 0, 1)
     # la sombra suave debajo
-    op, baja, difu = SOMBRA
     sa = Image.fromarray((a * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(max(1.0, difu * ancho)))
     sa = np.asarray(sa, np.float32) / 255.0 * op
-    dy = int(round(baja * alto))
     if dy:
-        sa = np.vstack([np.zeros((dy, ancho), np.float32), sa[:-dy]])
+        sa = np.vstack([np.zeros((dy, ancho_c), np.float32), sa[:-dy]])
     # cara encima de la sombra (alfa no premultiplicado)
     a_tot = a + sa * (1.0 - a)
     rgb = (cara * a[..., None]) / np.maximum(a_tot, 1e-6)[..., None]
     out = np.dstack([np.clip(rgb * 255.0 + 0.5, 0, 255), np.clip(a_tot * 255.0 + 0.5, 0, 255)]).astype(np.uint8)
-    return Image.fromarray(out, 'RGBA')
+    lienzo = Image.new('RGBA', (ancho, alto), (0, 0, 0, 0))
+    lienzo.paste(Image.fromarray(out, 'RGBA'), (x0, y0))
+    return lienzo

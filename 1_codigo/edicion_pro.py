@@ -110,8 +110,33 @@ def _prefs():
         return {}
 
 
-def activado():
-    return bool(_prefs().get('go_edicion_pro', False))
+# v5.97 (el usuario: «en cada estilo aparece activado»): la PRO es de CADA estilo (antes, una sola para todos). 'go_edicion_pro_estilos' = los
+# estilos (go_pack) con la PRO; 'go_edicion_pro' sigue diciendo la del estilo en uso (para quien lo lea tal cual). Sin la lista (prefs de
+# antes), la PRO de antes queda solo en el estilo que estaba en uso.
+def _estilo_go(p):
+    return str(p.get('go_pack') or p.get('plantilla') or '')
+
+
+def _con_pro(p):
+    lista = p.get('go_edicion_pro_estilos')
+    if lista is None:
+        return {_estilo_go(p)} if p.get('go_edicion_pro') else set()
+    return {str(x) for x in lista}
+
+
+def asegurar_lista():
+    """Guarda 'go_edicion_pro_estilos' si aún no está (prefs de antes): hay que hacerlo ANTES de cambiar de estilo, o la PRO de antes se
+    movería al estilo nuevo."""
+    p = _prefs()
+    if p.get('go_edicion_pro_estilos') is None:
+        import ajustes_ui
+        ajustes_ui.guardar_prefs({'go_edicion_pro_estilos': sorted(_con_pro(p))})
+
+
+def activado(estilo=None):
+    """¿Tiene la PRO ese estilo (por defecto, el que está en uso)?"""
+    p = _prefs()
+    return (estilo if estilo is not None else _estilo_go(p)) in _con_pro(p)
 
 
 def hay_motions(op=None):
@@ -368,9 +393,26 @@ def opciones_menu(op):
     return op
 
 
-def poner_activado(valor):
+AL_CAMBIAR = []                    # v5.97: quien quiera saber que la PRO se encendió o se apagó (la ventana: la página Efectos solo con la PRO)
+
+
+def poner_activado(valor, estilo=None):
+    """Enciende o apaga la PRO de ese estilo (por defecto, el que está en uso)."""
     import ajustes_ui
-    ajustes_ui.guardar_prefs({'go_edicion_pro': bool(valor)})
+    p = _prefs()
+    e = estilo if estilo is not None else _estilo_go(p)
+    con = _con_pro(p)
+    if valor:
+        con.add(e)
+    else:
+        con.discard(e)
+    ajustes_ui.guardar_prefs({'go_edicion_pro_estilos': sorted(con), 'go_edicion_pro': _estilo_go(p) in con})
+    valor = _estilo_go(p) in con
+    for fn in list(AL_CAMBIAR):
+        try:
+            fn(bool(valor))
+        except Exception:
+            pass
 
 
 def opciones_guardadas():

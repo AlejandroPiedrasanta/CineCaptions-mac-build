@@ -4807,6 +4807,27 @@
     "Premiere Pro abierto": "Premiere Pro 열림",
     "Listo para GO": "GO 준비 완료",
     "Mac: después de actualizarse ya no pide la licencia otra vez. Si te pasó, cierra CineCaptions y vuelve a abrirlo: tu licencia sigue ahí.": "Mac: 업데이트 후 라이선스를 다시 묻지 않습니다. 이미 겪었다면 CineCaptions를 종료했다가 다시 여세요. 라이선스는 그대로 있습니다.",
-    "Premiere Pro: se ve en verde en cuanto se detecta, y mientras coloca tus subtítulos dice «colocando…».": "Premiere Pro: 감지되는 즉시 초록색으로 표시되고, 자막을 배치하는 동안 «배치 중…»이라고 표시합니다."
+    "Premiere Pro: se ve en verde en cuanto se detecta, y mientras coloca tus subtítulos dice «colocando…».": "Premiere Pro: 감지되는 즉시 초록색으로 표시되고, 자막을 배치하는 동안 «배치 중…»이라고 표시합니다.",
+    "Con qué trabaja GO.": "GO가 작업할 프로그램.",
+    "Si pasa siempre, reinicia CineCaptions; si sigue, vuelve a ejecutar el instalador de CineCaptions (repara el motor).": "항상 그렇다면 CineCaptions를 다시 시작하세요. 계속되면 CineCaptions 설치 프로그램을 다시 실행하세요(엔진을 복구합니다).",
+    "Cierra y abre CineCaptions (vuelve a poner los scripts solo) y pulsa GO otra vez.": "CineCaptions를 닫았다가 다시 여세요(스크립트를 자동으로 다시 넣습니다). 그런 다음 GO를 다시 누르세요.",
+    "Motor de voz Qwen3-ASR instalado.": "음성 엔진 Qwen3-ASR 설치됨.",
+    "Qwen3-ASR no está instalado: se usará Whisper.": "Qwen3-ASR가 설치되어 있지 않습니다. Whisper를 사용합니다.",
+    "No encuentro CineCaptions_Puente.lua en la carpeta de scripts de Resolve: cierra y abre CineCaptions para que vuelva a ponerlo.": "Resolve 스크립트 폴더에서 CineCaptions_Puente.lua를 찾을 수 없습니다. CineCaptions를 닫았다가 다시 열면 다시 넣습니다.",
+    "Idioma, fondo y aquí mismo, en Tutoriales, todos estos videos. Desde ahí también apagas esta guía o la vuelves a ver cuando quieras.": "언어, 배경, 그리고 바로 여기 튜토리얼의 모든 동영상. 여기서 이 가이드를 끄거나 언제든 다시 볼 수 있습니다.",
+    "En Ajustes › Ayuda nos escribes por WhatsApp con el informe de tu equipo ya listo y ves tu versión y tu licencia.": "설정 › 도움말에서 컴퓨터 보고서가 준비된 상태로 WhatsApp으로 문의하고 버전과 라이선스를 확인할 수 있습니다.",
+    "CineCaptions lo repara solo en segundo plano al abrirse (descarga lo que falta; necesita internet). Si falla, lo reintenta al día siguiente.": "CineCaptions가 열릴 때 백그라운드에서 자동으로 복구합니다(없는 것을 다운로드하며 인터넷이 필요합니다). 실패하면 다음 날 다시 시도합니다.",
+    "Si no cabe en el disco: libera espacio en el disco del sistema (el mensaje dice cuánto hace falta); CineCaptions lo vuelve a intentar solo.": "디스크 공간이 부족하면 시스템 디스크의 공간을 확보하세요(필요한 용량은 메시지에 표시됩니다). CineCaptions가 자동으로 다시 시도합니다.",
+    "Si se cortó la descarga: comprueba la conexión (y que el antivirus o un firewall no bloqueen a CineCaptions); CineCaptions lo vuelve a intentar solo.": "다운로드가 끊겼다면 연결을 확인하세요(백신이나 방화벽이 CineCaptions를 막지 않는지도). CineCaptions가 자동으로 다시 시도합니다.",
+    "Si es el motor de IA (Qwen3): CineCaptions lo repara solo en segundo plano al abrirse (descarga lo que falta; necesita internet).": "AI 엔진(Qwen3)이라면 CineCaptions가 열릴 때 백그라운드에서 자동으로 복구합니다(없는 것을 다운로드하며 인터넷이 필요합니다).",
+    "Si pasa siempre, reinicia CineCaptions: si el motor está dañado, lo repara solo en segundo plano.": "항상 그렇다면 CineCaptions를 다시 시작하세요. 엔진이 손상되었으면 백그라운드에서 자동으로 복구합니다.",
+    "Premiere Pro: los estilos salen igual que en DaVinci Resolve: con su brillo y su halo, la palabra que se dice en rojo en el Estilo 7 y los colores sin aclararse.": "Premiere Pro: 스타일이 DaVinci Resolve와 똑같이 나옵니다. 글로우와 후광, 스타일 7의 말하는 단어 빨간색, 색이 더 이상 옅어지지 않습니다.",
+    "Más rápido: el Estilo 5 se prepara hasta 7 veces más rápido para Premiere Pro y para «Video sin editores».": "더 빠르게: Premiere Pro와 «편집기 없는 동영상»용 스타일 5 준비가 최대 7배 빨라졌습니다.",
+    "Interfaz más simple: sin la página Sonido (GO pone los sonidos solo), sin «Motor de voz», «Herramientas» ni «Atajos» en Ajustes.": "더 단순한 화면: 사운드 페이지가 없어졌습니다(GO가 소리를 자동으로 넣습니다). 설정의 «음성 엔진», «도구», «단축키»도 없어졌습니다.",
+    "El motor de voz se revisa y se repara solo si algo falla, sin que tengas que hacer nada.": "음성 엔진은 문제가 생기면 스스로 점검하고 복구합니다. 따로 할 일은 없습니다.",
+    "Efectos solo aparece y se aplica cuando activas la Edición PRO.": "효과는 PRO 편집을 켰을 때만 나타나고 적용됩니다.",
+    "Subtítulos mejor agrupados en los estilos 2, 4, 5, 6, 7, 8 y 9: las frases se cortan donde suena natural, sin «de» o «en» colgando al final ni letras sueltas.": "스타일 2, 4, 5, 6, 7, 8, 9의 자막 묶음이 더 자연스러워졌습니다. 문장이 자연스러운 곳에서 나뉘고, 끝에 조사만 남거나 글자 하나가 떨어지지 않습니다.",
+    "Modo PRO": "PRO 모드",
+    "Estilo: botones «Usar» y «Modo PRO» más claros. El Modo PRO es de cada estilo, se ve si está apagado y con un clic se enciende y te lleva a Efectos.": "스타일: «사용»과 «PRO 모드» 버튼이 더 분명해졌습니다. PRO 모드는 스타일마다 따로이며, 꺼져 있으면 바로 보이고 한 번 클릭하면 켜지면서 효과로 이동합니다."
   }
 }

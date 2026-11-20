@@ -1166,7 +1166,9 @@ class FilaPro(QWidget):
     def _lados(self):
         w, h = self.width(), self.height()
         self.lista.poner_escala(h / 620.0)
-        ver_lista = self._pro and w >= self.ANCHO_LISTA
+        # v5.97 (el usuario: «en la página de Estilo, al activar Edición PRO ya no sale esto; en vez de eso lo lleva a la página de Efectos»):
+        # los lados (el móvil de ejemplo y la barra de motions) ya no se enseñan aquí; lo de la PRO se elige en Efectos
+        ver_lista = False
         lista = self.lista.width() + self.ESPACIO if ver_lista else 0
         # el móvil, del alto de la tarjeta del centro: la misma cuenta que CarruselPacks._medidas con el ancho que le quedaría al slider
         try:
@@ -1183,7 +1185,7 @@ class FilaPro(QWidget):
             carta = max(0.0, centro - 32.0) / (0.88 + 2.0 * paso) / (ES.ASPECTO if ES else 0.5625)
             movil = max(0.0, min(alto_max, h - controles - 16.0, 1040.0, carta))
         ancho_ej = int(round(movil * asp + 20))
-        ver_ej = self._pro and movil >= self.MOVIL_MIN and (w - lista - ancho_ej - self.ESPACIO) >= self.CENTRO_MIN
+        ver_ej = False                            # (v5.97: ver arriba)
         if ver_ej and self._hueco.maximumWidth() != ancho_ej:
             self._hueco.setFixedWidth(ancho_ej)
         self._ancho_ej = ancho_ej

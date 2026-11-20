@@ -4807,6 +4807,27 @@
     "Premiere Pro abierto": "Premiere Pro 起動中",
     "Listo para GO": "GOの準備完了",
     "Mac: después de actualizarse ya no pide la licencia otra vez. Si te pasó, cierra CineCaptions y vuelve a abrirlo: tu licencia sigue ahí.": "Mac：アップデート後にライセンスを再度求められなくなりました。もし求められた場合は、CineCaptionsを終了して開き直してください。ライセンスはそのまま残っています。",
-    "Premiere Pro: se ve en verde en cuanto se detecta, y mientras coloca tus subtítulos dice «colocando…».": "Premiere Pro：検出されるとすぐ緑で表示され、字幕の配置中は「配置中…」と表示されます。"
+    "Premiere Pro: se ve en verde en cuanto se detecta, y mientras coloca tus subtítulos dice «colocando…».": "Premiere Pro：検出されるとすぐ緑で表示され、字幕の配置中は「配置中…」と表示されます。",
+    "Con qué trabaja GO.": "GO が使う編集ソフト。",
+    "Si pasa siempre, reinicia CineCaptions; si sigue, vuelve a ejecutar el instalador de CineCaptions (repara el motor).": "毎回起きる場合は CineCaptions を再起動してください。それでも続く場合は CineCaptions のインストーラーをもう一度実行してください（エンジンを修復します）。",
+    "Cierra y abre CineCaptions (vuelve a poner los scripts solo) y pulsa GO otra vez.": "CineCaptions を閉じて開き直し（スクリプトを自動で戻します）、もう一度 GO を押してください。",
+    "Motor de voz Qwen3-ASR instalado.": "音声エンジン Qwen3-ASR をインストール済み。",
+    "Qwen3-ASR no está instalado: se usará Whisper.": "Qwen3-ASR がインストールされていません。Whisper を使います。",
+    "No encuentro CineCaptions_Puente.lua en la carpeta de scripts de Resolve: cierra y abre CineCaptions para que vuelva a ponerlo.": "Resolve のスクリプトフォルダーに CineCaptions_Puente.lua が見つかりません。CineCaptions を閉じて開き直すと戻ります。",
+    "Idioma, fondo y aquí mismo, en Tutoriales, todos estos videos. Desde ahí también apagas esta guía o la vuelves a ver cuando quieras.": "言語、背景、そしてここ「チュートリアル」にあるすべての動画。ここからこのガイドをオフにしたり、いつでも見直したりできます。",
+    "En Ajustes › Ayuda nos escribes por WhatsApp con el informe de tu equipo ya listo y ves tu versión y tu licencia.": "設定 › ヘルプ では、パソコンのレポートを用意した状態で WhatsApp から連絡でき、バージョンとライセンスも確認できます。",
+    "CineCaptions lo repara solo en segundo plano al abrirse (descarga lo que falta; necesita internet). Si falla, lo reintenta al día siguiente.": "CineCaptions は起動時にバックグラウンドで自動修復します（足りないものをダウンロード。インターネットが必要）。失敗した場合は翌日にもう一度試します。",
+    "Si no cabe en el disco: libera espacio en el disco del sistema (el mensaje dice cuánto hace falta); CineCaptions lo vuelve a intentar solo.": "ディスクに入りきらない場合：システムディスクの空きを増やしてください（必要な量はメッセージに表示）。CineCaptions が自動でもう一度試します。",
+    "Si se cortó la descarga: comprueba la conexión (y que el antivirus o un firewall no bloqueen a CineCaptions); CineCaptions lo vuelve a intentar solo.": "ダウンロードが途中で切れた場合：接続を確認してください（ウイルス対策やファイアウォールが CineCaptions をブロックしていないかも）。CineCaptions が自動でもう一度試します。",
+    "Si es el motor de IA (Qwen3): CineCaptions lo repara solo en segundo plano al abrirse (descarga lo que falta; necesita internet).": "AI エンジン（Qwen3）の場合：CineCaptions が起動時にバックグラウンドで自動修復します（足りないものをダウンロード。インターネットが必要）。",
+    "Si pasa siempre, reinicia CineCaptions: si el motor está dañado, lo repara solo en segundo plano.": "毎回起きる場合は CineCaptions を再起動してください。エンジンが壊れていれば、バックグラウンドで自動修復します。",
+    "Premiere Pro: los estilos salen igual que en DaVinci Resolve: con su brillo y su halo, la palabra que se dice en rojo en el Estilo 7 y los colores sin aclararse.": "Premiere Pro：スタイルが DaVinci Resolve と同じに。光彩とハロー、スタイル 7 の話している単語の赤、色が薄くならないように。",
+    "Más rápido: el Estilo 5 se prepara hasta 7 veces más rápido para Premiere Pro y para «Video sin editores».": "高速化：Premiere Pro と「編集ソフトなしの動画」向けのスタイル 5 の準備が最大 7 倍速く。",
+    "Interfaz más simple: sin la página Sonido (GO pone los sonidos solo), sin «Motor de voz», «Herramientas» ni «Atajos» en Ajustes.": "よりシンプルな画面：サウンドページを廃止（GO が自動で音を入れます）。設定の「音声エンジン」「ツール」「ショートカット」もなくなりました。",
+    "El motor de voz se revisa y se repara solo si algo falla, sin que tengas que hacer nada.": "音声エンジンは問題があれば自動で確認・修復します。操作は不要です。",
+    "Efectos solo aparece y se aplica cuando activas la Edición PRO.": "「エフェクト」は PRO 編集をオンにしたときだけ表示され、適用されます。",
+    "Subtítulos mejor agrupados en los estilos 2, 4, 5, 6, 7, 8 y 9: las frases se cortan donde suena natural, sin «de» o «en» colgando al final ni letras sueltas.": "スタイル 2・4・5・6・7・8・9 で字幕のまとまりが自然に。文は自然な位置で区切られ、助詞が末尾に残ったり文字が一つだけ離れたりしません。",
+    "Modo PRO": "PRO モード",
+    "Estilo: botones «Usar» y «Modo PRO» más claros. El Modo PRO es de cada estilo, se ve si está apagado y con un clic se enciende y te lleva a Efectos.": "スタイル：「使う」と「PRO モード」のボタンを見やすく。PRO モードはスタイルごとで、オフのときが分かり、クリック一回でオンになって「エフェクト」へ移動します。"
   }
 }

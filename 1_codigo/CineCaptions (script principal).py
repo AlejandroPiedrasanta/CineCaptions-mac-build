@@ -2070,7 +2070,7 @@ class PlantillasWindow(QWidget):
         self.info_extra.setSpacing(6)
         iv.addLayout(self.info_extra)
         # en la barra: «En uso» / «Usar este tema» y, a la derecha, «Edición PRO» y las acciones de la tarjeta (🗑, ⋯)
-        self.usar_btn = proyecto_ui.BotonCompacto('uso', tr('Usar este estilo') if plantillas.SOLO_TEMAS else tr('Usar este estilo'), self._usar_central)
+        self.usar_btn = proyecto_ui.BotonCompacto('uso', tr('Usar'), self._usar_central)
         self.info_acciones_w = QWidget()
         self.info_acciones = QHBoxLayout(self.info_acciones_w)
         self.info_acciones.setContentsMargins(0, 0, 0, 0)
@@ -2280,14 +2280,15 @@ class PlantillasWindow(QWidget):
             menu.agregar(texto, fn)
         menu.mostrar(QCursor.pos(), ancla=ancla)        # (v5.84: pulsar otra vez «⋯» lo cierra)
     def _boton_pro(self):
-        """«Activar edición PRO»: con este tema, GO además edita el video en la línea de tiempo (motion graphics, Magic Mask, sonidos)."""
+        """«Modo PRO» de la tarjeta del centro (v5.97: de ESE estilo): con él, GO además edita el video (motion graphics, Magic Mask, sonidos)."""
         try:
             import edicion_pro
-            activa = edicion_pro.activado()
+            c = getattr(self, '_carta_actual', None)
+            activa = edicion_pro.activado(getattr(c, 'valor', None))
         except Exception:
             activa = False
         import proyecto_ui                              # v5.62 (propuesta C): la píldora dorada de la barra (antes, el botón grande con su corona)
-        b = proyecto_ui.BotonCompacto('pro', tr('Edición PRO activada') if activa else tr('Activar edición PRO'), self._alternar_pro, activo=activa)
+        b = proyecto_ui.BotonCompacto('pro', tr('Modo PRO'), self._alternar_pro, activo=activa)     # v5.97: «Modo PRO» con su interruptor
         Tooltip(b,tr('Además de los captions de este estilo, GO edita el video en Resolve: los captions y titulares DETRÁS de la persona (Magic Mask), '
                       'escenas de motion graphics y B-roll, cifras, listas, marcos, ficha final y sonidos, con un estilo propio para cada video (bodas, XV años, restaurantes, inmobiliaria, detrás de cámara…). '
                       'El estilo se elige en el chip «Edición PRO» de Inicio.'))
@@ -2296,16 +2297,29 @@ class PlantillasWindow(QWidget):
     def _alternar_pro(self):
         try:
             import edicion_pro
-            edicion_pro.poner_activado(not edicion_pro.activado())
-            self.carrusel.poner_vista_pro(edicion_pro.activado())                     # v5.5.9: la tarjeta enseña lo que hará GO
+            c = getattr(self, '_carta_actual', None)
+            estilo = getattr(c, 'valor', None)
+            activada = not edicion_pro.activado(estilo)
+            if activada and estilo:                   # v5.97: encender la PRO de un estilo lo pone en uso (GO hará lo que se ve)
+                if estilo != self._valor_actual():
+                    self._elegir(estilo)
+                elif callable(getattr(self.app, '_sincronizar_go_pack', None)):
+                    self.app._sincronizar_go_pack(estilo)
+            edicion_pro.poner_activado(activada, estilo)
+            self.carrusel.poner_vista_pro(activada)                                   # v5.5.9: la tarjeta enseña lo que hará GO
         except Exception:
-            pass
+            activada = False
         self._pintar_info()
         self.lateral_pro.refrescar()                                                  # v5.5.10: los lados (ejemplo y motions) entran o salen
         try:
             self.app._pintar_opciones_go()
         except Exception:
             pass
+        if activada:                                  # v5.97 (el usuario): al activar la PRO aquí, a la página de Efectos (sale en el menú con la PRO)
+            try:
+                self.app.ir_a('efectos')
+            except Exception:
+                pass
 
     def _zonas_vivas_cielo(self):
         """v5.63: lo que ya se repinta solo muchas veces por segundo (el slider a 30/s; el móvil mientras corre su clip): el cielo de la
@@ -2350,7 +2364,7 @@ class PlantillasWindow(QWidget):
         self.usar_btn.setVisible(not (self.modo == 'normal' and c.valor != '__clasica__'))
         en_uso = c.valor == self._valor_actual()
         # «En uso» no es un botón apagado: es una confirmación (verde, encendido)
-        self.usar_btn.poner(en_uso, tr('En uso') if en_uso else (tr('Usar este estilo') if plantillas.SOLO_TEMAS else tr('Usar este estilo')), icono='check')
+        self.usar_btn.poner(en_uso, tr('En uso') if en_uso else tr('Usar'), icono='check' if en_uso else 'check-circle-fill')     # v5.97 (el usuario): botón 1 «Usar», botón 2 «Modo PRO»
         self.usar_btn.setEnabled(not en_uso)
         self.barra_tema.ajustar()
     def _usar_central(self):
@@ -6615,7 +6629,7 @@ class BarraTitulo(Tarjeta):
         self.ayuda.setToolTip(self._texto_ayuda)
 
 
-NUMERO_PAGINA = {'nuevo': '01', 'estilos': '01', 'editor': '02', 'sfx': '03', 'efectos': '04'}
+NUMERO_PAGINA = {'nuevo': '01', 'estilos': '01', 'editor': '02', 'efectos': '03'}
 
 
 class SubtitleApp(QWidget):
@@ -6630,8 +6644,10 @@ class SubtitleApp(QWidget):
     # «Nuevo proyecto» y «Estilos y composición» son UNA entrada del menú
     # («Proyecto»), con un conmutador arriba; Inicio elige pack, idioma, efectos
     # y formato con chips debajo de GO.
+    # v5.97 (el usuario: «elimina la página de sonido»): sin «Sonido» en el menú ni en el arranque; GO sigue poniendo el sonido solo, con los
+    # ajustes guardados (los de fábrica si nunca se tocaron). Su código (_pagina_sfx, _asegurar_sfx, sonido_skill_ui) queda sin usar.
     PAGINAS = (('inicio', 'Inicio'), ('nuevo', 'Estilo'), ('editor', 'Corrector'),       # (v5.65: «Proyecto» → «Tema»; v5.66: «Creativo» → «Corrector»; v5.76: «Tema» → «Estilo»; pedidos del usuario)
-               ('sfx', 'Sonido'), ('efectos', 'Efectos'))
+               ('efectos', 'Efectos'))
     ANCHO_PLEGAR = 1400
     def __init__(self, initial_video=None):
         super().__init__()
@@ -6766,7 +6782,9 @@ class SubtitleApp(QWidget):
         o esté minimizada: nadie mira la animación.
         v5.83 (el usuario: «utiliza todos los hilos y memoria para que CineCaptions sea fluido y rápido»): ya no se espera al foco: Efectos,
         Estilo y Sonido se arman POR PARTES entre cuadro y cuadro de Inicio (_armar_por_partes, sin tirones), una tras otra."""
-        pendientes = [c for c in (pendientes if pendientes is not None else ('fondo', 'efectos', 'estilos', 'sfx')) if not self._pagina_hecha(c)]
+        pendientes = [c for c in (pendientes if pendientes is not None else ('fondo', 'efectos', 'estilos')) if not self._pagina_hecha(c)]
+        if 'efectos' in pendientes and not self._pro_activa():          # v5.97: Efectos solo con la Edición PRO: sin ella no se arma
+            pendientes.remove('efectos')
         if not pendientes:
             return
         if getattr(self, '_go_corriendo', False) or getattr(self, '_pagina_actual', 'inicio') != 'inicio':
@@ -7064,7 +7082,6 @@ class SubtitleApp(QWidget):
         self._pagina_nuevo()
         self._pagina_editor()
         self._pagina_estilos()
-        self._pagina_sfx()
         self._pagina_efectos()
     def _build_lateral(self):
         self.lateral = QFrame()
@@ -7148,6 +7165,17 @@ class SubtitleApp(QWidget):
         self.isla = isla_ui.IslaNav(self, self.PAGINAS)
         self.isla.pagina.connect(self.ir_a)
         self.isla.accion.connect(self._accion_isla)
+        try:
+            import edicion_pro
+            edicion_pro.asegurar_lista()         # v5.97: la PRO de antes queda en su estilo antes de que nada cambie de estilo
+        except Exception:
+            pass
+        self._efectos_segun_pro()
+        try:                                     # v5.97: encender o apagar la PRO (desde donde sea) enseña u oculta Efectos
+            import edicion_pro
+            edicion_pro.AL_CAMBIAR.append(lambda _v: self._efectos_segun_pro() if ui.en_hilo_ui() else ejecutar_en_ui(self._efectos_segun_pro))
+        except Exception:
+            pass
         self.ctrl_ventana = isla_ui.ControlesVentana(self)
         self.ctrl_ventana.accion.connect(self._accion_isla)
         self.marca_cinema = isla_ui.MarcaCinema(self, LOGO_MARCA_PATH if LOGO_MARCA_PATH.exists() else None)       # el logo, arriba a la izquierda de Inicio
@@ -7418,6 +7446,15 @@ class SubtitleApp(QWidget):
         «Proyecto» es ahora solo «Estilos y composición»: la pantalla «Nuevo proyecto» (vista previa,
         receta, Generar) ya no se muestra; GO, en Inicio, hace ese trabajo. Sus widgets se siguen
         construyendo, fuera de pantalla, porque el resto del programa lee y guarda sus valores."""
+        if clave == 'sfx':                       # v5.97: la página Sonido ya no existe (la pide _abrir_estudio y algún aviso viejo)
+            return
+        if clave == 'efectos':                   # v5.97: Efectos solo con la Edición PRO
+            try:
+                import edicion_pro
+                if not edicion_pro.activado():
+                    return
+            except Exception:
+                return
         if clave == 'nuevo':
             clave = 'estilos'
         if (clave == 'estilos' and self._plantillas_ventana is None) or (clave == 'sfx' and self._estudio_ventana is None
@@ -7475,6 +7512,26 @@ class SubtitleApp(QWidget):
             self.registro_flotante.raise_()
         if clave == 'editor':
             self._al_entrar_en_creativo()          # v5.3.2: detecta el audio / la línea de tiempo de Proyecto (y abre el editor si ya hay palabras)
+    def _pro_activa(self):
+        try:
+            import edicion_pro
+            return edicion_pro.activado()
+        except Exception:
+            return False
+    def _efectos_segun_pro(self):
+        """v5.97 (el usuario: «la página de Efectos está oculta y desactivada; solo se activa y aparece en el menú si activan Edición PRO»)."""
+        try:
+            import edicion_pro
+            pro = edicion_pro.activado()
+        except Exception:
+            pro = False
+        b = (getattr(self, '_nav', None) or {}).get('efectos')
+        if b is not None:
+            b.setVisible(pro)
+        if hasattr(self, 'isla'):
+            self.isla.poner_visible('efectos', pro)
+        if not pro and getattr(self, '_pagina_actual', None) == 'efectos':
+            self.ir_a('inicio')
     def _marcar_nav(self, clave):
         for c, b in self._nav.items():
             b.setChecked(c == clave)
@@ -8640,7 +8697,10 @@ class SubtitleApp(QWidget):
         try:
             import ajustes_ui
             anterior = str(ajustes_ui.leer_prefs().get('go_pack') or '')
+            import edicion_pro
+            edicion_pro.asegurar_lista()
             ajustes_ui.guardar_prefs({'go_pack': valor})
+            ajustes_ui.guardar_prefs({'go_edicion_pro': edicion_pro.activado()})
         except Exception:
             pass
         if anterior is not None and valor != anterior:
@@ -8661,6 +8721,7 @@ class SubtitleApp(QWidget):
                 registro.excepcion(origen='chip Estilo · sincronizar')
             self._guardar_preferencias()
         self._pintar_opciones_go()
+        self._efectos_segun_pro()                     # v5.97: la PRO es de cada estilo: Efectos sale o no según el nuevo
     def _sincronizar_go_pack(self, valor):
         """Estilos → GO: el pack elegido en Estilos pasa a ser el de GO ('auto' = el diseño de 3 líneas)."""
         if valor in ('auto', 'dinamico', 'Base títulos dinámicos'):
@@ -8672,8 +8733,13 @@ class SubtitleApp(QWidget):
         try:
             import ajustes_ui
             if str(ajustes_ui.leer_prefs().get('go_pack') or '') != guardar:
+                import edicion_pro
+                edicion_pro.asegurar_lista()
                 ajustes_ui.guardar_prefs({'go_pack': guardar})
                 self._aplicar_recomendacion(guardar)
+                import edicion_pro                    # v5.97: la PRO del estilo nuevo (la de cada estilo) a 'go_edicion_pro' y al menú
+                ajustes_ui.guardar_prefs({'go_edicion_pro': edicion_pro.activado()})
+                self._efectos_segun_pro()
         except Exception:
             pass
     def _plantilla_un_clic(self):
@@ -10381,8 +10447,7 @@ class SubtitleApp(QWidget):
             P(*textos('estilo'), carta_central, 'estilos', lado='abajo', margen=8, redondeo=22, video='estilo', antes=self._guia_devolver_carrusel),
             P(*textos('crea'), carta_central, 'estilos', lado='abajo', margen=8, redondeo=22, video='crea', antes=ir_a_crear),
             P(*textos('corrector'), editor, 'editor', lado='abajo', video='corrector', antes=self._guia_devolver_carrusel),
-            P(*textos('sonido'), columna_sonido, 'sfx', lado='derecha', video='sonido'),
-            P(*textos('efectos'), seccion_efectos, 'efectos', lado='abajo', video='efectos'),
+        ] + ([P(*textos('efectos'), seccion_efectos, 'efectos', lado='abajo', video='efectos')] if self._pro_activa() else []) + [   # v5.97: solo con la PRO
             P(*textos('ajustes'), lambda: self.isla.rect_de('ajustes'), 'inicio', lado='abajo', margen=6, video='ajustes'),
         ]
 
@@ -10869,7 +10934,7 @@ class SubtitleApp(QWidget):
             poner('tipografias', 'aviso', tr('faltan {n}', n=f[1] + f[2]), tr('Resolve solo ve las fuentes instaladas en el sistema. Instálalas desde «Estilos y composición».'))
         modelo = d.get('modelo')
         if motor and d.get('motor_pref', 'qwen3') == 'qwen3':
-            poner('modelo', 'ok', f"Qwen3-ASR {motor.get('modelo') or ''}".strip(), tr('Motor de voz Qwen3-ASR instalado (Ajustes > General).'))
+            poner('modelo', 'ok', f"Qwen3-ASR {motor.get('modelo') or ''}".strip(), tr('Motor de voz Qwen3-ASR instalado.'))
         else:
             poner('modelo', 'ok' if modelo else 'info', f'{MODEL_SIZE} · 1,5 GB' if modelo else tr('se descarga al primer uso'))
         poner('traduccion', 'ok' if n else 'info', tr('lista') if n else tr('sin paquetes'))
@@ -11856,7 +11921,7 @@ class SubtitleApp(QWidget):
                 if motor_voz.instalado():
                     texto = tr('Qwen3-ASR {m} · {d}', m=info.get('modelo') or '1.7B', d=info.get('gpu') or 'CPU')
                 else:
-                    texto = tr('Qwen3-ASR no está instalado (Ajustes > General): se usará Whisper.')
+                    texto = tr('Qwen3-ASR no está instalado: se usará Whisper.')
             else:
                 texto = tr('Whisper large-v3-turbo · usa la GPU si hay CUDA')
         except Exception:
@@ -14501,7 +14566,6 @@ class SubtitleApp(QWidget):
         for chip in self._chips_recetas:
             chip.setEnabled(bool(enabled))
         self._pintar_chips_idioma()
-        self._nav['sfx'].setEnabled(bool(enabled) or self._pagina_actual == 'sfx')
         if enabled:
             self._on_modo_change()
         else:

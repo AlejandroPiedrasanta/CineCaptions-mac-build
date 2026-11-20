@@ -73,7 +73,7 @@ def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla=None, m
     """palabras [{'word','start','end'}] -> {'cues': [...], 'plan': [...]}. `mains`: palabras (texto) o índices de la lista original forzados como
     clave (las «Principal» de Creativo). `ancla` no se usa: la línea va siempre abajo, dentro de la zona segura."""
     unidas = VP.unir_fragmentos(palabras, idioma)
-    pal = G._preparar(unidas)
+    pal = TP.pegar_sueltas(G._preparar(unidas))         # v5.97: «veinte C» juntas
     if not pal:
         return {'cues': [], 'plan': []}
     for w in pal:

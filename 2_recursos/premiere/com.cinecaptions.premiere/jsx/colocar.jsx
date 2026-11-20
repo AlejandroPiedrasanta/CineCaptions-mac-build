@@ -11,7 +11,9 @@
 
 var CC = (typeof CC !== 'undefined' && CC) ? CC : {};
 CC.PANEL = 3;                                    // protocolo del panel (latido.panel): 2 = textos editables · 3 = trae la secuencia abierta
-CC.REV = 16;                                 // revisión de ESTE archivo (latido.rev): CineCaptions sabe si Premiere corre un panel viejo
+CC.REV = 17;                                 // revisión de ESTE archivo (latido.rev): CineCaptions sabe si Premiere corre un panel viejo
+// v5.97 (rev 17; medido en Premiere 26.5.2 con los 9 estilos): la secuencia de CineCaptions se compone SIN «color lineal» (CC.sinLineal):
+// con él, el halo y el brillo en PNG (alfa suave sobre el video) salían 2-3 veces más fuertes que en Resolve y en la vista de CineCaptions
 // v5.94 (rev 16; un cliente: «agarra un audio de la timeline que no es»): GO sin video trabaja con la SECUENCIA ABIERTA, como con el
 // timeline de Resolve: pedido `tipo: 'audio'` → CC.traerAudio exporta su audio a un WAV (preset de Premiere) y dice sus medidas; el pedido
 // de colocar con `en_secuencia` (su sequenceID) pone todo en una COPIA de esa secuencia (la del usuario no se toca ni se guarda el proyecto)
@@ -561,6 +563,19 @@ CC.ponerImagenes = function (seq, proj, bin, p, primera, res) {
     res.imagenes_animadas = animadas;
 };
 
+CC.sinLineal = function (seq, res) {           // la secuencia es de CineCaptions (nueva o la COPIA): la del usuario no se toca
+    try {
+        var st = seq.getSettings();
+        if (st && st.compositeLinearColor) {
+            st.compositeLinearColor = false;
+            seq.setSettings(st);
+            res.lineal = 'quitado';
+        } else {
+            res.lineal = (st && typeof st.compositeLinearColor !== 'undefined') ? 'no' : 'sin ajuste';
+        }
+    } catch (e) { res.lineal = 'error ' + (e.message || e); }
+};
+
 CC.fotos = function (seq, p, res) {              // (pruebas) cuadros de la secuencia en PNG, para compararlos con el dibujo de CineCaptions
     if (!p.fotos || !p.fotos.length || !p.carpeta_fotos) { return; }
     res.fotos = [];
@@ -722,6 +737,7 @@ CC.colocar = function (p) {
     var nImg = conTextos ? (p.carriles_imagen || 0) : 0, nTxt = conTextos ? (p.carriles_texto || 1) : 0;
     seq = CC.asegurarPistas(seq, p.solo_audio ? 1 : (conTextos ? baseV + nImg + nTxt : baseV + 1), baseA + fin.length + (musica.length ? 1 : 0));
     var res = { ok: true };
+    CC.sinLineal(seq, res);
 
     if (conTextos) {                             // v5.85: los textos encima (primero: si Premiere no deja, se vuelve a la capa) y las piezas debajo
         if (seq.videoTracks.numTracks < baseV + nImg + nTxt) {

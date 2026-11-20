@@ -54,25 +54,95 @@ def _avance(par, texto, em):
 
 
 def _trozos(pal, frase, forzados):
-    """Parte una frase (índices) en trozos parejos de ≤ MAX_PALABRAS palabras y ≤ MAX_SEGUNDOS."""
+    """Parte una frase (índices) en trozos de ≤ MAX_PALABRAS palabras y ≤ MAX_SEGUNDOS (v5.97: por dónde suena natural, trozos_armonicos)."""
+    return trozos_armonicos(pal, frase, MAX_PALABRAS, MAX_SEGUNDOS)
+
+
+# v5.97 (el usuario: «pule más los estilos, que sean agrupaciones más armoniosas, excepto el Estilo 3»): antes la frase se partía en trozos del
+# MISMO tamaño contando palabras y luego se movía la que colgaba si cabía; salían «este es producto es | un smart ring veinte C» o «que en |
+# este | caso». Ahora se elige entre TODAS las particiones posibles la que menos cuesta: cortar tras «de, la, en, es, que…» (colgante) o
+# antes de una letra suelta pegada («veinte C», «iPhone 15») cuesta mucho; cortar en una coma, un punto o una pausa de la voz, poco; los
+# trozos muy desparejos o de una sola palabra, algo. Medido con 4 videos reales (grupos/medir.py del scratchpad).
+IDEAL_PALABRAS = 3.5
+_SUELTAS_ES = {'y', 'o', 'a', 'e', 'u', 'i'}            # (palabras de una letra que SÍ son palabras: no se pegan a la anterior)
+_ANTES_DE = {'que', 'y', 'pero', 'porque', 'o', 'cuando', 'si', 'aunque', 'pues', 'entonces', 'and', 'but', 'because', 'so', 'when', 'if'}
+
+
+def _pegada(w):
+    """¿Va pegada a la anterior? Una letra o una cifra sueltas que son parte de un nombre («veinte C», «iPhone 15», «Galaxy S»)."""
+    p = w['plano']
+    return (len(p) == 1 and p.isalnum() and p not in _SUELTAS_ES) or (p.isdigit() and len(p) <= 4)
+
+
+def pegar_sueltas(pal, hueco_max=0.45):
+    """v5.97: una letra o cifra suelta que es parte de un nombre («veinte C», «iPhone 15») se une a la palabra de antes: así nunca queda sola
+    en su línea ni en su bloque. Mismos campos de G._preparar; `orig` junta los de las dos."""
+    sal = []
+    for w in pal:
+        if sal and _pegada(w) and not sal[-1]['signo'] and w['t'] - sal[-1]['fin'] <= hueco_max:
+            a = sal[-1]
+            a['texto'] = a['texto'] + ' ' + w['texto']
+            a['plano'] = a['plano'] + w['plano']
+            a['fin'] = max(a['fin'], w['fin'])
+            a['signo'] = w['signo']
+            a['fin_frase'] = a.get('fin_frase') or w.get('fin_frase')
+            a['orig'] = list(a.get('orig', ())) + list(w.get('orig', ()))
+            continue
+        sal.append(dict(w))
+    for i, w in enumerate(sal):
+        w['i'] = i
+    return sal
+
+
+def _coste_corte(pal, a, b):
+    """Cortar entre la palabra a (última del trozo) y b (primera del siguiente): + = mal sitio, − = buen sitio."""
+    wa, wb = pal[a], pal[b]
+    c = 0.0
+    if wa['signo']:
+        c -= 3.0 if wa['signo'] in G._FUERTE else 2.0
+    hueco = wb['t'] - wa['fin']
+    c -= 2.0 if hueco >= 0.30 else (0.8 if hueco >= 0.15 else 0.0)
+    if _cuelga(wa) and not wa['signo']:
+        c += 6.0
+    if _pegada(wb):
+        c += 8.0
+    if wb['plano'] in _ANTES_DE:
+        c -= 0.6
+    return c
+
+
+def trozos_armonicos(pal, frase, max_pal, max_seg, ideal=IDEAL_PALABRAS):
+    """La partición de `frase` (índices) en trozos de ≤ max_pal palabras y ≤ max_seg que menos cuesta (programación dinámica)."""
     n = len(frase)
-    partes = max(1, math.ceil(n / MAX_PALABRAS))
-    while True:
-        tam = [n // partes + (1 if i < n % partes else 0) for i in range(partes)]
-        trozos, i = [], 0
-        for t in tam:
-            trozos.append(frase[i:i + t])
-            i += t
-        largo = max(pal[t[-1]]['fin'] - pal[t[0]]['t'] for t in trozos)
-        if largo <= MAX_SEGUNDOS or partes >= n:
-            break
-        partes += 1
-    return [t for t in trozos if t]
+    if n == 0:
+        return []
+    INF = float('inf')
+    mejor = [0.0] + [INF] * n
+    desde = [0] * (n + 1)
+    for i in range(1, n + 1):
+        for j in range(max(0, i - max_pal), i):
+            if mejor[j] == INF:
+                continue
+            tam = i - j
+            dur = pal[frase[i - 1]]['fin'] - pal[frase[j]]['t']
+            if tam > 1 and dur > max_seg:
+                continue
+            c = mejor[j] + 1.0 + (3.0 if (tam == 1 and n > 1) else 0.3 * (tam - ideal) ** 2)
+            if j > 0:
+                c += _coste_corte(pal, frase[j - 1], frase[j])
+            if c < mejor[i]:
+                mejor[i], desde[i] = c, j
+    trozos, i = [], n
+    while i > 0:
+        j = desde[i]
+        trozos.append(frase[j:i])
+        i = j
+    return trozos[::-1]
 
 
 def _cuelga(w):
     """¿Esta palabra se queda colgando al final de un bloque? (artículos, preposiciones, posesivos y palabras vacías cortas: «la», «de», «se», «que»)"""
-    return w['plano'] in LLEVAN or (w['plano'] in G.STOP and len(w['plano']) <= 3)
+    return w['plano'] in LLEVAN or (w['plano'] in G.STOP and len(w['plano']) <= 3) or w['plano'] in ('no', 'not', 'nunca', 'ni')   # (v5.97: «caso no | está»)
 
 
 def _sin_colgantes(pal, trozos):
@@ -194,7 +264,7 @@ def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla=None, m
     """palabras [{'word','start','end'}] -> {'cues': [...], 'plan': [...]} (el contrato de viral_planificador.planificar). `mains`: palabras (texto)
     o índices de la lista original forzados como palabra GRANDE (las «Principal» de Creativo). `ancla` no se usa: el bloque va siempre al centro."""
     unidas = VP.unir_fragmentos(palabras, idioma)
-    pal = G._preparar(unidas)
+    pal = pegar_sueltas(G._preparar(unidas))            # v5.97: «veinte C» juntas
     if not pal:
         return {'cues': [], 'plan': []}
     for w in pal:

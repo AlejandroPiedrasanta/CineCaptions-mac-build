@@ -46,7 +46,7 @@ def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla=None, m
     """palabras [{'word','start','end'}] -> {'cues': [...], 'plan': [...]} (el contrato de viral_planificador.planificar). `ancla` no se usa: el
     bloque va siempre centrado y abajo, dentro de la zona segura."""
     unidas = VP.unir_fragmentos(palabras, idioma)
-    pal = G._preparar(unidas)
+    pal = TP.pegar_sueltas(G._preparar(unidas))         # v5.97: «veinte C» juntas
     if not pal:
         return {'cues': [], 'plan': []}
     for w in pal:

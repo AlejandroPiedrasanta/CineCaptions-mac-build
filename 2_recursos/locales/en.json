@@ -5046,6 +5046,27 @@
     "Premiere Pro abierto": "Premiere Pro open",
     "Listo para GO": "Ready for GO",
     "Mac: después de actualizarse ya no pide la licencia otra vez. Si te pasó, cierra CineCaptions y vuelve a abrirlo: tu licencia sigue ahí.": "Mac: after updating it no longer asks for your license again. If it happened to you, quit CineCaptions and open it again: your license is still there.",
-    "Premiere Pro: se ve en verde en cuanto se detecta, y mientras coloca tus subtítulos dice «colocando…».": "Premiere Pro: it shows green as soon as it is detected, and while it places your captions it says “placing…”."
+    "Premiere Pro: se ve en verde en cuanto se detecta, y mientras coloca tus subtítulos dice «colocando…».": "Premiere Pro: it shows green as soon as it is detected, and while it places your captions it says “placing…”.",
+    "Con qué trabaja GO.": "What GO works with.",
+    "Si pasa siempre, reinicia CineCaptions; si sigue, vuelve a ejecutar el instalador de CineCaptions (repara el motor).": "If it always happens, restart CineCaptions; if it continues, run the CineCaptions installer again (it repairs the engine).",
+    "Cierra y abre CineCaptions (vuelve a poner los scripts solo) y pulsa GO otra vez.": "Close and reopen CineCaptions (it puts the scripts back by itself) and press GO again.",
+    "Motor de voz Qwen3-ASR instalado.": "Qwen3-ASR voice engine installed.",
+    "Qwen3-ASR no está instalado: se usará Whisper.": "Qwen3-ASR is not installed: Whisper will be used.",
+    "No encuentro CineCaptions_Puente.lua en la carpeta de scripts de Resolve: cierra y abre CineCaptions para que vuelva a ponerlo.": "I can't find CineCaptions_Puente.lua in Resolve's scripts folder: close and reopen CineCaptions so it puts it back.",
+    "Idioma, fondo y aquí mismo, en Tutoriales, todos estos videos. Desde ahí también apagas esta guía o la vuelves a ver cuando quieras.": "Language, background and, right here in Tutorials, all these videos. From here you can also turn off this guide or watch it again whenever you want.",
+    "En Ajustes › Ayuda nos escribes por WhatsApp con el informe de tu equipo ya listo y ves tu versión y tu licencia.": "In Settings › Help you write to us on WhatsApp with your computer's report ready, and see your version and license.",
+    "CineCaptions lo repara solo en segundo plano al abrirse (descarga lo que falta; necesita internet). Si falla, lo reintenta al día siguiente.": "CineCaptions repairs it by itself in the background when it opens (it downloads what's missing; needs internet). If it fails, it tries again the next day.",
+    "Si no cabe en el disco: libera espacio en el disco del sistema (el mensaje dice cuánto hace falta); CineCaptions lo vuelve a intentar solo.": "If it doesn't fit on the disk: free up space on the system disk (the message says how much is needed); CineCaptions tries again by itself.",
+    "Si se cortó la descarga: comprueba la conexión (y que el antivirus o un firewall no bloqueen a CineCaptions); CineCaptions lo vuelve a intentar solo.": "If the download was cut off: check the connection (and that the antivirus or a firewall isn't blocking CineCaptions); CineCaptions tries again by itself.",
+    "Si es el motor de IA (Qwen3): CineCaptions lo repara solo en segundo plano al abrirse (descarga lo que falta; necesita internet).": "If it's the AI engine (Qwen3): CineCaptions repairs it by itself in the background when it opens (it downloads what's missing; needs internet).",
+    "Si pasa siempre, reinicia CineCaptions: si el motor está dañado, lo repara solo en segundo plano.": "If it always happens, restart CineCaptions: if the engine is damaged, it repairs it by itself in the background.",
+    "Premiere Pro: los estilos salen igual que en DaVinci Resolve: con su brillo y su halo, la palabra que se dice en rojo en el Estilo 7 y los colores sin aclararse.": "Premiere Pro: styles now look the same as in DaVinci Resolve: with their glow and halo, the spoken word in red in Style 7 and colors that no longer wash out.",
+    "Más rápido: el Estilo 5 se prepara hasta 7 veces más rápido para Premiere Pro y para «Video sin editores».": "Faster: Style 5 is prepared up to 7 times faster for Premiere Pro and for “Video without editors”.",
+    "Interfaz más simple: sin la página Sonido (GO pone los sonidos solo), sin «Motor de voz», «Herramientas» ni «Atajos» en Ajustes.": "Simpler interface: no Sound page (GO adds the sounds by itself), and no “Voice engine”, “Tools” or “Shortcuts” in Settings.",
+    "El motor de voz se revisa y se repara solo si algo falla, sin que tengas que hacer nada.": "The voice engine checks and repairs itself if something fails, without you having to do anything.",
+    "Efectos solo aparece y se aplica cuando activas la Edición PRO.": "Effects only appears and is applied when you turn on PRO Editing.",
+    "Subtítulos mejor agrupados en los estilos 2, 4, 5, 6, 7, 8 y 9: las frases se cortan donde suena natural, sin «de» o «en» colgando al final ni letras sueltas.": "Better-grouped subtitles in styles 2, 4, 5, 6, 7, 8 and 9: phrases break where it sounds natural, with no “of” or “in” left hanging at the end and no stray letters.",
+    "Modo PRO": "PRO mode",
+    "Estilo: botones «Usar» y «Modo PRO» más claros. El Modo PRO es de cada estilo, se ve si está apagado y con un clic se enciende y te lleva a Efectos.": "Style: clearer “Use” and “PRO mode” buttons. PRO mode is per style, you can see when it is off, and one click turns it on and takes you to Effects."
   }
 }

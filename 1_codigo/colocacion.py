@@ -1254,7 +1254,7 @@ def _lanzar_puente_windows(espera_s=30, forzar=False):
         import instalador_scripts as ins
         ruta = next((c / 'CineCaptions_Puente.lua' for c in ins.carpetas_scripts_resolve() if (c / 'CineCaptions_Puente.lua').is_file()), None)
         if ruta is None:
-            registro.aviso(tr('No encuentro CineCaptions_Puente.lua en la carpeta de scripts de Resolve: usa «Reinstalar scripts» en Ajustes.'), 'Puente · Windows')
+            registro.aviso(tr('No encuentro CineCaptions_Puente.lua en la carpeta de scripts de Resolve: cierra y abre CineCaptions para que vuelva a ponerlo.'), 'Puente · Windows')
             return False
         ventanas = _ventanas_de_resolve()
         principal = _ventana_principal(ventanas)

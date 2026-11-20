@@ -160,7 +160,7 @@ def _relleno(mascara, base_y, alto_tinta, color=None, degradado=None):
 
 
 def texto(txt, par, em, color=(1, 1, 1), degradado=None, esp=1.0, contorno=0.0, color_contorno=(0, 0, 0), sombra=None, halo=None, inclinacion=0.0,
-          caja=None, apretar=0.0, brillo=None, sombra2=None, solo_caja=False, dura=None):
+          caja=None, apretar=0.0, brillo=None, sombra2=None, solo_caja=False, dura=None, solo_efectos=None):
     """El sprite de una palabra. em = letra en px; esp = espaciado de letras (× avance); contorno = grosor (× em); sombra = (opacidad, bajada × em,
     desenfoque × em); halo = (radio × em, intensidad); inclinacion = cursiva sintética (× alto); caja = dict(color, pad_x, arriba, abajo (× em),
     punteada, dy (× em, + = arriba), degradado (clara, honda)). Ancla: centro del avance en x, línea de base en y.
@@ -168,7 +168,9 @@ def texto(txt, par, em, color=(1, 1, 1), degradado=None, esp=1.0, contorno=0.0, 
     [, color]) del color de la letra (con degradado, el de su mitad); sombra2 = la sombra ancha («B · Premium»), como `sombra`.
     v5.55: solo_caja = solo la caja, en el mismo lienzo y con el mismo anclaje que la palabra (la vista anima la caja del «select» aparte);
     el sprite lleva `total` = el avance de la palabra en px.
-    v5.78: dura = (derecha × em, bajada × em, color): la sombra DURA del Estilo 7 (la letra con su contorno, desplazada y sin difuminar)."""
+    v5.78: dura = (derecha × em, bajada × em, color): la sombra DURA del Estilo 7 (la letra con su contorno, desplazada y sin difuminar).
+    v5.97: solo_efectos = {'sombra', 'sombra2', 'dura', 'brillo', 'halo'}: SOLO esos efectos, sin contorno ni letra (Premiere: lo que su texto
+    no lleva va en una imagen debajo, en el mismo lienzo y anclaje)."""
     em = float(em)
     f = _fuente(par, em)
     if f is None:
@@ -225,8 +227,9 @@ def texto(txt, par, em, color=(1, 1, 1), degradado=None, esp=1.0, contorno=0.0, 
         sp = Sprite(_lienzo_centrado(img, pad + total / 2.0, base))
         sp.total = total
         return sp
-    for sm in (sombra2, sombra):
-        if not sm:
+    quiere = (lambda n: True) if solo_efectos is None else (lambda n: n in solo_efectos)
+    for nombre_s, sm in (('sombra2', sombra2), ('sombra', sombra)):
+        if not sm or not quiere(nombre_s):
             continue
         op, baja, blur = sm
         s = masc.filter(ImageFilter.GaussianBlur(max(1.0, blur * em))).point(lambda v, op=op: int(v * op))
@@ -235,25 +238,26 @@ def texto(txt, par, em, color=(1, 1, 1), degradado=None, esp=1.0, contorno=0.0, 
         desplazada = Image.new('RGBA', (W, H), (0, 0, 0, 0))
         desplazada.alpha_composite(capa_s, (0, int(round(baja * em))))
         img.alpha_composite(desplazada)
-    if dura:
+    if dura and quiere('dura'):
         ddx, ddy, col_d = dura
         r_d = max(1, int(round(contorno * em))) if contorno > 0 else 0
         m_d = _max_cuadrado(masc, 2 * r_d + 1) if r_d else masc
         img.alpha_composite(_relleno(m_d, base, cap, color=col_d), (max(0, int(round(ddx * em))), max(0, int(round(ddy * em)))))
-    if brillo:
+    if brillo and quiere('brillo'):
         radio, fuerza = brillo[:2]
         color_b = brillo[2] if len(brillo) > 2 else (min(degradado, key=lambda pc: abs(float(pc[0]) - 0.5))[1] if degradado else color)
         b_m = masc.filter(ImageFilter.GaussianBlur(max(1.5, radio * em))).point(lambda v: int(min(255, v * fuerza * 1.6)))
         img.alpha_composite(_relleno(b_m, base, cap, color=color_b))
-    if halo:
+    if halo and quiere('halo'):
         radio, fuerza = halo
         h_m = masc.filter(ImageFilter.GaussianBlur(max(1.5, radio * em))).point(lambda v: int(v * fuerza))
         img.alpha_composite(_relleno(h_m, base, cap, color=color if not degradado else degradado[-1][1]))
-    if contorno > 0:
+    if contorno > 0 and solo_efectos is None:
         r = max(1, int(round(contorno * em)))
         borde = _max_cuadrado(masc, 2 * r + 1)
         img.alpha_composite(_relleno(borde, base, cap, color=color_contorno))
-    img.alpha_composite(_relleno(masc, base, cap, color=color, degradado=degradado))
+    if solo_efectos is None:
+        img.alpha_composite(_relleno(masc, base, cap, color=color, degradado=degradado))
     ax = pad + total / 2.0
     if inclinacion:
         k = float(inclinacion)

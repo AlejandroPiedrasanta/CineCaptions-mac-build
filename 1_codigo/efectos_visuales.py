@@ -152,12 +152,17 @@ def migrar_a_efectos_activos():
 
 
 def activado():
-    """El interruptor general (chip «Visuales» de Inicio)."""
+    """El interruptor general (chip «Visuales» de Inicio). v5.97 (el usuario: «la página de Efectos está oculta y desactivada; solo se activa y
+    aparece en el menú si activan Edición PRO»): sin la Edición PRO, nada de Efectos."""
     try:
         import ajustes_ui
-        return bool(ajustes_ui.leer_prefs().get('go_efectos_visuales', True))
+        prefs = ajustes_ui.leer_prefs()
+        import edicion_pro
+        if not edicion_pro.activado():            # (la del estilo en uso)
+            return False
+        return bool(prefs.get('go_efectos_visuales', True))
     except Exception:
-        return True
+        return False
 
 
 CLIPS_USUARIO = Path.home() / 'DaVinciSubtitles' / 'efectos_clips'          # (no es la caché: «mantenimiento» la vacía y los proyectos de Resolve seguirían apuntando a esos archivos)

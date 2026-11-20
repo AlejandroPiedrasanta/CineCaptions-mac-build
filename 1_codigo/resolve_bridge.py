@@ -1934,7 +1934,7 @@ def lanzar_puente_mac(espera_s=25, espera_abrir_s=180, forzar=False):
         if codigo != 0 or salida != 'ok':
             motivo = _motivo_de_permiso(err) if codigo != 0 else ''
             if not motivo:
-                motivo = {'sin_menu': 'Resolve está abierto pero no muestra el menú Scripts > CineCaptions_Puente (¿sin proyecto abierto, o scripts sin instalar? Ajustes > Reinstalar scripts)',
+                motivo = {'sin_menu': 'Resolve está abierto pero no muestra el menú Scripts > CineCaptions_Puente (¿sin proyecto abierto, o scripts sin instalar? cierra y abre CineCaptions)',
                           'sin_resolve': 'Resolve no está abierto'}.get(salida) or salida or err.strip()[-200:] or 'sin respuesta'
             return fallo('No pude lanzar el Puente en Resolve por el menú: ' + motivo)
         if _esperar_latido(espera_s, version):

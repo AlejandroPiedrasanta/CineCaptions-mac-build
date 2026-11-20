@@ -277,6 +277,23 @@ def _partir(pal, frase, mains, A=AFINADO, agrupadas=None):
     return [t for t in final if t]
 
 
+def _sin_colgar(plan, pal):
+    """v5.97 (el usuario: «agrupaciones más armoniosas»): un bloque no acaba en «de, la, en, que, no…» si la frase sigue en el siguiente sin
+    pausa: esa palabra pasa a abrir el siguiente («que en este caso no | está funcionando» → «que en este caso | no está funcionando»).
+    Solo palabras pequeñas (nunca una grande ni la única del bloque). Antes de _reglas_lineas: las líneas se arman ya con el reparto bueno."""
+    import tipo_planificador as TP
+    for j in range(len(plan) - 1):
+        a, b = plan[j], plan[j + 1]
+        while (len(a['palabras']) >= 2 and a['frase'] == b['frase'] and a['palabras'][-1] not in a['mains']
+               and a['palabras'][-1] not in a.get('miembros', ()) and TP._cuelga(pal[a['palabras'][-1]])
+               and not pal[a['palabras'][-1]]['signo'] and pal[b['palabras'][0]]['t'] - pal[a['palabras'][-1]]['fin'] < 0.35):
+            k = a['palabras'].pop()
+            b['palabras'].insert(0, k)
+            a['orig'] = sorted(o for x in a['palabras'] for o in pal[x]['orig'])
+            b['orig'] = sorted(o for x in b['palabras'] for o in pal[x]['orig'])
+    return [b for b in plan if b['palabras']]
+
+
 def _complejos(plan, pal, A=AFINADO):
     """v5.48 (pedido: «bloques más complejos de tres líneas, la principal en medio, y bloques cortos»): alterna un bloque de TRES líneas
     (pequeña · PRINCIPAL · pequeña) con bloques cortos. Un bloque que acaba en su palabra grande se lleva las primeras palabras pequeñas del
@@ -693,7 +710,8 @@ def planificar(palabras, idioma='es', pack='Referencia', ancho_tl=1080, ancla='m
     Cada elemento del plan lleva 'orig' (los índices de las palabras que se entregaron y quedaron en el bloque) para que el editor sepa qué palabra va en qué bloque.
     """
     A = AFINADO
-    pal = _preparar(palabras)
+    import tipo_planificador as TP
+    pal = TP.pegar_sueltas(_preparar(palabras))       # v5.97: «veinte C» juntas (solo los Estilos 2 y 6: el 3 y el 7 no pasan por aquí)
     if not pal:
         return [], []
     forzar_peso, forzar_estilo = {}, {}
@@ -742,6 +760,7 @@ def planificar(palabras, idioma='es', pack='Referencia', ancho_tl=1080, ancla='m
                          'orig': sorted(o for k in trozo for o in pal[k]['orig'])})
     if A.get('complejos', True) and not forzados:
         plan = _complejos(plan, pal, A)
+    plan = _sin_colgar(plan, pal)
     plan = _reglas_lineas(plan, pal, A)
     plan = _juntar_cortos(plan, pal, A)
     if forzados is None:

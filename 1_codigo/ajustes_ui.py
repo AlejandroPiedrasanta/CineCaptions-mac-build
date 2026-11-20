@@ -592,6 +592,15 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.97', [
+        'Estilo: botones «Usar» y «Modo PRO» más claros. El Modo PRO es de cada estilo, se ve si está apagado y con un clic se enciende y te lleva a Efectos.',
+        'Subtítulos mejor agrupados en los estilos 2, 4, 5, 6, 7, 8 y 9: las frases se cortan donde suena natural, sin «de» o «en» colgando al final ni letras sueltas.',
+        'Premiere Pro: los estilos salen igual que en DaVinci Resolve: con su brillo y su halo, la palabra que se dice en rojo en el Estilo 7 y los colores sin aclararse.',
+        'Más rápido: el Estilo 5 se prepara hasta 7 veces más rápido para Premiere Pro y para «Video sin editores».',
+        'Interfaz más simple: sin la página Sonido (GO pone los sonidos solo), sin «Motor de voz», «Herramientas» ni «Atajos» en Ajustes.',
+        'El motor de voz se revisa y se repara solo si algo falla, sin que tengas que hacer nada.',
+        'Efectos solo aparece y se aplica cuando activas la Edición PRO.',
+    ]),
     ('5.96', [
         'Mac: después de actualizarse ya no pide la licencia otra vez. Si te pasó, cierra CineCaptions y vuelve a abrirlo: tu licencia sigue ahí.',
         'Premiere Pro: se ve en verde en cuanto se detecta, y mientras coloca tus subtítulos dice «colocando…».',
@@ -2636,7 +2645,7 @@ class _MuestrasAcento(QWidget):
 class VentanaAjustes(_Panel):
     # v5.76: «Tutoriales» (los videos de cada página y la guía). v5.82 (el usuario: «une la sección de Acerca de CineCaptions con Ayuda»):
     # «Acerca de» va DENTRO de «Ayuda», debajo del soporte (quien pida 'acerca' llega a 'ayuda')
-    PESTANAS = ('general', 'interfaz', 'atajos', 'tutoriales', 'ayuda')
+    PESTANAS = ('general', 'interfaz', 'tutoriales', 'ayuda')      # v5.97 (el usuario: «elimina la página de atajos»): sin «Atajos»; los atajos siguen funcionando
 
     def __init__(self, app, pestana='general', diferir=False):
         # diferir (v5.83, preparar_ajustes): solo el marco; la página inicial la arma completar() en otro rato libre
@@ -2666,7 +2675,7 @@ class VentanaAjustes(_Panel):
         cc.setContentsMargins(46, 30, 34, 12)
         cc.addWidget(_cabecera(tr('Ajustes de la aplicación'), tr('Ajustes de CineCaptions'), self.cerrar, tam=32))   # (v5.70: más baja)
         c.addWidget(cab)
-        nombres = [(tr('General'), 'gear-six'), (tr('Interfaz'), 'paint-brush'), (tr('Atajos'), 'keyboard'),
+        nombres = [(tr('General'), 'gear-six'), (tr('Interfaz'), 'paint-brush'),
                    (tr('Tutoriales'), 'play-circle'), (tr('Ayuda'), 'lifebuoy')]          # v5.70: con su ícono
         self.pila = QStackedWidget()
         self.pestanas = _Pestanas(nombres, self._ir_a_pestana)
@@ -2676,7 +2685,7 @@ class VentanaAjustes(_Panel):
         # hasta entonces la pila lleva un hueco vacío. Cada una lee lo de siempre al armarse.
         pestana = 'ayuda' if pestana == 'acerca' else pestana
         inicial = self.PESTANAS.index(pestana) if pestana in self.PESTANAS else 0
-        self._armadores = (self._pag_general, self._pag_interfaz, self._pag_atajos, self._pag_tutoriales, self._pag_ayuda)
+        self._armadores = (self._pag_general, self._pag_interfaz, self._pag_tutoriales, self._pag_ayuda)
         self._paginas_d = []
         self._armadas = set()
         for k in range(len(self._armadores)):
@@ -2779,7 +2788,7 @@ class VentanaAjustes(_Panel):
     # -- General --------------------------------------------------------------
     def _pag_general(self, capa):
         self._cabeza_pagina(capa, tr('Preferencias generales'), tr('General'),
-                            tr('Motor de voz, espacio de las cachés y con qué trabaja GO.'), icono='gear-six')     # v5.4.45: el idioma está en Interfaz (aquí quedaba una fila muerta que nunca se mostraba)
+                            tr('Con qué trabaja GO.'), icono='gear-six')     # v5.4.45: el idioma está en Interfaz (aquí quedaba una fila muerta que nunca se mostraba)
         # motor de voz
         motores ={'qwen3': tr('Qwen3-ASR (recomendado)'), 'whisper': tr('Whisper large-v3-turbo')}
         motor_var = StringVar(motores.get(self._borrador['motor_voz'], motores['qwen3']))
@@ -2795,6 +2804,8 @@ class VentanaAjustes(_Panel):
                            'portugués, francés, alemán, italiano, japonés, coreano, ruso, chino y cantonés. '
                            'Para los demás idiomas, o si no está instalado, se usa Whisper large-v3-turbo.'),
                         caja_motor, 340, icono='microphone')
+        f_motor.setParent(self)                          # v5.97: «Motor de voz» quitada de Ajustes (el usuario: «elimina esto»); GO usa Qwen3-ASR y
+        f_motor.hide()                                   # cae solo a Whisper; la tarjeta se sigue armando oculta (_pintar_motor la lee)
         self._pintar_motor()
         # v5.69: quitadas «IA de texto», «Otras IA (análisis, sonido y efectos)» y «GPU para la voz» (el usuario lo pidió): la IA de texto es
         # siempre la recomendada (Gemma 4 E4B, que baja sola a Qwen3.5-4B / Qwen3-1.7B si no cabe) y la GPU se repara sola al abrir
@@ -2860,7 +2871,7 @@ class VentanaAjustes(_Panel):
         # v5.22: «Copias de seguridad» quitada de Ajustes (el usuario lo pidió); copias.py queda sin uso
         # v5.52: quitadas «Reproducir al terminar», «Abrir siempre en vertical» y «Vista de Resolve al terminar» (el usuario lo pidió): van SIEMPRE
         # activadas (go_reproducir / go_vertical / go_vista_resolve ya no se leen); la vista que GO aplica es la que ya estuviera guardada
-        capa.addWidget(_grupo(f_motor, f_resolve, f_premiere, f_mp4))
+        capa.addWidget(_grupo(f_resolve, f_premiere, f_mp4))
 
     def _pintar_motor(self):
         import motor_voz
@@ -3261,25 +3272,8 @@ class VentanaAjustes(_Panel):
         self._cabeza_pagina(capa, tr('Soporte'), tr('Ayuda'),
                             tr('¿Algo no funciona? Escríbenos: el informe de tu equipo va listo para enviar.'), icono='lifebuoy')
         capa.addWidget(self._tarjeta_soporte())
-        app = self.app
-
-        def llamar(nombre):
-            fn = getattr(app, nombre, None)
-            if callable(fn):
-                self.cerrar()
-                fn()
-        f_diag = _Fila(tr('Diagnóstico'), tr('Revisa Resolve, la conexión MCP, el Puente, los scripts, el motor de voz y '
-                                             'la licencia, y lo deja listo para copiar y enviar.'),
-                       Boton(tr('Ejecutar diagnóstico'), lambda: llamar('_ejecutar_diagnostico'), tipo='neutro', alto=46, tam=15), 340,
-                       icono='heartbeat')
-        f_scripts = _Fila(tr('Scripts de Resolve'), tr('Vuelve a poner los scripts de CineCaptions en Área de trabajo > '
-                                                      'Scripts (para Resolve Free).'),
-                          Boton(tr('Reinstalar scripts'), lambda: llamar('_instalar_en_resolve'), tipo='neutro', alto=46, tam=15), 340,
-                          ultima=True, icono='code')
-        # v5.69: quitadas «Qué respondió Resolve» y «Carpeta de datos» (el usuario lo pidió). v5.70: «Contacto» (copiaba el diagnóstico,
-        # igual que la fila de arriba) pasa a la tarjeta de soporte con WhatsApp y la web
-        capa.addWidget(_etiqueta_seccion(tr('Herramientas')))
-        capa.addWidget(_grupo(f_diag, f_scripts))
+        # v5.97 (el usuario: «elimina esto»): sin la sección «Herramientas» (Diagnóstico y Reinstalar scripts). El informe de soporte sigue
+        # en la tarjeta de arriba (WhatsApp) y en «Copiar informe» del Registro; los scripts de Resolve se ponen solos (instalador y GO).
         self._pag_acerca(capa, seccion=True)                 # v5.82: «Acerca de CineCaptions» va aquí, debajo del soporte
 
     def _tarjeta_soporte(self):

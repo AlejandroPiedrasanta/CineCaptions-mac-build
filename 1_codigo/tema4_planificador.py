@@ -164,7 +164,8 @@ def _bloques(pal, frase):
 # sigue («…and welcome to | the Canopy House», «make your | edits», «the next | time») o partir «in all | the best ways». _pulir_cortes repasa
 # cada ORACIÓN y elige sus cortes por el menor coste: los de antes salen gratis, mover uno cuesta poco y un defecto mucho; mismos topes de siempre.
 # La palabra suelta al FINAL de la oración se queda (es el estilo de la referencia: «…más | vendido»).
-COLGANTES = PEQ | GP.DET | {'que', 'como', 'cuando', 'porque', 'si', 'when', 'because', 'than', 'you', 'dont', 'cant', 'wont', 'doesnt', 'didnt'}
+COLGANTES = PEQ | GP.DET | {'que', 'como', 'cuando', 'porque', 'si', 'when', 'because', 'than', 'you', 'dont', 'cant', 'wont', 'doesnt', 'didnt',
+             'no', 'ni', 'nunca', 'not'}       # v5.97: «que en este caso no | está» (el usuario: «agrupaciones más armoniosas»)
 ARTICULOS = set('''the a an this these those my your our their his her its el la los las un una unos unas este esta estos estas ese esa esos esas
                    mi mis tu tus su sus nuestro nuestra'''.split())        # «the next | time»: SOLO artículos, demostrativos y posesivos (GP.DET trae «that» y preposiciones)
 CORTE = {'cambio': 1.5, 'colgada': 6.0, 'det': 4.0, 'suelta': 4.0, 'pausa': 1.0, 'pausa_dentro': 3.0}   # 'det' > 2 cambios: «the next | time» se arregla aunque haya que mover dos cortes
@@ -339,7 +340,8 @@ def planificar(palabras, idioma='es', pack=PACK, ancho_tl=1080, ancla='medio', m
     """palabras [{'word','start','end'}] -> (cues, plan). La misma firma que guion_planificador.planificar (los parámetros que no aplican a este estilo se ignoran).
     `video` (Tema 5): de él sale el color de la frase clave (edicion_pro_tema5.acento_de_video); sin él, el azul."""
     A = AFINADO
-    pal = GP._preparar(palabras)
+    import tipo_planificador as TP
+    pal = TP.pegar_sueltas(GP._preparar(palabras))     # v5.97: «veinte C» juntas
     if not pal:
         return [], []
     forzados = None

@@ -376,7 +376,7 @@ def analizar(palabras, idioma='es', progreso=None, estado=None, modo=None):
                 if r:
                     # v5.71: aviso, no error: los subtítulos salen igual (motor de reglas / diccionario)
                     r.aviso('La IA de texto falló %d veces seguidas: sigo con el motor de reglas (sin corrección por IA) hasta reiniciar el programa. '
-                            'Revisa Ajustes > General > Motor de voz > Reparar.' % _FALLOS['n'], 'IA de texto')
+                            'Si el motor está dañado, CineCaptions lo repara solo.' % _FALLOS['n'], 'IA de texto')
             raise RuntimeError('la IA de texto está desactivada en esta sesión tras fallar varias veces')
         # v5.11: si el modelo grande falla, se cambia SOLO al ligero (1.7B) antes de rendirse; cada intento queda en el Registro
         modelos = [modelo] + _respaldos(modelo)              # (v5.46: Gemma 4 E4B → Qwen3.5-4B → Qwen3-1.7B)

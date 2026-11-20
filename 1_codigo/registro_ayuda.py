@@ -105,7 +105,7 @@ _REGLAS = [
      'los subtítulos salen igual, con menos finura en la corrección.',
      ['Cierra programas que usen la tarjeta gráfica (navegador con video, juegos, otro editor) y repite GO.',
       'Si repites GO sobre el mismo video, el resultado de la IA que sí terminó se reutiliza.',
-      'Si pasa siempre, reinicia CineCaptions; si sigue, en Ajustes > General > Motor de voz pulsa «Reparar el motor».'], 'parcial'),
+      'Si pasa siempre, reinicia CineCaptions: si el motor está dañado, lo repara solo en segundo plano.'], 'parcial'),
     (r'sin dar se[ñn]ales|sigue sin responder tras|parece atascado|lleva .* sin avanzar',
      'Un paso de GO se quedó atascado',
      'GO lleva demasiado tiempo en un paso sin avanzar (casi siempre esperando a Resolve o a la tarjeta gráfica). CineCaptions lo vigila y, si hace falta, cierra la conexión con Resolve y lo reintenta.',
@@ -126,7 +126,7 @@ _REGLAS = [
      'Resolve no muestra el menú de Scripts',
      'Resolve está abierto pero su menú Área de trabajo > Scripts no tiene CineCaptions_Puente: casi siempre es que no hay un proyecto abierto (la pantalla de proyectos no tiene ese menú) o que los scripts no están instalados.',
      ['Abre un proyecto en Resolve y espera a que se vea la página Edición.',
-      'En CineCaptions: Ajustes > «Reinstalar scripts de Resolve» y vuelve a pulsar GO.'], 'bloquea'),
+      'Cierra y abre CineCaptions (vuelve a poner los scripts solo) y pulsa GO otra vez.'], 'bloquea'),
     (r'La interfaz estuvo sin responder|congelaci[oó]n',
      'La ventana se congeló un momento',
      'La ventana de CineCaptions dejó de responder unos segundos (el equipo estaba ocupado con la voz, la IA o Resolve).',
@@ -307,27 +307,27 @@ _REGLAS = [
      'No se descargó la IA de texto',
      'La voz quedó lista, pero la IA que corrige el texto y elige las palabras clave no se pudo descargar; el mensaje dice por qué. Mientras '
      'falte, GO corrige el texto con reglas: funciona, con menos acierto.',
-     ['Si no cabe en el disco: libera espacio en el disco del sistema (el mensaje dice cuánto hace falta) y vuelve a pulsar «Reparar el motor».',
-      'Si se cortó la descarga: comprueba la conexión (y que el antivirus o un firewall no bloqueen a CineCaptions) y vuelve a pulsar «Reparar el motor».'],
+     ['Si no cabe en el disco: libera espacio en el disco del sistema (el mensaje dice cuánto hace falta); CineCaptions lo vuelve a intentar solo.',
+      'Si se cortó la descarga: comprueba la conexión (y que el antivirus o un firewall no bloqueen a CineCaptions); CineCaptions lo vuelve a intentar solo.'],
      'parcial'),
     (r'Al abrir: Motor de IA.*falta la IA de texto',
      'Falta la IA de texto (la voz funciona)',
      'El motor de voz está listo, pero la IA que corrige el texto y elige las palabras clave no se descargó (casi siempre por falta de espacio '
      'en el disco o porque se cortó la conexión). Mientras falte, GO corrige el texto con reglas: funciona, con menos acierto.',
-     ['En Ajustes › General › Motor de voz pulsa «Reparar el motor» (descarga lo que falta; necesita internet).',
+     ['CineCaptions lo repara solo en segundo plano al abrirse (descarga lo que falta; necesita internet). Si falla, lo reintenta al día siguiente.',
       'Deja al menos 6 GB libres en el disco del sistema: la IA de texto ocupa unos 4 GB.'], 'parcial'),
     (r'Falla al iniciar: Motor de IA.*(versión anterior|PyTorch|falta el modelo de voz|falta el alineador|faltan modelos)',
      'Al motor de IA le falta una pieza',
      'Al abrirse, CineCaptions comprobó el motor de voz e IA y le falta una pieza (el modelo de voz, el alineador de palabras o PyTorch) o es '
      'de una versión anterior: una instalación o una descarga quedó a medias. Mientras, la voz se transcribe con Whisper.',
-     ['En Ajustes › General › Motor de voz pulsa «Reparar el motor» (descarga lo que falta; necesita internet).',
+     ['CineCaptions lo repara solo en segundo plano al abrirse (descarga lo que falta; necesita internet). Si falla, lo reintenta al día siguiente.',
       'Si el antivirus o el Control inteligente de aplicaciones de Windows bloquea la descarga, permite CineCaptions y repite.'], 'parcial'),
     # v5.54: el chequeo de arranque de un motor («Falla al iniciar: Motor de IA (Qwen3) — faltan 63 librerías…») caía en la de abajo por «Qwen»
     # y salía como «La transcripción no pudo terminar», con pasos de un audio dañado, sin haber transcrito nada
     (r'Falla al iniciar: Motor (de IA|auxiliar)',
      'A un motor de IA le faltan librerías',
      'Al abrirse, CineCaptions comprobó sus motores de IA y a uno le faltan librerías o no tiene la versión que necesita: una instalación o una actualización quedó a medias. Todavía no se ha transcrito nada; al pulsar GO la voz prueba con el otro motor.',
-     ['Si es el motor de IA (Qwen3): en Ajustes › General › Motor de voz pulsa «Reparar el motor» (descarga lo que falta; necesita internet).',
+     ['Si es el motor de IA (Qwen3): CineCaptions lo repara solo en segundo plano al abrirse (descarga lo que falta; necesita internet).',
       'Si es el motor auxiliar (Whisper): reinstala CineCaptions con el último instalador, que pone al día sus librerías (se conservan tus ajustes).',
       'Si el antivirus o el Control inteligente de aplicaciones de Windows bloquea la descarga, permite CineCaptions y repite.'], 'parcial'),
     # v5.64: una librería que falta en GO («el motor de IA (Qwen3) no arrancó: ModuleNotFoundError: No module named 'transformers'») caía en la
@@ -336,7 +336,7 @@ _REGLAS = [
      'Falta una librería de CineCaptions',
      'Una parte del programa (casi siempre un motor de IA) no encontró una de sus librerías: una instalación o una actualización quedó a medias, '
      'o el antivirus la quitó. No es un problema de tu video.',
-     ['Si es el motor de IA (Qwen3): en Ajustes › General › Motor de voz pulsa «Reparar el motor» (descarga lo que falta; necesita internet).',
+     ['Si es el motor de IA (Qwen3): CineCaptions lo repara solo en segundo plano al abrirse (descarga lo que falta; necesita internet).',
       'Si no, reinstala CineCaptions con el instalador más reciente (se conservan tus ajustes).',
       'Añade la carpeta de CineCaptions a las excepciones de tu antivirus.'], 'bloquea'),
     # v5.64: las librerías de CUDA que faltan se bajan solas (vigilancia.preparar_gpu_voz); antes caía en «Falla al iniciar» con pasos de reinstalar

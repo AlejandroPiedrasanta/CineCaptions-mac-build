@@ -26,7 +26,7 @@ import time
 LIBRERIAS = (
     ('PySide6', 'Qt (PySide6)', '6.12.0'),
     ('qtawesome', 'Iconos (QtAwesome)', '1.4.2'),
-    ('numpy', 'NumPy', '2.5.4'),
+    ('numpy', 'NumPy', '2.5.5'),
     ('PIL', 'Pillow', '13.0.0'),                      # (v5.5.10: subió con 3_compilar/requirements.txt; las dos van juntas)
     ('av', 'PyAV (FFmpeg)', '19.0.2'),
     ('spellchecker', 'pyspellchecker', '0.9.1'),
@@ -80,7 +80,7 @@ def _compatible(v, fijada):
         return False
 
 
-REPARAR_MOTOR = 'Ajustes > General > Motor de voz > Reparar'
+REPARAR_MOTOR = 'CineCaptions lo repara solo en segundo plano'
 
 
 def _fila_motor_qwen(mv):

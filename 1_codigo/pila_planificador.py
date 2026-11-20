@@ -112,18 +112,8 @@ def _letra_peq(texto, em_g, wg, tope_ancho, enfasis=False):
 
 # ------------------------------------------------------------------------------------------------------------------ bloques
 def _trozos(pal, frase):
-    n = len(frase)
-    partes = max(1, math.ceil(n / MAX_PALABRAS))
-    while True:
-        tam = [n // partes + (1 if i < n % partes else 0) for i in range(partes)]
-        trozos, i = [], 0
-        for t in tam:
-            trozos.append(frase[i:i + t])
-            i += t
-        if max(pal[t[-1]]['fin'] - pal[t[0]]['t'] for t in trozos) <= MAX_SEGUNDOS or partes >= n:
-            break
-        partes += 1
-    return [t for t in trozos if t]
+    # v5.97: por dónde suena natural (tipo_planificador.trozos_armonicos), no en trozos del mismo tamaño
+    return TP.trozos_armonicos(pal, frase, MAX_PALABRAS, MAX_SEGUNDOS, ideal=4.5)
 
 
 def _sin_colgantes(pal, trozos):
@@ -270,7 +260,7 @@ def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla=None, m
     """palabras [{'word','start','end'}] -> {'cues': [...], 'plan': [...]} (el contrato de viral_planificador.planificar). `ancla` no se usa: la
     pila va siempre a media altura (como la referencia), dentro de la zona segura."""
     unidas = VP.unir_fragmentos(palabras, idioma)
-    pal = G._preparar(unidas)
+    pal = TP.pegar_sueltas(G._preparar(unidas))         # v5.97: «veinte C» juntas
     if not pal:
         return {'cues': [], 'plan': []}
     for w in pal:

@@ -45,14 +45,11 @@ TUTORIALES = [
     ('corrector', 'Corrector',
      'Después de GO tus palabras aparecen aquí. Elige un pincel (Arriba, Principal, Abajo) y toca las palabras para decidir '
      'cuál va grande; con doble clic corriges lo que se oyó mal. «Generar» lo vuelve a colocar en Resolve.'),
-    ('sonido', 'Sonido',
-     'Elige cómo suena tu video: automático según el estilo, elegante, dinámico… y si lleva gancho al inicio o música. '
-     'GO pone los efectos solo; aquí los escuchas y los cambias uno por uno.'),
     ('efectos', 'Efectos',
      'El gancho del inicio, los captions detrás de ti, las transiciones y más. Toca una tarjeta para elegirla y apaga '
      'lo que no quieras con su interruptor: GO los aplica solos.'),
     ('ajustes', 'Ajustes',
-     'Idioma, fondo, motor de voz y aquí mismo, en Tutoriales, todos estos videos. Desde ahí también apagas esta guía '
+     'Idioma, fondo y aquí mismo, en Tutoriales, todos estos videos. Desde ahí también apagas esta guía '
      'o la vuelves a ver cuando quieras.'),
     # v5.82: paso a paso (solo en Ajustes › Tutoriales; la guía sigue con una página por paso)
     ('probar', 'Prueba los estilos',
@@ -68,11 +65,10 @@ TUTORIALES = [
      'En Ajustes › Interfaz eliges la escena de Inicio, el fondo, el color de resaltado, el idioma y el tamaño. Pasa el ratón por una '
      'tarjeta para verla en movimiento.'),
     ('ayuda', '¿Necesitas ayuda?',
-     'En Ajustes › Ayuda nos escribes por WhatsApp con el informe de tu equipo ya listo, ejecutas el diagnóstico y ves tu versión y '
-     'tu licencia.'),
+     'En Ajustes › Ayuda nos escribes por WhatsApp con el informe de tu equipo ya listo y ves tu versión y tu licencia.'),
 ]
 ORDEN = [t[0] for t in TUTORIALES]
-GUIA = ('inicio', 'estilo', 'crea', 'corrector', 'sonido', 'efectos', 'ajustes')         # la guía: un paso por página
+GUIA = ('inicio', 'estilo', 'crea', 'corrector', 'efectos', 'ajustes')         # la guía: un paso por página (v5.97: sin «Sonido», la página ya no existe)
 GRUPOS = (('Las páginas', GUIA), ('Paso a paso', tuple(i for i in ORDEN if i not in GUIA)))
 
 

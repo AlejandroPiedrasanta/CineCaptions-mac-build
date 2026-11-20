@@ -21,6 +21,7 @@ Cada tipo va en carriles que no se pisan (`pista`: 0, 1, 2…): el panel (coloca
 Si el panel no puede poner textos, GO vuelve a la capa de siempre (script principal, `_go_colocar_premiere`).
 """
 import hashlib
+import json
 import math
 import struct
 import time
@@ -320,6 +321,10 @@ def _color_medio(degradado):
 def _sombra(e):
     """La sombra de Premiere (una por texto) con lo que más se nota del dibujo: la dura del Estilo 7, la sombra, la ancha, el brillo o el halo."""
     em = float(e['em'])
+    elegido = _efecto_de_premiere(e)
+    if elegido is None:
+        return None
+    e = {k: v for k, v in e.items() if k not in _EFECTOS or k == elegido}
     if e.get('dura'):
         ddx, ddy, col = e['dura']
         return {'color': _rgb(col, (0, 0, 0)), 'opacidad': 100, 'angulo': math.degrees(math.atan2(ddx, -ddy)) % 360,
@@ -336,6 +341,8 @@ def _sombra(e):
             fuerza = float(fuerza) * 1.6
         if len(brillo) > 2:
             col = _rgb(brillo[2])
+        elif e.get('halo') and e.get('degradado'):      # (render_temas: el halo de una con degradado es del color de abajo)
+            col = _rgb(e['degradado'][-1][1])
         elif e.get('degradado'):
             col = _color_medio(e['degradado'])
         else:
@@ -343,6 +350,90 @@ def _sombra(e):
         return {'color': col, 'opacidad': max(10, min(100, round(float(fuerza) * 100))), 'angulo': 180.0, 'distancia': 0.0,
                 'desenfoque': float(radio) * em, 'tamano': 0.0}
     return None
+
+
+_ELEGIDO = {}
+_KW_TEXTO = ('color', 'degradado', 'esp', 'contorno', 'color_contorno', 'sombra', 'halo', 'inclinacion', 'apretar', 'brillo', 'sombra2', 'dura')
+_EFECTOS = ('dura', 'sombra', 'sombra2', 'brillo', 'halo')
+
+
+def _efecto_de_premiere(e):
+    """v5.97: el efecto que lleva la sombra del propio texto de Premiere (solo cabe uno): el que, solo, más se parece a la palabra con todos
+    (medido una vez por letra, tamaño y efectos, con «Hg»). Antes, siempre la primera sombra: el Estilo 4 perdía su halo (con él, casi exacto)
+    y el 6 se quedaba con una sombra negra en vez del resplandor. None si no lleva ninguno."""
+    # (el brillo y el halo NO: en el Premiere real 26.5 su sombra a 0 de distancia casi no se ve —Estilos 1 y 2 sin resplandor, medido
+    # 2026-11-19—; van siempre en la imagen de debajo, que es exacta)
+    activos = [k for k in ('dura', 'sombra', 'sombra2') if e.get(k)]
+    if len(activos) <= 1:
+        return activos[0] if activos else None
+    kw = {k: e.get(k) for k in _KW_TEXTO if e.get(k) is not None}
+    if kw.get('degradado'):                      # (Premiere lleva el tono medio; se compara con lo mismo)
+        kw['color'] = tuple(v / 255.0 for v in _color_medio(kw.pop('degradado')))
+    clave = json.dumps([e['par'], round(float(e['em'])), kw], default=str, sort_keys=True)
+    if clave not in _ELEGIDO:
+        try:
+            import render_temas as RT
+            real = RT.texto('Hg', e['par'], e['em'], **kw)
+            mejor, menor = activos[0], None
+            for k in activos:
+                uno = RT.texto('Hg', e['par'], e['em'], **{n: v for n, v in kw.items() if n not in _EFECTOS or n == k})
+                d = _diferencia(_sprite_rgba(real), _sprite_rgba(uno))
+                if menor is None or d < menor - 1e-4:
+                    mejor, menor = k, d
+            _ELEGIDO[clave] = mejor
+        except Exception:
+            _ELEGIDO[clave] = activos[0]
+    return _ELEGIDO[clave]
+
+
+def _diferencia(a, b):
+    """Diferencia media (0-1) del color premultiplicado de dos RGBA del mismo lienzo, sobre la tinta de cualquiera."""
+    if a.shape != b.shape:
+        return 1.0
+    a, b = a.astype(np.float32), b.astype(np.float32)
+    pa, pb = a[..., :3] * a[..., 3:] / 255.0, b[..., :3] * b[..., 3:] / 255.0
+    tinta = np.maximum(a[..., 3], b[..., 3]) > 20
+    return float(np.abs(pa - pb)[tinta].mean() / 255.0) if tinta.any() else 0.0
+
+
+def efectos_aparte(e):
+    """v5.97 (el usuario: «en Premiere los estilos fallan demasiado»; medido con los 9 estilos: el 2, el 4 y el 6 perdían la sombra ancha, el
+    halo y el brillo porque el texto de Premiere lleva UNA sombra): los efectos que el texto no lleva, para dibujarlos en una imagen debajo."""
+    principal = _efecto_de_premiere(e)
+    return {k for k in ('sombra', 'sombra2', 'dura', 'brillo', 'halo') if e.get(k) and k != principal}
+
+
+EFECTO_MINIMO = 0.004             # diferencia media (0-1, sobre la tinta) por debajo de la cual el efecto aparte no se nota: no se pone (cada pieza
+                                 # cuesta ~0,2-0,5 s al colocar en Premiere; el Estilo 9 sumaba 293 imágenes de una sombra ancha invisible)
+
+
+def _se_nota(debajo, texto):
+    """Cuánto cambia el texto (RGBA de render_temas, sin los efectos aparte) al ponerle `debajo` (mismo lienzo y anclaje)."""
+    if debajo.shape != texto.shape:
+        return 1.0
+    a = debajo.astype(np.float32)
+    b = texto.astype(np.float32)
+    ab, aa = b[..., 3:] / 255.0, a[..., 3:] / 255.0
+    salida_a = ab + aa * (1.0 - ab)
+    pre = b[..., :3] * ab + a[..., :3] * aa * (1.0 - ab)
+    solo = b[..., :3] * ab
+    tinta = salida_a[..., 0] > 0.08
+    return float(np.abs(pre - solo)[tinta].mean() / 255.0) if tinta.any() else 0.0
+
+
+_VALE = {}
+
+
+def _vale_aparte(e, extras, kw):
+    """¿Se nota lo que va aparte? Depende de la letra, el tamaño y los efectos, no de la palabra: se mide una vez por combinación (con «Hg»)."""
+    import render_temas as RT
+    clave = json.dumps([e['par'], round(float(e['em'])), sorted(extras), {k: v for k, v in kw.items()}], default=str, sort_keys=True)
+    if clave not in _VALE:
+        muestra = 'Hg'
+        sp = RT.texto(muestra, e['par'], e['em'], solo_efectos=extras, **kw)
+        solo = RT.texto(muestra, e['par'], e['em'], **{k: v for k, v in kw.items() if k not in extras})
+        _VALE[clave] = sp is not None and solo is not None and _se_nota(_sprite_rgba(sp), _sprite_rgba(solo)) >= EFECTO_MINIMO
+    return _VALE[clave]
 
 
 def _png(rgba, carpeta):
@@ -382,18 +473,25 @@ def _a_fotogramas(items, fps):
 
 
 def _carriles(items):
-    """Pone `pista` (0, 1, 2…) a cada pieza: en un mismo carril nunca se solapan (por orden de entrada, el primer carril libre)."""
-    fines = []
-    for it in sorted(items, key=lambda i: (i['t0'], i['t1'])):
-        for k, fin in enumerate(fines):
-            if fin <= it['t0'] - HUECO_S:
-                it['pista'] = k
-                fines[k] = it['t1']
-                break
-        else:
-            it['pista'] = len(fines)
-            fines.append(it['t1'])
-    return len(fines)
+    """Pone `pista` (0, 1, 2…) a cada pieza: en un mismo carril nunca se solapan y, v5.97, lo que va encima en el dibujo (más tarde en la
+    lista: render_temas compone en ese orden) va en un carril MÁS ALTO que todo lo anterior con lo que coincide en el tiempo. Antes iba al primer
+    carril libre por orden de entrada: en el Estilo 7 la palabra roja (la que se dice) caía debajo de su copia blanca y en Premiere no se veía
+    (medido en Premiere 26.5.2: «esta cajita» toda blanca). → número de carriles."""
+    puestos = []                                 # (t0, t1, carril) de lo ya colocado
+    usados = 0
+    for it in items:
+        t0, t1 = float(it['t0']), float(it['t1'])
+        encima = -1                              # (el orden: solo lo que de verdad se ve a la vez)
+        for a0, a1, k in puestos:
+            if a0 < t1 - 1e-4 and t0 < a1 - 1e-4:
+                encima = max(encima, k)
+        k = encima + 1                           # (el primer carril por encima que esté libre, con su hueco)
+        while any(kk == k and a0 < t1 + HUECO_S and t0 < a1 + HUECO_S for a0, a1, kk in puestos):
+            k += 1
+        it['pista'] = k
+        puestos.append((t0, t1, k))
+        usados = max(usados, it['pista'] + 1)
+    return usados
 
 
 # ------------------------------------------------------------------------------------------------ v5.87: la animación de cada pieza
@@ -727,6 +825,28 @@ def preparar(video, cues, carpeta=None, emoji_arriba=True, estilo=None, cancelad
             if anim:
                 ficha['anim'] = anim
             textos.append(ficha)
+            extras, efecto_im = efectos_aparte(e), None
+            if extras:                            # v5.97: la sombra ancha, el halo o el brillo que el texto de Premiere no lleva, en PNG debajo
+                try:
+                    import render_temas as RT
+                    kw = {k: e.get(k) for k in ('color', 'degradado', 'esp', 'contorno', 'color_contorno', 'sombra', 'halo', 'inclinacion',
+                                                'apretar', 'brillo', 'sombra2', 'dura') if e.get(k) is not None}
+                    if _vale_aparte(e, extras, kw):
+                        sp = RT.texto(e['txt'], e['par'], e['em'], solo_efectos=extras, **kw)
+                    else:
+                        sp = None
+                    if sp is not None:
+                        sp.girar(float(c.get('rot') or 0.0))
+                        efx = _sprite_rgba(sp)
+                        if efx[..., 3].any():
+                            im = {'ruta': str(_png(efx, destino)), 'x': round(ax, 2), 'y': round(ay, 2), 'ancho': efx.shape[1],
+                                  'alto': efx.shape[0], 't0': ficha['t0'], 't1': ficha['t1'], 'entrada': ficha['entrada'], 'k': 'efecto'}
+                            anim = _animar(c, (ax, ay), fps)
+                            if anim:
+                                im['anim'] = anim
+                            efecto_im = im
+                except Exception:
+                    pass
             if e.get('caja'):                     # la pegatina: la caja (sin letras) en PNG, debajo del texto y con el mismo ancla y giro
                 try:
                     import render_temas as RT
@@ -743,6 +863,8 @@ def preparar(video, cues, carpeta=None, emoji_arriba=True, estilo=None, cancelad
                         imagenes.append(im)
                 except Exception:
                     pass
+            if efecto_im:                         # (encima de la caja, debajo del texto: como los dibuja render_temas)
+                imagenes.append(efecto_im)
             continue
         rgba = _rgba_de_capa(c)
         if not rgba[..., 3].any():

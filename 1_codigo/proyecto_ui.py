@@ -625,7 +625,7 @@ class BotonCompacto(QAbstractButton):
         super().__init__(padre)
         self.tipo = tipo
         self._activo = bool(activo)
-        self._icono_n = 'crown' if tipo == 'pro' else 'check'
+        self._icono_n = 'crown-fill' if tipo == 'pro' else 'check-circle-fill'      # v5.97: iconos rellenos (se leen mejor)
         self._h = 0.0
         self.setAttribute(Qt.WidgetAttribute.WA_Hover)
         self.setText(texto)
@@ -658,7 +658,9 @@ class BotonCompacto(QAbstractButton):
         w = QFontMetricsF(self._fuente()).horizontalAdvance(self.text())
         if self.tipo == 'uso' and self._activo:
             return QSize(int(math.ceil(20 + 7 + w + 4)), 36)
-        return QSize(int(math.ceil((12 if self.tipo == 'pro' else 14) + 16 + 8 + w + 16)), 40 if self.tipo == 'pro' else 36)
+        if self.tipo == 'pro':                    # v5.97: corona + texto + el interruptor (34 px) que dice si está encendido
+            return QSize(int(math.ceil(12 + 16 + 8 + w + 12 + 34 + 12)), 40)
+        return QSize(int(math.ceil(14 + 18 + 8 + w + 20)), 40)
 
     def minimumSizeHint(self):
         return self.sizeHint()
@@ -700,36 +702,57 @@ class BotonCompacto(QAbstractButton):
             return
         rad = r.height() / 2.0
         if self.tipo == 'pro':
+            # v5.97 (el usuario: «no se nota si el botón PRO es texto o un botón… que se note que el PRO está desactivado»): un botón de verdad
+            # con su interruptor dentro. Apagado: gris (borde, corona y texto) y el interruptor a la izquierda; encendido: dorado y a la derecha.
             oro = _real(ui.AMBAR)
-            fondo = QColorReal(oro)
-            fondo.setAlpha(int((26 if self._activo else 0) + 20 * self._h))
-            borde = QColorReal(oro)
-            borde.setAlpha(140 if self._activo else 77 + int(50 * self._h))
-            p.setPen(QPen(borde, 1.0))
+            gris = _real(ui.TEXT_MUTED)
+            base = oro if self._activo else gris
+            fondo = QColorReal(base)
+            fondo.setAlpha(int((46 if self._activo else 22) + 22 * self._h))
+            borde = QColorReal(base)
+            borde.setAlpha(200 if self._activo else 110 + int(70 * self._h))
+            p.setPen(QPen(borde, 1.2))
             p.setBrush(fondo)
             p.drawRoundedRect(r, rad, rad)
-            tinta = QColorReal(oro)
-            if not self._activo:
-                tinta.setAlpha(215)
-            pm = self._glifo(oro.name(), 16)
+            tinta = QColorReal(oro if self._activo else QColorReal(225, 232, 244))
+            pm = self._glifo(base.name(), 16)
             if pm is not None:
                 p.drawPixmap(QPointF(12.0, r.center().y() - 8.0), pm)
             p.setPen(tinta)
             p.drawText(QRectF(36.0, 0, w_txt + 4, self.height()), alin, self.text())
+            pista = QRectF(r.right() - 12.0 - 34.0, r.center().y() - 9.0, 34.0, 18.0)
+            p.setPen(Qt.PenStyle.NoPen)
+            c_pista = QColorReal(oro if self._activo else gris)
+            c_pista.setAlpha(235 if self._activo else 90)
+            p.setBrush(c_pista)
+            p.drawRoundedRect(pista, 9.0, 9.0)
+            p.setBrush(QColorReal(20, 24, 36) if self._activo else QColorReal(230, 236, 246))
+            cx = pista.right() - 9.0 if self._activo else pista.left() + 9.0
+            p.drawEllipse(QPointF(cx, pista.center().y()), 6.5, 6.5)
             p.end()
             return
-        g = QLinearGradient(r.topLeft(), r.topRight())                       # «Usar este tema» / «Crear mi estilo»
-        g.setColorAt(0.0, _mezcla(verde, QColorReal(255, 255, 255), 0.12 * self._h))
-        g.setColorAt(1.0, _mezcla(_real(ui.ACCENT), QColorReal(255, 255, 255), 0.12 * self._h))
-        p.setPen(Qt.PenStyle.NoPen)
+        # v5.97 (el usuario: «mejora el botón de usar y el icono»): del alto del «Modo PRO», con brillo arriba, borde claro y un halo verde
+        # al pasar el ratón; icono relleno y texto oscuro en negrita
+        if self._h:
+            halo = QColorReal(verde)
+            halo.setAlpha(60)
+            p.setPen(QPen(halo, 3.0))
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.drawRoundedRect(r.adjusted(1.5, 1.5, -1.5, -1.5), rad, rad)
+        g = QLinearGradient(r.topLeft(), r.bottomLeft())                     # «Usar» / «Crear mi estilo»
+        g.setColorAt(0.0, _mezcla(verde, QColorReal(255, 255, 255), 0.18 + 0.10 * self._h))
+        g.setColorAt(1.0, _mezcla(_real(ui.ACCENT), QColorReal(255, 255, 255), 0.06 * self._h))
+        borde = QColorReal(255, 255, 255)
+        borde.setAlpha(70)
+        p.setPen(QPen(borde, 1.0))
         p.setBrush(g)
-        p.drawRoundedRect(r, rad, rad)
-        oscuro = QColorReal(11, 20, 36)
-        pm = self._glifo(oscuro.name(), 14)
+        p.drawRoundedRect(r.adjusted(2.0, 2.0, -2.0, -2.0), rad - 2.0, rad - 2.0)
+        oscuro = QColorReal(6, 32, 22)
+        pm = self._glifo(oscuro.name(), 18)
         if pm is not None:
-            p.drawPixmap(QPointF(14.0, r.center().y() - 7.0), pm)
+            p.drawPixmap(QPointF(14.0, r.center().y() - 9.0), pm)
         p.setPen(oscuro)
-        p.drawText(QRectF(36.0, 0, w_txt + 4, self.height()), alin, self.text())
+        p.drawText(QRectF(39.0, 0, w_txt + 4, self.height()), alin, self.text())
         p.end()
 
 

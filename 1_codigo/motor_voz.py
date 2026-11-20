@@ -424,7 +424,12 @@ def motor_para(codigo_idioma):
             _FALLOS['avisado'] = True
             r = _reg()
             if r:
-                r.error('Qwen3-ASR falló %d veces seguidas: uso Whisper para el resto de esta sesión. Revisa Ajustes > General > Motor de voz > Reparar.' % _FALLOS['n'], 'motor de voz')
+                r.error('Qwen3-ASR falló %d veces seguidas: uso Whisper mientras lo reviso y, si hace falta, lo reparo solo en segundo plano.' % _FALLOS['n'], 'motor de voz')
+            try:                                # v5.97: sin botón «Reparar el motor»: se repara solo (vigilancia.reparar_motor_ia)
+                import vigilancia
+                vigilancia.reparar_motor_ia('Qwen3-ASR falló %d veces seguidas en GO' % _FALLOS['n'])
+            except Exception:
+                pass
         return None
     return 'qwen3' if instalado() else None
 

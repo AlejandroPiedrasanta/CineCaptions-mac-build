@@ -4807,6 +4807,27 @@
     "Premiere Pro abierto": "Premiere Pro 已打开",
     "Listo para GO": "可以按 GO 了",
     "Mac: después de actualizarse ya no pide la licencia otra vez. Si te pasó, cierra CineCaptions y vuelve a abrirlo: tu licencia sigue ahí.": "Mac：更新后不再重新要求输入许可证。如果你遇到过，请退出 CineCaptions 再重新打开：你的许可证还在。",
-    "Premiere Pro: se ve en verde en cuanto se detecta, y mientras coloca tus subtítulos dice «colocando…».": "Premiere Pro：一检测到就显示为绿色，放置字幕时显示“正在放置…”。"
+    "Premiere Pro: se ve en verde en cuanto se detecta, y mientras coloca tus subtítulos dice «colocando…».": "Premiere Pro：一检测到就显示为绿色，放置字幕时显示“正在放置…”。",
+    "Con qué trabaja GO.": "GO 使用的软件。",
+    "Si pasa siempre, reinicia CineCaptions; si sigue, vuelve a ejecutar el instalador de CineCaptions (repara el motor).": "如果总是发生，请重启 CineCaptions；如果仍然存在，请重新运行 CineCaptions 安装程序（它会修复引擎）。",
+    "Cierra y abre CineCaptions (vuelve a poner los scripts solo) y pulsa GO otra vez.": "关闭并重新打开 CineCaptions（它会自动放回脚本），然后再次按 GO。",
+    "Motor de voz Qwen3-ASR instalado.": "语音引擎 Qwen3-ASR 已安装。",
+    "Qwen3-ASR no está instalado: se usará Whisper.": "未安装 Qwen3-ASR：将使用 Whisper。",
+    "No encuentro CineCaptions_Puente.lua en la carpeta de scripts de Resolve: cierra y abre CineCaptions para que vuelva a ponerlo.": "在 Resolve 的脚本文件夹中找不到 CineCaptions_Puente.lua：关闭并重新打开 CineCaptions 即可放回。",
+    "Idioma, fondo y aquí mismo, en Tutoriales, todos estos videos. Desde ahí también apagas esta guía o la vuelves a ver cuando quieras.": "语言、背景，以及就在“教程”里的所有这些视频。你也可以在这里关闭本指南或随时重新观看。",
+    "En Ajustes › Ayuda nos escribes por WhatsApp con el informe de tu equipo ya listo y ves tu versión y tu licencia.": "在“设置 › 帮助”中，你可以通过 WhatsApp 联系我们（电脑报告已准备好），并查看你的版本和许可证。",
+    "CineCaptions lo repara solo en segundo plano al abrirse (descarga lo que falta; necesita internet). Si falla, lo reintenta al día siguiente.": "CineCaptions 打开时会在后台自动修复（下载缺少的部分；需要联网）。如果失败，第二天会再试一次。",
+    "Si no cabe en el disco: libera espacio en el disco del sistema (el mensaje dice cuánto hace falta); CineCaptions lo vuelve a intentar solo.": "如果磁盘空间不足：请清理系统磁盘空间（消息中会说明需要多少）；CineCaptions 会自动重试。",
+    "Si se cortó la descarga: comprueba la conexión (y que el antivirus o un firewall no bloqueen a CineCaptions); CineCaptions lo vuelve a intentar solo.": "如果下载中断：请检查网络连接（以及杀毒软件或防火墙是否拦截了 CineCaptions）；CineCaptions 会自动重试。",
+    "Si es el motor de IA (Qwen3): CineCaptions lo repara solo en segundo plano al abrirse (descarga lo que falta; necesita internet).": "如果是 AI 引擎（Qwen3）：CineCaptions 打开时会在后台自动修复（下载缺少的部分；需要联网）。",
+    "Si pasa siempre, reinicia CineCaptions: si el motor está dañado, lo repara solo en segundo plano.": "如果总是发生，请重启 CineCaptions：如果引擎损坏，它会在后台自动修复。",
+    "Premiere Pro: los estilos salen igual que en DaVinci Resolve: con su brillo y su halo, la palabra que se dice en rojo en el Estilo 7 y los colores sin aclararse.": "Premiere Pro：样式与 DaVinci Resolve 一致：带有光晕和辉光，样式 7 中正在说的词显示为红色，颜色不再发白。",
+    "Más rápido: el Estilo 5 se prepara hasta 7 veces más rápido para Premiere Pro y para «Video sin editores».": "更快：为 Premiere Pro 和“无需编辑器的视频”准备样式 5 的速度最多提高 7 倍。",
+    "Interfaz más simple: sin la página Sonido (GO pone los sonidos solo), sin «Motor de voz», «Herramientas» ni «Atajos» en Ajustes.": "界面更简洁：去掉了“声音”页面（GO 会自动添加声音），设置中也不再有“语音引擎”“工具”和“快捷键”。",
+    "El motor de voz se revisa y se repara solo si algo falla, sin que tengas que hacer nada.": "语音引擎出现问题时会自动检查并修复，你无需做任何操作。",
+    "Efectos solo aparece y se aplica cuando activas la Edición PRO.": "“效果”只有在开启 PRO 编辑时才会出现并生效。",
+    "Subtítulos mejor agrupados en los estilos 2, 4, 5, 6, 7, 8 y 9: las frases se cortan donde suena natural, sin «de» o «en» colgando al final ni letras sueltas.": "样式 2、4、5、6、7、8、9 的字幕分组更自然：句子在自然的位置断开，末尾不再留下“的”“在”之类的词，也不会有单独的字母。",
+    "Modo PRO": "PRO 模式",
+    "Estilo: botones «Usar» y «Modo PRO» más claros. El Modo PRO es de cada estilo, se ve si está apagado y con un clic se enciende y te lleva a Efectos.": "样式：“使用”和“PRO 模式”按钮更清楚。PRO 模式按样式分别设置，关闭时一目了然，点一下即开启并跳转到“效果”。"
   }
 }

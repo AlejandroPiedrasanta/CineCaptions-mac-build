@@ -89,7 +89,9 @@ class IslaNav(QWidget):
         self._items.append(_Item('s1', 'sep'))
         self._items.append(_Item('estado', 'accion', tr('Resolve')))
         self._items.append(_Item('ajustes', 'accion', tr('Ajustes')))
-        self._items.append(_Item('pin', 'accion', tr('Mantener encima de Resolve')))
+        # v5.97 (el usuario: «elimina esto»): sin el alfiler «Mantener encima de Resolve» en la isla
+        self._todos = list(self._items)                 # v5.97: poner_visible oculta páginas (Efectos solo con la Edición PRO)
+        self._ocultas = set()
         self._actual = None
         self._pin = False
         self._color_estado = QColor('#6B7C99')
@@ -116,6 +118,23 @@ class IslaNav(QWidget):
         for it in self._items:
             if it.tipo == 'nav':
                 it.sel.objetivo = 1.0 if it.clave == clave else 0.0
+        motor_resortes.pedir(self)
+
+    def poner_visible(self, clave, si):
+        """v5.97: muestra u oculta la página `clave` en la isla (la isla se encoge y se recentra sola)."""
+        ocultas = set(self._ocultas)
+        if si:
+            ocultas.discard(clave)
+        else:
+            ocultas.add(clave)
+        if ocultas == self._ocultas:
+            return
+        self._ocultas = ocultas
+        self._items = [it for it in self._todos if it.clave not in ocultas]
+        if self._hover is not None and self._hover not in self._items:
+            self._hover = None
+        self._medir()
+        self.update()
         motor_resortes.pedir(self)
 
     def poner_pin(self, si):
