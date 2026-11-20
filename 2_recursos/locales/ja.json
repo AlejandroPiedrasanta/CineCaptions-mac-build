@@ -4852,6 +4852,23 @@
     "Recomendado": "おすすめ",
     "Si algo falla, nos llega el informe (nunca tus videos, audio ni textos) para arreglarlo antes.": "問題が起きるとレポートが届き（動画・音声・テキストは送られません）、早く直せます。",
     "Nueva ventana de permisos: tras instalar o actualizar te dice qué necesita CineCaptions en tu Mac o tu PC y te lleva a activarlo. Si ya está todo, no vuelve a salir.": "新しい権限ウィンドウ：インストールやアップデートの後、Mac や PC で CineCaptions に必要なものを示し、オンにする場所へ案内します。すべて揃っていれば再表示されません。",
-    "Arreglado: tras actualizar ya no sale «Falla al iniciar: Motor de IA» por las librerías nuevas; se ponen al día solas.": "修正：アップデート後に新しいライブラリが原因で「起動時のエラー：AI エンジン」が出なくなりました。自動で更新されます。"
+    "Arreglado: tras actualizar ya no sale «Falla al iniciar: Motor de IA» por las librerías nuevas; se ponen al día solas.": "修正：アップデート後に新しいライブラリが原因で「起動時のエラー：AI エンジン」が出なくなりました。自動で更新されます。",
+    "GO lo pone en 0:00 – 0:01 (siempre el primer segundo).": "GO は 0:00 – 0:01 に入れます（常に最初の1秒）。",
+    "Apagado: GO no lo pone.": "オフ：GO は入れません。",
+    "Tu video": "あなたの動画",
+    "Cada icono es un efecto, donde GO lo pondrá. Clic en uno para cambiarlo.": "各アイコンは効果で、GO が入れる位置にあります。クリックで変更できます。",
+    "Suelta un video en Inicio para verlo aquí. Clic en un icono para cambiar ese efecto.": "ホームに動画をドロップするとここに表示されます。アイコンをクリックしてその効果を変更。",
+    "Salir de CineCaptions": "CineCaptions を終了",
+    "Para usar CineCaptions hace falta TODO esto en tu equipo. La ventana se cierra cuando esté todo permitido.": "CineCaptions を使うには、これらすべてが必要です。すべて許可されるとこのウィンドウは閉じます。",
+    "Falta 1 permiso": "権限があと1つ必要です",
+    "Faltan {n} permisos": "権限があと {n} つ必要です",
+    "Para abrir tus videos de cualquier carpeta sin que macOS pregunte cada vez. Si al activarlo no cambia, sal y vuelve a abrir CineCaptions.": "macOS に毎回確認されずに、どのフォルダの動画も開けるようにします。有効にしても変わらない場合は、CineCaptions を終了して開き直してください。",
+    "Mientras esté activado, Windows bloquea partes de CineCaptions. Hay que desactivarlo.": "有効な間、Windows は CineCaptions の一部をブロックします。無効にする必要があります。",
+    "Efecto": "エフェクト",
+    "Clic para abrirlo.": "クリックで開きます。",
+    "Nueva página Efectos: arriba ves tu video con el icono de cada efecto en el momento en que GO lo pone; clic en uno para cambiarlo.": "新しいエフェクトページ：上部に動画が表示され、GO が効果を入れる位置に各アイコンが並びます。クリックで変更できます。",
+    "Las opciones de cada efecto, más grandes y con su nombre encima; caben todas sin desplazar.": "各効果の選択肢が大きくなり、名前が上に表示されます。スクロールせずにすべて収まります。",
+    "Permisos: la ventana ya no se cierra hasta que CineCaptions tenga todo lo que necesita en tu Mac o tu PC.": "権限：CineCaptions に必要なものがすべて揃うまで、ウィンドウは閉じません（Mac・PC）。",
+    "Interfaz más pulida en todas las páginas: menos avisos técnicos en Inicio, Ajustes mejor ordenado y transiciones más suaves.": "すべてのページの見た目を改善：ホームの技術的な通知を減らし、設定を整理し、切り替えを滑らかに。"
   }
 }

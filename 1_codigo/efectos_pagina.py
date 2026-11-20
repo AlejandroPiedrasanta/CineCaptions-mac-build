@@ -380,13 +380,16 @@ class PaginaEfectos(QWidget):
         # PESTAÑAS arriba; debajo, a la izquierda «GO usará», «Personaliza» y «Dónde va en tu video»; en el centro el ejemplo en GRANDE (el
         # protagonista) con «Ver otra vez» / «Usar …»; a la derecha todas las opciones en tarjetas verticales. La página no se desplaza: cada
         # columna, si no cabe. Ritmo ocupa todo el ancho. Piezas e iconos (Higgsfield): efectos_panel_ui.
+        # v5.99 «Línea de tiempo» (el usuario eligió la A de tres propuestas nuevas): las pestañas pasan a ser la TIRA DE TU VIDEO, con el
+        # icono de cada efecto donde va (TiraTiempo, lo mismo hacia fuera que la barra); debajo, las tres columnas más ceñidas y las
+        # opciones como pósters con su nombre encima (5 + 4).
         from PySide6.QtWidgets import QStackedWidget
-        from efectos_panel_ui import BarraPestanas, PanelVista
+        from efectos_panel_ui import PanelVista, TiraTiempo
         raiz = QVBoxLayout(self)
         raiz.setContentsMargins(0, 0, 0, 0)
-        raiz.setSpacing(16)
-        self._tira_pest = Tarjeta(self, espacio=0, margenes=(10, 8, 10, 8))
-        self._barra = BarraPestanas()
+        raiz.setSpacing(14)
+        self._tira_pest = Tarjeta(self, espacio=0, margenes=(20, 10, 20, 8))
+        self._barra = TiraTiempo()
         self._barra.elegida.connect(self._seleccionar)
         self._tira_pest.capa.addWidget(self._barra)
         raiz.addWidget(self._tira_pest)
@@ -434,13 +437,15 @@ class PaginaEfectos(QWidget):
         self._estilos_pro.cambio.connect(self._motions.refrescar)
         self._estilos_pro.cambio.connect(self._pintar_barra)
         self._tarjetas.extend(self._estilos_pro.tarjetas)
-        from efectos_panel_ui import PestanaSeccion
+        from efectos_panel_ui import MarcaSeccion
         for sec in self._estilos_pro.secciones:
-            info = self._envolver(self._pila_info, sec.info, (26, 24, 26, 22))
-            opc = self._envolver(self._pila_opc, sec.opciones, (24, 22, 24, 22))
+            info = self._envolver(self._pila_info, sec.info, (22, 20, 22, 18))
+            opc = self._envolver(self._pila_opc, sec.opciones, (20, 18, 20, 18))
             self._paginas_sec[sec.clave] = (info, opc)
-            self._barra.agregar(PestanaSeccion(sec.clave, tr(sec.s['titulo']), sec.clave))
+            self._barra.agregar(MarcaSeccion(sec.clave, tr(sec.s['titulo']), sec.clave))
             sec.vista.connect(self._ver)
+            sec.al_lugar = self._barra.poner_lugar         # (dónde va: lo calcula la sección al refrescarse)
+            sec.refrescar()
         yield
         # ---- los efectos clásicos van en su propio bloque: con la Edición PRO activa NO se aplican (la PRO hace la intro, el gancho, los zooms y los
         #      gráficos; sumarlos la estropeaba), así que se esconden. «Ritmo: quitar pausas» sí vale con la PRO y queda fuera.
@@ -532,6 +537,7 @@ class PaginaEfectos(QWidget):
                                      ('normal', tr('Normal'), tr('Las pausas normales y largas.'), False), ('fuerte', tr('Todas'), tr('Todas las pausas, sin respirar.'), False)], op.get('fx_pausas'), 'fx_pausas')
         self._f_saltos = self._fila(t5.capa, 'saltos', tr('Zoom alterno en cada corte'), tr('Con las pausas quitadas, el cuadro se acerca en un tramo sí y en el siguiente no, para que el corte seco parezca intencionado.'),
                                     self._niveles(tr('Sin zoom'), tr('Todos los tramos igual.'), tr('Un acercamiento discreto.'), tr('Un acercamiento claro.'), tr('Un acercamiento grande.')), op.get('fx_zoom_saltos'), 'fx_zoom_saltos')
+        t5.capa.addStretch(1)                            # v5.99: lo que sobra de alto, abajo (antes se repartía entre los textos: huecos enormes)
         self._env_ritmo = self._envolver(self._cuerpo, t5)   # v5.93: «Ritmo» con su pestaña, a todo el ancho. Los clásicos no: lo que les
         self._clasicos.setParent(self)                   # quedaba (Cierre, Sonido extra) ya estaba quitado de la página (v5.20) y su hueco salía
         self._clasicos.hide()                            # vacío; siguen armados para que sus ajustes guardados se lean igual
@@ -539,7 +545,7 @@ class PaginaEfectos(QWidget):
             ico_r = ui.icono_linea('ph.scissors', '#B9C5D8')
         except Exception:
             ico_r = None
-        self._barra.agregar(PestanaSeccion('ritmo', tr('Ritmo: quitar pausas'), 'ritmo', icono_qt=ico_r))   # (su icono de Higgsfield; si falta, Phosphor)
+        self._barra.agregar(MarcaSeccion('ritmo', tr('Ritmo: quitar pausas'), 'ritmo', icono_qt=ico_r))   # (su icono de Higgsfield; si falta, Phosphor)
         for c in self._f_pausas.tarjetas:                # (tras la fila, que ya guardó: la barra dice cuántas pausas quita)
             c.clic.connect(lambda _i: self._pintar_barra())
         yield
@@ -600,6 +606,11 @@ class PaginaEfectos(QWidget):
         super().showEvent(e)
         if not self._reloj.isActive():
             self._reloj.start()
+        try:                                             # v5.99: la tira enseña el video de Inicio (sus fotogramas, en un hilo)
+            import posiciones_pro as POS
+            self._barra.poner_video(POS.video_actual())
+        except Exception:
+            pass
 
     def hideEvent(self, e):
         super().hideEvent(e)
@@ -626,11 +637,29 @@ class PaginaEfectos(QWidget):
         if izq is None or centro is None:
             return
         a = self.width()                                 # (la ventana puede ser estrecha: los lados ceden antes que las opciones)
-        ai, ac = (540, 470) if a >= 2000 else (460, 420) if a >= 1650 else (400, 360) if a >= 1350 else (330, 300)
+        ai, ac = (440, 380) if a >= 2000 else (400, 330) if a >= 1650 else (340, 290) if a >= 1350 else (300, 250)
         if izq.width() != ai:
             izq.setFixedWidth(ai)
         if centro.width() != ac:
             centro.setFixedWidth(ac)
+        QTimer.singleShot(0, self._ajustar_rejillas)   # (tras colocar las columnas: el alto que tienen las opciones)
+
+    def _ajustar_rejillas(self):
+        """v5.99: las tarjetas de opciones crecen hasta llenar el alto de su columna (sin banda vacía abajo ni desplazar)."""
+        der = getattr(self, '_der', None)
+        estilos = getattr(self, '_estilos_pro', None)
+        if der is None or estilos is None or not ui.vivo(der):
+            return
+        for sec in estilos.secciones:
+            rej = getattr(sec, 'slider', None)
+            if rej is None or not hasattr(rej, 'poner_alto_max'):
+                continue
+            try:
+                from PySide6.QtCore import QPoint
+                y = rej.mapTo(sec.opciones, QPoint(0, 0)).y()
+            except Exception:
+                y = 40
+            rej.poner_alto_max(der.height() - 18 * 2 - y - 6)   # (los márgenes de la columna: 18 arriba y abajo)
 
     def _envolver(self, pila, w, margenes=(0, 0, 0, 0)):
         """Una columna con su barra de desplazamiento (solo si no cabe: la página entera ya no se desplaza)."""
@@ -651,6 +680,7 @@ class PaginaEfectos(QWidget):
             self._pila_opc.setCurrentWidget(cols[1])
             cols[0].arriba()
             cols[1].arriba()
+            QTimer.singleShot(0, self._ajustar_rejillas)
             sec._ver(sec.elegida())                      # → self._ver
         else:
             self._cuerpo.setCurrentWidget(self._env_ritmo)

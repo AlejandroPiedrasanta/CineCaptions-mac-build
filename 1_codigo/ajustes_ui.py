@@ -458,6 +458,9 @@ class CapaModal(QWidget):
 
     def keyPressEvent(self, e):
         if e.key() == Qt.Key.Key_Escape:
+            if not getattr(self, 'cerrar_con_esc', True):     # v5.99: la ventana de permisos no se cierra con Esc
+                e.accept()
+                return
             self.cerrar()
             e.accept()
             return
@@ -592,6 +595,12 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.99', [
+        'Nueva página Efectos: arriba ves tu video con el icono de cada efecto en el momento en que GO lo pone; clic en uno para cambiarlo.',
+        'Las opciones de cada efecto, más grandes y con su nombre encima; caben todas sin desplazar.',
+        'Permisos: la ventana ya no se cierra hasta que CineCaptions tenga todo lo que necesita en tu Mac o tu PC.',
+        'Interfaz más pulida en todas las páginas: menos avisos técnicos en Inicio, Ajustes mejor ordenado y transiciones más suaves.',
+    ]),
     ('5.98', [
         'Nueva ventana de permisos: tras instalar o actualizar te dice qué necesita CineCaptions en tu Mac o tu PC y te lleva a activarlo. Si ya está todo, no vuelve a salir.',
         'Arreglado: tras actualizar ya no sale «Falla al iniciar: Motor de IA» por las librerías nuevas; se ponen al día solas.',
@@ -2099,7 +2108,7 @@ class _Fila(QFrame):
     """Una fila de ajuste: titulo y explicacion a la izquierda, control a la derecha. v5.70: con `icono` (Phosphor) lleva su cuadrito delante."""
 
     def __init__(self, titulo, explicacion='', control=None, ancho_control=None, ultima=False, vertical=False, expandir=False, icono=None,
-                 logo=None):
+                 logo=None, arriba=False):
         super().__init__()
         self.setObjectName('filaAjuste')
         if not ultima:
@@ -2113,9 +2122,10 @@ class _Fila(QFrame):
             self.explicacion = TextoAjustable(explicacion, 14)
             cc.addWidget(self.explicacion)
         cuadro = (_logo_programa(logo) if logo else None) or (_azulejo(icono) if icono else None)   # (v5.78: `logo` = icono de un programa)
+        alin = Qt.AlignmentFlag.AlignTop if arriba else Qt.AlignmentFlag.AlignVCenter   # v5.99: `arriba` = filas altas (Licencia)
         if cuadro is not None:
             envoltura, ce = caja_h(espacio=18)
-            ce.addWidget(cuadro, 0, Qt.AlignmentFlag.AlignVCenter)
+            ce.addWidget(cuadro, 0, alin)
             ce.addWidget(col, 1)
             col = envoltura
         if vertical:
@@ -2123,7 +2133,7 @@ class _Fila(QFrame):
         else:
             # titulo y explicacion juntos y centrados frente al control
             # (sin esto el sobrante de alto se repartia entre los dos)
-            c.addWidget(col, 1, Qt.AlignmentFlag.AlignVCenter)
+            c.addWidget(col, 1, alin)
         if control is not None:
             if ancho_control and not vertical:
                 control.setFixedWidth(ancho_control)
@@ -2131,7 +2141,7 @@ class _Fila(QFrame):
                 c.addWidget(control)                      # ocupa todo el ancho de la fila
             else:
                 c.addWidget(control, 0 if not vertical else 0,
-                            Qt.AlignmentFlag.AlignVCenter if not vertical else Qt.AlignmentFlag.AlignLeft)
+                            alin if not vertical else Qt.AlignmentFlag.AlignLeft)
 
 
 def _grupo(*filas):
@@ -2426,6 +2436,7 @@ class _CarruselEstilos(QWidget):
         h = QHBoxLayout(fila)
         h.setContentsMargins(4, 4, 4, 6)
         h.setSpacing(14)
+        h.addStretch(1)                                 # v5.99: si caben todas, centradas (antes a la izquierda con un hueco a la derecha)
         for t in tarjetas:
             h.addWidget(t)
             t.installEventFilter(self)
@@ -2483,6 +2494,7 @@ class _CarruselEstilos(QWidget):
         barra = self._scroll.horizontalScrollBar()
         self._izq.setVisible(barra.value() > barra.minimum() + 2 and barra.maximum() > 0)
         self._der.setVisible(barra.value() < barra.maximum() - 2)
+        self._puntos.setVisible(barra.maximum() > 0)    # v5.99: los puntos solo si hay que deslizar (si caben todas, sobran)
         self._puntos.poner(self._elegido, 0.0)
         self._colocar()
 
@@ -3175,7 +3187,7 @@ class VentanaAjustes(_Panel):
         self._lic_fila = cfb
         cl.addWidget(fb)
         f_lic = _Fila(tr('Licencia'), tr('Tu clave de cinecaptions.shop. Desactiva este equipo para activarla en otra computadora.'),
-                      caja_lic, 380, icono='key')
+                      caja_lic, 380, icono='key', arriba=True)   # (v5.99: arriba, frente a los datos; centrada dejaba un hueco)
         self._pintar_licencia()
         # v5.69: quitadas «Notas de la versión» y «Actualizaciones» (el usuario lo pidió): las novedades salen solas tras actualizar, la versión
         # nueva se vigila sola (cada 10 s) y el panel rápido de Ajustes conserva «Leer notas de la versión» y el botón de actualizar

@@ -4930,6 +4930,23 @@
     "Recomendado": "Empfohlen",
     "Si algo falla, nos llega el informe (nunca tus videos, audio ni textos) para arreglarlo antes.": "Wenn etwas schiefgeht, bekommen wir den Bericht (nie deine Videos, Audio oder Texte), um es schneller zu beheben.",
     "Nueva ventana de permisos: tras instalar o actualizar te dice qué necesita CineCaptions en tu Mac o tu PC y te lleva a activarlo. Si ya está todo, no vuelve a salir.": "Neues Fenster für Berechtigungen: Nach Installation oder Update zeigt es, was CineCaptions auf deinem Mac oder PC braucht, und führt dich zum Aktivieren. Ist alles bereit, erscheint es nicht mehr.",
-    "Arreglado: tras actualizar ya no sale «Falla al iniciar: Motor de IA» por las librerías nuevas; se ponen al día solas.": "Behoben: Nach einem Update erscheint wegen der neuen Bibliotheken kein „Startfehler: KI-Engine“ mehr; sie aktualisieren sich selbst."
+    "Arreglado: tras actualizar ya no sale «Falla al iniciar: Motor de IA» por las librerías nuevas; se ponen al día solas.": "Behoben: Nach einem Update erscheint wegen der neuen Bibliotheken kein „Startfehler: KI-Engine“ mehr; sie aktualisieren sich selbst.",
+    "GO lo pone en 0:00 – 0:01 (siempre el primer segundo).": "GO setzt es bei 0:00 – 0:01 (immer die erste Sekunde).",
+    "Apagado: GO no lo pone.": "Aus: GO fügt es nicht ein.",
+    "Tu video": "Dein Video",
+    "Cada icono es un efecto, donde GO lo pondrá. Clic en uno para cambiarlo.": "Jedes Symbol ist ein Effekt, dort, wo GO ihn setzt. Klicke darauf, um ihn zu ändern.",
+    "Suelta un video en Inicio para verlo aquí. Clic en un icono para cambiar ese efecto.": "Zieh ein Video auf Start, um es hier zu sehen. Klicke auf ein Symbol, um den Effekt zu ändern.",
+    "Salir de CineCaptions": "CineCaptions beenden",
+    "Para usar CineCaptions hace falta TODO esto en tu equipo. La ventana se cierra cuando esté todo permitido.": "Um CineCaptions zu nutzen, braucht dein Computer ALL das. Das Fenster schließt sich, sobald alles erlaubt ist.",
+    "Falta 1 permiso": "1 Berechtigung fehlt",
+    "Faltan {n} permisos": "{n} Berechtigungen fehlen",
+    "Para abrir tus videos de cualquier carpeta sin que macOS pregunte cada vez. Si al activarlo no cambia, sal y vuelve a abrir CineCaptions.": "Damit du Videos aus jedem Ordner öffnen kannst, ohne dass macOS jedes Mal fragt. Ändert sich nach dem Aktivieren nichts, beende CineCaptions und öffne es erneut.",
+    "Mientras esté activado, Windows bloquea partes de CineCaptions. Hay que desactivarlo.": "Solange es aktiv ist, blockiert Windows Teile von CineCaptions. Es muss deaktiviert werden.",
+    "Efecto": "Effekt",
+    "Clic para abrirlo.": "Klicke, um es zu öffnen.",
+    "Nueva página Efectos: arriba ves tu video con el icono de cada efecto en el momento en que GO lo pone; clic en uno para cambiarlo.": "Neue Seite Effekte: oben siehst du dein Video mit dem Symbol jedes Effekts an der Stelle, an der GO ihn setzt; klicke darauf, um ihn zu ändern.",
+    "Las opciones de cada efecto, más grandes y con su nombre encima; caben todas sin desplazar.": "Die Optionen jedes Effekts sind größer, mit ihrem Namen darauf; alle passen ohne Scrollen.",
+    "Permisos: la ventana ya no se cierra hasta que CineCaptions tenga todo lo que necesita en tu Mac o tu PC.": "Berechtigungen: Das Fenster schließt sich erst, wenn CineCaptions alles hat, was es auf deinem Mac oder PC braucht.",
+    "Interfaz más pulida en todas las páginas: menos avisos técnicos en Inicio, Ajustes mejor ordenado y transiciones más suaves.": "Feinere Oberfläche auf allen Seiten: weniger technische Hinweise auf Start, aufgeräumtere Einstellungen und weichere Übergänge."
   }
 }

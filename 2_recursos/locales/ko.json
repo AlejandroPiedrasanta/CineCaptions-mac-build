@@ -4852,6 +4852,23 @@
     "Recomendado": "권장",
     "Si algo falla, nos llega el informe (nunca tus videos, audio ni textos) para arreglarlo antes.": "문제가 생기면 보고서가 전달되어(동영상·오디오·텍스트는 제외) 더 빨리 고칠 수 있습니다.",
     "Nueva ventana de permisos: tras instalar o actualizar te dice qué necesita CineCaptions en tu Mac o tu PC y te lleva a activarlo. Si ya está todo, no vuelve a salir.": "새 권한 창: 설치나 업데이트 후 Mac 또는 PC에서 CineCaptions에 필요한 것을 알려 주고 켜는 곳으로 안내합니다. 모두 준비되면 다시 나오지 않습니다.",
-    "Arreglado: tras actualizar ya no sale «Falla al iniciar: Motor de IA» por las librerías nuevas; se ponen al día solas.": "수정: 업데이트 후 새 라이브러리 때문에 «시작 오류: AI 엔진»이 더 이상 나오지 않습니다. 자동으로 업데이트됩니다."
+    "Arreglado: tras actualizar ya no sale «Falla al iniciar: Motor de IA» por las librerías nuevas; se ponen al día solas.": "수정: 업데이트 후 새 라이브러리 때문에 «시작 오류: AI 엔진»이 더 이상 나오지 않습니다. 자동으로 업데이트됩니다.",
+    "GO lo pone en 0:00 – 0:01 (siempre el primer segundo).": "GO가 0:00 – 0:01에 넣습니다(항상 첫 1초).",
+    "Apagado: GO no lo pone.": "꺼짐: GO가 넣지 않습니다.",
+    "Tu video": "내 영상",
+    "Cada icono es un efecto, donde GO lo pondrá. Clic en uno para cambiarlo.": "각 아이콘은 효과이며 GO가 넣을 위치에 있습니다. 클릭해서 바꾸세요.",
+    "Suelta un video en Inicio para verlo aquí. Clic en un icono para cambiar ese efecto.": "홈에 영상을 놓으면 여기에 보입니다. 아이콘을 클릭해 그 효과를 바꾸세요.",
+    "Salir de CineCaptions": "CineCaptions 종료",
+    "Para usar CineCaptions hace falta TODO esto en tu equipo. La ventana se cierra cuando esté todo permitido.": "CineCaptions를 사용하려면 이 모든 것이 필요합니다. 모두 허용되면 이 창이 닫힙니다.",
+    "Falta 1 permiso": "권한 1개가 남았습니다",
+    "Faltan {n} permisos": "권한 {n}개가 남았습니다",
+    "Para abrir tus videos de cualquier carpeta sin que macOS pregunte cada vez. Si al activarlo no cambia, sal y vuelve a abrir CineCaptions.": "macOS가 매번 묻지 않고 어느 폴더의 영상이든 열 수 있도록 합니다. 켠 뒤에도 바뀌지 않으면 CineCaptions를 종료했다가 다시 여세요.",
+    "Mientras esté activado, Windows bloquea partes de CineCaptions. Hay que desactivarlo.": "켜져 있는 동안 Windows가 CineCaptions의 일부를 차단합니다. 꺼야 합니다.",
+    "Efecto": "효과",
+    "Clic para abrirlo.": "클릭해서 여세요.",
+    "Nueva página Efectos: arriba ves tu video con el icono de cada efecto en el momento en que GO lo pone; clic en uno para cambiarlo.": "새 효과 페이지: 위쪽에 영상과 GO가 효과를 넣는 시점의 아이콘이 보입니다. 클릭해서 바꾸세요.",
+    "Las opciones de cada efecto, más grandes y con su nombre encima; caben todas sin desplazar.": "각 효과의 옵션이 더 커지고 이름이 위에 표시됩니다. 스크롤 없이 모두 보입니다.",
+    "Permisos: la ventana ya no se cierra hasta que CineCaptions tenga todo lo que necesita en tu Mac o tu PC.": "권한: CineCaptions에 필요한 모든 것이 갖춰질 때까지 창이 닫히지 않습니다(Mac·PC).",
+    "Interfaz más pulida en todas las páginas: menos avisos técnicos en Inicio, Ajustes mejor ordenado y transiciones más suaves.": "모든 페이지 다듬기: 홈의 기술 알림 감소, 설정 정리, 더 부드러운 전환."
   }
 }

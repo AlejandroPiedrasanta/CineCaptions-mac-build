@@ -664,18 +664,33 @@ class SeccionEstilo(Tarjeta):
         ci.setSpacing(0)
         self._cab = _CabeceraPanel(tr(seccion['titulo']))
         self._var_on = ui.BooleanVar(False)
-        self._sw = Interruptor(tr('Activado en GO'), self._var_on, self._cambio_on, tam=13, color='#E0EBFB')
-        self._cab.capa.addWidget(self._sw)
+        self._sw = Interruptor('', self._var_on, self._cambio_on, tam=13, color='#E0EBFB')   # (v5.99: sin texto; la línea verde de
+        self._sw.setAccessibleName(tr('Activado en GO'))                                    # debajo dice si GO lo pone y dónde)
+        self._cab.capa.addWidget(self._sw, 0, Qt.AlignmentFlag.AlignTop)
         ci.addWidget(self._cab)
         ci.addSpacing(10)
         ci.addWidget(Etiqueta(tr(seccion['detalle']), 14, color=TEXT_MUTED, envolver=True))
         self._lbl_estado = Etiqueta('', 12, color='#8EA2C6', envolver=True)     # (lo dice «GO usará»: queda oculta, con su texto al día)
         self._lbl_estado.hide()
         ci.addWidget(self._lbl_estado)
-        ci.addSpacing(18)
-        self._usara = TarjetaUsara()
-        ci.addWidget(self._usara)
-        ci.addSpacing(22)
+        # v5.99 «Línea de tiempo»: dónde va, en una línea bajo lo que es (con «Posición» para marcarlo a mano); la tira de arriba lo dibuja.
+        # «GO usará» y la barrita de «Dónde va» ya no se ven (lo dicen el check de la opción y la tira); siguen armadas, ocultas.
+        ci.addSpacing(12)
+        fila_d, cd = caja_h(espacio=8)
+        self._lbl_donde = Etiqueta('', 12.5, color='#5FD9AE', envolver=True)
+        self._lbl_donde.setMinimumWidth(0)
+        cd.addWidget(self._lbl_donde, 1)
+        pm = icono_ui('b_posicion', 16)
+        from PySide6.QtGui import QIcon
+        self._b_pos = Boton(tr('Posición'), self.alternar_posiciones, tipo='neutro', alto=30, tam=12, icono=QIcon(pm) if pm is not None else None)
+        self._b_pos.setVisible(self.clave not in SIN_POSICION)
+        cd.addWidget(self._b_pos, 0, Qt.AlignmentFlag.AlignTop)
+        ci.addWidget(fila_d)
+        self._usara = TarjetaUsara(self.info)
+        self._usara.hide()
+        self._donde = LineaDonde(self.info)
+        self._donde.hide()
+        ci.addSpacing(20)
         extras = seccion.get('sonidos') or seccion.get('zooms')
         ci.addWidget(Etiqueta((tr('Personaliza') if extras else tr('Colores')).upper(), 11, peso='negrita', color='#6F7E98'))
         ci.addSpacing(8)
@@ -744,22 +759,6 @@ class SeccionEstilo(Tarjeta):
             self._ajustes.append((pref, opciones, var))
             self._botones_aj.append((botones, opciones, var))
         ci.addStretch(1)
-        ci.addSpacing(18)
-        fila_d, cd = caja_h(espacio=8)                   # «Dónde va en tu video» (y «Posición» para marcarlo a mano)
-        cd.addWidget(Etiqueta(tr('Dónde va en tu video').upper(), 11, peso='negrita', color='#6F7E98'))
-        cd.addStretch(1)
-        pm = icono_ui('b_posicion', 16)
-        from PySide6.QtGui import QIcon
-        self._b_pos = Boton(tr('Posición'), self.alternar_posiciones, tipo='neutro', alto=30, tam=12, icono=QIcon(pm) if pm is not None else None)
-        self._b_pos.setVisible(self.clave not in SIN_POSICION)
-        cd.addWidget(self._b_pos)
-        ci.addWidget(fila_d)
-        ci.addSpacing(8)
-        self._donde = LineaDonde()
-        ci.addWidget(self._donde)
-        ci.addSpacing(8)
-        self._lbl_donde = Etiqueta('', 12, color=TEXT_MUTED, envolver=True)
-        ci.addWidget(self._lbl_donde)
         self._pos = None
         yield
         # ---- la columna de la derecha: las opciones en tarjetas verticales
@@ -831,7 +830,7 @@ class SeccionEstilo(Tarjeta):
         tramos, texto = [], ''
         if self.clave == 'gancho':
             tramos = [(0.0, 1.0, VERDE)]
-            texto = tr('El gancho va siempre en el primer segundo.')
+            texto = tr('GO lo pone en 0:00 – 0:01 (siempre el primer segundo).')
         elif not ruta:
             texto = tr('Suelta un video en Inicio para ver aquí dónde va.')
         else:
@@ -848,7 +847,16 @@ class SeccionEstilo(Tarjeta):
             else:
                 texto = tr('Sin marcar: GO elige dónde, según tu video. Con «Posición» lo marcas tú.')
         self._donde.poner(dur, tramos)
+        if not on:
+            texto = tr('Apagado: GO no lo pone.')
         self._lbl_donde.setText(texto)
+        self._lbl_donde.poner_color('#5FD9AE' if on else '#7F8CA4')
+        al_lugar = getattr(self, 'al_lugar', None)       # v5.99: la tira de tu video (arriba de la página) pone aquí su icono
+        if al_lugar is not None:
+            try:
+                al_lugar(self.clave, dur, tramos)
+            except RuntimeError:
+                pass
 
     def alternar(self):
         self._abierta = not self._abierta

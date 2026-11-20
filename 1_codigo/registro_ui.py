@@ -24,6 +24,7 @@ from i18n import tr
 
 COLOR_NIVEL = {'info': '#4589FF', 'ok': '#24D18F', 'aviso': '#F5B84B', 'error': '#FF6B6B'}
 DURACION_MS = {'info': 5200, 'ok': 5200, 'aviso': 10000, 'error': 15000}
+_SOLO_REGISTRO = {'emojis'}                      # orígenes de información que no salen en la línea de avisos (tareas internas de fondo)
 
 
 def _quieto():
@@ -117,6 +118,8 @@ class SubtituloVivo(QWidget):
     def _nuevo(self, e):
         if e.nivel == 'aviso':                    # v5.5.7 (pedido del usuario): los avisos no se enseñan; solo información y errores
             return
+        if e.nivel == 'info' and e.origen in _SOLO_REGISTRO:   # v5.99: las tareas internas de fondo, solo en el Registro (la línea de
+            return                                # «Emojis animados: 601 listos de 1390…» tapaba Inicio al abrir)
         self._entrada = e
         self.setToolTip((e.mensaje + (f'\n{e.origen}' if e.origen else '') + '\n' + tr('Clic: abrir el registro')))
         self._animar_k(1.0, 280)

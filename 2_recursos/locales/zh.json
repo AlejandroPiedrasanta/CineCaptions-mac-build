@@ -4852,6 +4852,23 @@
     "Recomendado": "推荐",
     "Si algo falla, nos llega el informe (nunca tus videos, audio ni textos) para arreglarlo antes.": "出现问题时我们会收到报告（绝不包含你的视频、音频或文字），以便尽快修复。",
     "Nueva ventana de permisos: tras instalar o actualizar te dice qué necesita CineCaptions en tu Mac o tu PC y te lleva a activarlo. Si ya está todo, no vuelve a salir.": "全新权限窗口：安装或更新后，会告诉你 CineCaptions 在 Mac 或 PC 上需要什么并带你去开启。全部就绪后不再显示。",
-    "Arreglado: tras actualizar ya no sale «Falla al iniciar: Motor de IA» por las librerías nuevas; se ponen al día solas.": "已修复：更新后不会再因新库而出现“启动失败：AI 引擎”，它们会自动更新。"
+    "Arreglado: tras actualizar ya no sale «Falla al iniciar: Motor de IA» por las librerías nuevas; se ponen al día solas.": "已修复：更新后不会再因新库而出现“启动失败：AI 引擎”，它们会自动更新。",
+    "GO lo pone en 0:00 – 0:01 (siempre el primer segundo).": "GO 会放在 0:00 – 0:01（始终是第一秒）。",
+    "Apagado: GO no lo pone.": "已关闭：GO 不会添加。",
+    "Tu video": "你的视频",
+    "Cada icono es un efecto, donde GO lo pondrá. Clic en uno para cambiarlo.": "每个图标是一个效果，位于 GO 放置的位置。点击即可更改。",
+    "Suelta un video en Inicio para verlo aquí. Clic en un icono para cambiar ese efecto.": "将视频拖到首页即可在此查看。点击图标可更改该效果。",
+    "Salir de CineCaptions": "退出 CineCaptions",
+    "Para usar CineCaptions hace falta TODO esto en tu equipo. La ventana se cierra cuando esté todo permitido.": "要使用 CineCaptions，你的电脑需要以下全部权限。全部允许后此窗口才会关闭。",
+    "Falta 1 permiso": "还缺 1 项权限",
+    "Faltan {n} permisos": "还缺 {n} 项权限",
+    "Para abrir tus videos de cualquier carpeta sin que macOS pregunte cada vez. Si al activarlo no cambia, sal y vuelve a abrir CineCaptions.": "无需 macOS 每次询问即可打开任意文件夹中的视频。开启后若没有变化，请退出并重新打开 CineCaptions。",
+    "Mientras esté activado, Windows bloquea partes de CineCaptions. Hay que desactivarlo.": "开启时，Windows 会阻止 CineCaptions 的部分功能。必须将其关闭。",
+    "Efecto": "效果",
+    "Clic para abrirlo.": "点击打开。",
+    "Nueva página Efectos: arriba ves tu video con el icono de cada efecto en el momento en que GO lo pone; clic en uno para cambiarlo.": "全新效果页面：顶部显示你的视频，每个效果的图标位于 GO 添加它的时刻；点击即可更改。",
+    "Las opciones de cada efecto, más grandes y con su nombre encima; caben todas sin desplazar.": "每个效果的选项更大，名称显示在上面；无需滚动即可全部看到。",
+    "Permisos: la ventana ya no se cierra hasta que CineCaptions tenga todo lo que necesita en tu Mac o tu PC.": "权限：在 CineCaptions 获得 Mac 或 PC 上所需的全部权限前，窗口不会关闭。",
+    "Interfaz más pulida en todas las páginas: menos avisos técnicos en Inicio, Ajustes mejor ordenado y transiciones más suaves.": "所有页面更精致：首页的技术提示更少，设置更整齐，过渡更流畅。"
   }
 }

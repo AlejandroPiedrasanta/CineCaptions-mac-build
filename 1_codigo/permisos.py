@@ -16,9 +16,11 @@ Cada permiso = {id, titulo, texto, estado ('ok' | 'falta'), requerido, boton, ac
   sin firma). NO se excluye CineCaptions del antivirus: los antivirus tratan eso como conducta sospechosa.
 - Los dos: Informes de errores (telemetria_errores; preferencia enviar_errores) con su interruptor: cuenta como hecho al verlo.
 
-Cuándo sale (revisar_al_abrir, unos segundos después de abrir, fuera de cualquier otra ventana): con una versión nueva (o la primera vez)
-si falta algo; con la misma versión, solo si falta algo OBLIGATORIO y como mucho una vez al día. Todo listo → no sale nunca más (hasta que
-falte algo). Lo lento (la ficha del equipo) se lee en un hilo; mientras la ventana está abierta se vuelve a mirar cada 1,5 s.
+Cuándo sale (revisar_al_abrir, unos segundos después de abrir, fuera de cualquier otra ventana): v5.99 (el usuario: «la ventana no se
+cierra hasta que tengas todos los permisos; en Mac todo debe estar permitido, igual en Windows»): TODO es obligatorio (también los informes
+de errores, encendidos) y sale en CADA arranque mientras falte algo. Sin X, sin «Más tarde», sin Esc ni clic fuera: «Listo» solo se puede
+pulsar con todo permitido; la única otra salida es «Salir de CineCaptions» (cierra el programa; al abrirlo vuelve). Lo que no se puede
+saber (None) no bloquea. Lo lento (la ficha del equipo) se lee en un hilo; con la ventana abierta se vuelve a mirar cada 1,5 s.
 """
 import os
 import sys
@@ -178,7 +180,15 @@ def win_admin_pendiente(ficha=None):
 
 
 def win_smart_app_control(ficha=None):
-    """True si el Control inteligente de aplicaciones está activado (bloquea partes de CineCaptions)."""
+    """True si el Control inteligente de aplicaciones está activado o en evaluación (bloquea partes de CineCaptions). v5.99: se lee EN VIVO
+    del registro (la ficha es de la sesión: al apagarlo con la ventana abierta no se enteraba); la ficha, solo si el registro no responde."""
+    try:
+        import salud
+        sac = salud.smart_app_control()
+        if sac is not None:
+            return sac in ('activado', 'evaluacion')
+    except Exception:
+        pass
     f = ficha if ficha is not None else _ficha()
     return any(x.get('id') == 'smart_app_control' and x.get('estado') == 'falta' for x in (f.get('revision') or []))
 
@@ -208,46 +218,47 @@ def _abrir(uri):
 
 # ------------------------------------------------------------------------------------------------------------------ la lista
 def lista(ficha=None):
-    """Los permisos de ESTE equipo. Fuera del hilo de la interfaz la primera vez (la ficha del equipo)."""
+    """Los permisos de ESTE equipo. Fuera del hilo de la interfaz la primera vez (la ficha del equipo).
+    v5.99 (el usuario: «la ventana no se cierra hasta que tengas todos los permisos… en Mac todo debe estar permitido, igual en Windows»):
+    TODOS obligatorios, también los informes de errores (encendidos). Lo que no se puede saber (None) no bloquea: si no, nadie saldría."""
     p = _prefs()
     sal = []
 
-    def poner(i, titulo, texto, ok, requerido, boton, accion):
-        sal.append({'id': i, 'titulo': titulo, 'texto': texto, 'estado': 'ok' if ok else 'falta', 'requerido': requerido,
+    def poner(i, titulo, texto, ok, boton, accion):
+        sal.append({'id': i, 'titulo': titulo, 'texto': texto, 'estado': 'ok' if ok else 'falta', 'requerido': True,
                     'boton': boton, 'accion': accion})
     if ES_MAC:
         poner('accesibilidad', _tr('Accesibilidad'), _tr('Para pulsar por ti los menús de DaVinci Resolve (colocar los subtítulos y reproducir).'),
-              mac_accesibilidad() is not False, True, _tr('Permitir'), _pedir_accesibilidad)
+              mac_accesibilidad() is not False, _tr('Permitir'), _pedir_accesibilidad)
         poner('automatizacion', _tr('Automatización'), _tr('Para hablar con DaVinci Resolve y con macOS («System Events»).'),
-              mac_automatizacion() is True, True, _tr('Permitir'), _pedir_automatizacion)
-        poner('disco', _tr('Acceso total al disco'), _tr('Para abrir tus videos de cualquier carpeta sin que macOS pregunte cada vez. Recomendado.'),
-              mac_disco_completo() is not False, False, _tr('Abrir ajustes'), lambda: _abrir_panel_mac('Privacy_AllFiles'))
+              mac_automatizacion() is not False, _tr('Permitir'), _pedir_automatizacion)
+        poner('disco', _tr('Acceso total al disco'), _tr('Para abrir tus videos de cualquier carpeta sin que macOS pregunte cada vez. Si al activarlo no cambia, sal y vuelve a abrir CineCaptions.'),
+              mac_disco_completo() is not False, _tr('Abrir ajustes'), lambda: _abrir_panel_mac('Privacy_AllFiles'))
     elif ES_WIN:
         f = ficha if ficha is not None else _ficha()
         pend = win_admin_pendiente(f)
         poner('admin', _tr('Administrador'), _tr('Para poner tu equipo al día una vez (Visual C++ y el driver de la tarjeta gráfica). Windows te pedirá permiso.')
-              + (('\n' + ' · '.join(pend[:2])) if pend else ''), not pend, False, _tr('Permitir'), _pedir_admin)
+              + (('\n' + ' · '.join(pend[:2])) if pend else ''), not pend, _tr('Permitir'), _pedir_admin)
         poner('notificaciones', _tr('Notificaciones'), _tr('Para avisarte cuando GO termina o hay una actualización.'),
-              win_notificaciones() is not False, False, _tr('Abrir ajustes'), lambda: _abrir('ms-settings:notifications'))
+              win_notificaciones() is not False, _tr('Abrir ajustes'), lambda: _abrir('ms-settings:notifications'))
         poner('smart_app_control', _tr('Control inteligente de aplicaciones'),
-              _tr('Mientras esté activado, Windows bloquea partes de CineCaptions. Recomendado: desactivarlo.'),
-              not win_smart_app_control(f), False, _tr('Abrir ajustes'), lambda: _abrir('windowsdefender://smartapp'))
+              _tr('Mientras esté activado, Windows bloquea partes de CineCaptions. Hay que desactivarlo.'),
+              not win_smart_app_control(f), _tr('Abrir ajustes'), lambda: _abrir('windowsdefender://smartapp'))
+    on = p.get('enviar_errores') is not False
     sal.append({'id': 'telemetria', 'titulo': _tr('Informes de errores'),
                 'texto': _tr('Si algo falla, nos llega el informe (nunca tus videos, audio ni textos) para arreglarlo antes.'),
-                'estado': 'ok' if p.get('telemetria_decidida') else 'falta', 'requerido': False, 'boton': None, 'accion': None,
-                'interruptor': p.get('enviar_errores') is not False})
+                'estado': 'ok' if on else 'falta', 'requerido': True, 'boton': None, 'accion': None,
+                'interruptor': on})
     return sal
 
 
+def faltan(items):
+    return [x for x in (items or []) if x['estado'] != 'ok']
+
+
 def hay_que_mostrar(items, ahora=None):
-    if not items or all(x['estado'] == 'ok' for x in items):
-        return False
-    p = _prefs()
-    ahora = time.time() if ahora is None else ahora
-    if str(p.get('permisos_version') or '') != _version():
-        return True
-    falta_obligatorio = any(x['estado'] != 'ok' and x['requerido'] for x in items)
-    return falta_obligatorio and ahora - float(p.get('permisos_ultimo') or 0) >= REPETIR_S
+    """v5.99: en CADA arranque mientras falte algo (antes: con versión nueva o, si faltaba algo obligatorio, una vez al día)."""
+    return bool(faltan(items))
 
 
 def marcar_visto(telemetria=None):
@@ -323,8 +334,11 @@ def _crear_panel_clase():
             cv = QVBoxLayout(self)
             cv.setContentsMargins(34, 28, 34, 26)
             cv.setSpacing(16)
-            cv.addWidget(A._cabecera(_tr('Antes de empezar'), _tr('Permisos de CineCaptions'), self._mas_tarde, tam=26))
-            cv.addWidget(Etiqueta(_tr('Para que GO funcione sin cortes, CineCaptions necesita esto en tu equipo. Solo te lo pedimos una vez.'),
+            cab = A._cabecera(_tr('Antes de empezar'), _tr('Permisos de CineCaptions'), lambda: None, tam=26)
+            for b in cab.findChildren(A.BotonIcono):         # v5.99: sin la X; no se cierra hasta tenerlo todo
+                b.hide()
+            cv.addWidget(cab)
+            cv.addWidget(Etiqueta(_tr('Para usar CineCaptions hace falta TODO esto en tu equipo. La ventana se cierra cuando esté todo permitido.'),
                                   14, color=ui.TEXT_MUTED, envolver=True))
             grupo, cg = caja_v(espacio=0)
             grupo.setObjectName('grupoAjustes')
@@ -339,7 +353,7 @@ def _crear_panel_clase():
             pie, cp = caja_h(espacio=10)
             self.estado = Etiqueta('', 13, color=ui.TEXT_MUTED)
             cp.addWidget(self.estado, 1)
-            cp.addWidget(Boton(_tr('Más tarde'), self._mas_tarde, tipo='neutro', alto=42, tam=14))
+            cp.addWidget(Boton(_tr('Salir de CineCaptions'), self._salir, tipo='neutro', alto=42, tam=14))   # (sin «Más tarde»)
             self.listo_btn = Boton(_tr('Listo'), self._listo, tipo='primario', alto=42, tam=14)
             cp.addWidget(self.listo_btn)
             cv.addWidget(pie)
@@ -361,7 +375,7 @@ def _crear_panel_clase():
             ctrl = None
             if 'interruptor' in it:
                 var = BooleanVar(bool(it['interruptor']))
-                ctrl = Interruptor('', var=var)
+                ctrl = Interruptor('', var=var, comando=lambda i=it: self._cambio_telemetria(i))
                 self._telemetria = var
             elif it.get('accion'):
                 ctrl = Boton(it['boton'], lambda _=False, i=it: self._pedir(i), tipo='neutro', alto=38, tam=13)
@@ -370,19 +384,22 @@ def _crear_panel_clase():
             self._filas[it['id']] = (chip, ctrl)
             return fila
 
+        def _cambio_telemetria(self, it):
+            it['estado'] = 'ok' if self._telemetria.get() else 'falta'
+            self._pintar()
+
         def _pintar(self):
             for it in self.items:
                 chip, ctrl = self._filas[it['id']]
-                if it['id'] == 'telemetria':
-                    chip.setText('')
-                    continue
                 ok = it['estado'] == 'ok'
-                chip.setText(('✓ ' + _tr('Listo')) if ok else (_tr('Falta') if it['requerido'] else _tr('Recomendado')))
-                chip.setStyleSheet('color: %s;' % (ui.ACCENT_CLARO if ok else (ui.AMBAR if not it['requerido'] else '#FF7A7A')))
-                if ctrl is not None:
+                chip.setText(('✓ ' + _tr('Listo')) if ok else _tr('Falta'))
+                chip.setStyleSheet('color: %s;' % (ui.ACCENT_CLARO if ok else '#FF7A7A'))
+                if ctrl is not None and it['id'] != 'telemetria':
                     ctrl.setVisible(not ok)
-            faltan = [x for x in self.items if x['estado'] != 'ok' and x['id'] != 'telemetria']
-            self.estado.setText(_tr('Todo listo') if not faltan else '')
+            n = len(faltan(self.items))
+            self.estado.setText(_tr('Todo listo') if not n else (_tr('Falta 1 permiso') if n == 1 else _tr('Faltan {n} permisos', n=n)))
+            self.estado.setStyleSheet('color: %s;' % (ui.ACCENT_CLARO if not n else '#FF7A7A'))
+            self.listo_btn.setEnabled(not n)                  # v5.99: «Listo» solo con todo permitido
 
         def _pedir(self, it):
             if self._ocupado:
@@ -416,19 +433,31 @@ def _crear_panel_clase():
             if self._capa is not None and ui.vivo(self._capa):
                 self._capa.cerrar()
 
-        def _mas_tarde(self):
-            self._cerrar()
+        def _salir(self):
+            """Sin todos los permisos no se usa: la única salida es cerrar el programa (la ventana vuelve al abrirlo)."""
+            self._reloj.stop()
+            try:
+                self.app.close()
+            except Exception:
+                from PySide6.QtWidgets import QApplication
+                QApplication.quit()
 
         def _listo(self):
+            if faltan(self.items):                            # (por si acaso: no se cierra con algo pendiente)
+                self._pintar()
+                return
             self._cerrar()
 
         def abrir(self):
             from PySide6.QtCore import QRect
 
             def centrado(ancho_v, alto_v, panel):           # (centrado, con su ancho fijo y el alto que pide)
-                alto = min(panel.sizeHint().height(), alto_v - 60)
+                capa = panel.layout()                       # v5.99: el alto para SU ancho (los textos que saltan de línea; con
+                alto_c = capa.heightForWidth(panel.width()) if capa is not None and capa.hasHeightForWidth() else -1   # sizeHint sobraban
+                alto = min(alto_c if alto_c > 0 else panel.sizeHint().height(), alto_v - 60)   # huecos entre el título y la lista)
                 return QRect((ancho_v - panel.width()) // 2, (alto_v - alto) // 2, panel.width(), alto)
             self._capa = A.CapaModal(self.app, self, cerrar_fuera=False, posicion=centrado)
+            self._capa.cerrar_con_esc = False                 # v5.99: ni Esc ni clic fuera la cierran
             self._reloj.start()
 
     return PanelPermisos
