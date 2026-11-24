@@ -13540,8 +13540,12 @@ class SubtitleApp(QWidget):
                 marcas = posiciones_pro.para_plan(str(media_path), recorte)
             except Exception:
                 marcas = {}
+            # v6.02: los pesos de la IA que GO ya calculó (marcar_todo) si son de ESTAS palabras: la PRO no vuelve a correr el modelo (3 min 10 s medidos)
+            r_ia = getattr(self, '_resumen_ia', None) or {}
+            pesos_go = r_ia.get('pesos') if words and r_ia.get('n_palabras') == len(words) else None
             plan = edicion_pro.planificar(str(media_path), words, duracion, cortes=cortes, idioma=idioma or 'es',
-                                          al_estado=lambda t: self.msg_queue.put(('status', tr(t))), tema=tema_pro, marcas=marcas)
+                                          al_estado=lambda t: self.msg_queue.put(('status', tr(t))), tema=tema_pro, marcas=marcas,
+                                          pesos=pesos_go)
             plan['_recorte'] = recorte                 # v5.29: «Listo» en Efectos › Posición pasa las marcas a ESTE timeline sin rehacer GO
             plan['tema5'] = tema5
             plan['sin_color_claves'] = sin_color_claves

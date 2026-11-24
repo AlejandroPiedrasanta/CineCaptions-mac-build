@@ -1119,4 +1119,8 @@ def marcar_todo(palabras, idioma='es', progreso=None, estado=None, tamanos=None,
             elegidos = emojis_sin_ia(palabras, roles, idioma)
         resumen['emojis'] = poner_emojis(palabras, elegidos)
     resumen['grupos'] = sum(1 for r in roles if r == 'main')
+    # v6.02: la importancia de cada palabra (mismos índices: corregir no los cambia) para la Edición PRO. Sin esto la PRO volvía a correr el
+    # modelo con las palabras YA corregidas (otra huella en la caché): 3 min 10 s en un GO real, con Resolve abriéndose a la vez en la GPU
+    resumen['pesos'] = dict(pesos) if pesos else None
+    resumen['n_palabras'] = len(palabras)
     return palabras, roles, resumen

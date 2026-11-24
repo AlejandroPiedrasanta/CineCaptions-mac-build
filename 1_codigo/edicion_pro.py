@@ -459,13 +459,17 @@ def _pesos_ia(palabras, idioma, al_estado=None):
         return None
 
 
-def planificar(video, palabras, duracion=None, cortes=None, idioma='es', opciones=None, al_estado=None, tema=None, marcas=None):
+def planificar(video, palabras, duracion=None, cortes=None, idioma='es', opciones=None, al_estado=None, tema=None, marcas=None, pesos=None):
     """v5.22: `marcas` = posiciones_pro.para_plan (Efectos › «Posición»): van a plan['_marcas'] y, si hacen falta, se arma también el plan
-    MÁS DENSO (`_pool`, `_pool_broll`) del que aplicar() saca la pieza de cada marca."""
+    MÁS DENSO (`_pool`, `_pool_broll`) del que aplicar() saca la pieza de cada marca.
+    v6.02: `pesos` = la importancia de cada palabra que GO ya calculó (ia_texto.marcar_todo): si viene, la IA no vuelve a correr aquí."""
     op = dict(OPCIONES_POR_DEFECTO, **(opciones or opciones_guardadas()))
     op = opciones_neon(op) if tema == 'neon' else opciones_menu(op)      # (v5.57: en los 6 temas, solo lo encendido en el menú de la PRO)
     w, h, dur, _fps = medir(video)
-    pesos = _pesos_ia(palabras, idioma, al_estado) if op.get('pro_ia_local') else None
+    if not op.get('pro_ia_local'):
+        pesos = None
+    elif not pesos:
+        pesos = _pesos_ia(palabras, idioma, al_estado)
     neon_mot = None                                  # (None, no []: con una lista, aplicar() renderiza la placa del kit aunque esté vacía)
     if tema == 'neon' and 'kit' in (op.get('_neon_extras') or []):
         try:                                         # v5.5.13: la PRO del Tema 1 = los motions del kit «TEMA 1» (kit_neon_motions), no los gráficos genéricos
