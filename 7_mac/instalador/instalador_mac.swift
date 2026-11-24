@@ -244,7 +244,8 @@ struct VistaInstalador: View {
         TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { ctx in
             let t = ctx.date.timeIntervalSinceReferenceDate
             ZStack(alignment: .top) {
-                LinearGradient(colors: [Color(hex: 0x10203f), Color(hex: 0x080c14)], startPoint: .topLeading, endPoint: UnitPoint(x: 0.75, y: 1))
+                // v6.02 (el usuario: «instaladores más modernos»): el degradado deja ver un poco el vidrio de macOS de detrás (NSVisualEffectView)
+                LinearGradient(colors: [Color(hex: 0x10203f).opacity(0.86), Color(hex: 0x080c14).opacity(0.93)], startPoint: .topLeading, endPoint: UnitPoint(x: 0.75, y: 1))
                 Ellipse()
                     .fill(RadialGradient(colors: [colorEstado.opacity(0.16 + 0.04 * sin(t * 1.6)), colorEstado.opacity(0)], center: .center,
                                          startRadius: 0, endRadius: 230))
@@ -261,8 +262,8 @@ struct VistaInstalador: View {
                 .frame(width: ANCHO, height: ALTO)
             }
             .frame(width: ANCHO, height: ALTO)
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(colorBorde, lineWidth: 1.2))
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .circular))          // (v6.02: la misma curva que la máscara del vidrio: sin asomar 1 pt)
+            .overlay(RoundedRectangle(cornerRadius: 24, style: .circular).stroke(colorBorde, lineWidth: 1.2))
         }
     }
 
@@ -383,6 +384,19 @@ struct VistaInstalador: View {
 }
 
 // ---------------------------------------------------------------------------------------------------------------- app
+/// v6.02: la máscara del vidrio: un rectángulo redondeado que se estira sin deformar las esquinas.
+func mascaraRedondeada(_ radio: CGFloat) -> NSImage {
+    let lado = radio * 2 + 1
+    let img = NSImage(size: NSSize(width: lado, height: lado), flipped: false) { r in
+        NSColor.black.setFill()
+        NSBezierPath(roundedRect: r, xRadius: radio, yRadius: radio).fill()
+        return true
+    }
+    img.capInsets = NSEdgeInsets(top: radio, left: radio, bottom: radio, right: radio)
+    img.resizingMode = .stretch
+    return img
+}
+
 final class VentanaSinMarco: NSWindow {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
@@ -427,7 +441,17 @@ final class Instalador: NSObject, NSApplicationDelegate {
         w.hasShadow = true
         w.isMovableByWindowBackground = true
         w.title = T("Instalar CineCaptions", "Install CineCaptions")
-        w.contentView = NSHostingView(rootView: vista)
+        // v6.02: vidrio nativo de macOS (desenfoque de lo que hay detrás), recortado con las mismas esquinas continuas de 24 que la vista
+        let vidrio = NSVisualEffectView(frame: NSRect(x: 0, y: 0, width: ANCHO, height: ALTO))
+        vidrio.material = .hudWindow
+        vidrio.blendingMode = .behindWindow
+        vidrio.state = .active
+        vidrio.maskImage = mascaraRedondeada(24)
+        let host = NSHostingView(rootView: vista)
+        host.frame = vidrio.bounds
+        host.autoresizingMask = [.width, .height]
+        vidrio.addSubview(host)
+        w.contentView = vidrio
         w.center()
         w.makeKeyAndOrderFront(nil)
         ventana = w

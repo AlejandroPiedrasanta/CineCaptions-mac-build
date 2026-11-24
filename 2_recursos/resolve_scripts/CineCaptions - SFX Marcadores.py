@@ -31,7 +31,7 @@ import os
 import time
 from pathlib import Path
 
-VERSION = "6.01 (sfx marcadores)"
+VERSION = "6.02 (sfx marcadores)"
 
 CARPETA_COMPARTIDA = Path.home() / "DaVinciSubtitles"
 ARCHIVO_PENDIENTE = CARPETA_COMPARTIDA / "sfx_marcadores_pendiente.json"

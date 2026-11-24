@@ -1576,8 +1576,14 @@ def _encolar(accion, datos=None, timeout=90, on_progreso=None):
             limpiar(f)
             return (veredicto == 'ok', resumen.strip())
 
+    try:                                                        # v6.02: se despierta en cuanto el Puente deja la respuesta en jobs/ (antes, hasta 0,25 s tarde por trabajo; GO manda varios)
+        import resolve_mcp
+        esperar = resolve_mcp._aviso_de_carpeta(CARPETA_TRABAJOS)
+    except Exception:
+        esperar = time.sleep
     inicio = time.time()
-    sin_latido = 0
+    sin_latido_desde = None                                     # v6.02: por TIEMPO (SIN_LATIDO_MAXIMO vueltas de 0,25 s): el bucle ya no da vueltas fijas
+    proximo_progreso = 0.0
     pendiente_retirado = False
     proxima_mirada = inicio + 8.0
     proxima_lectura = inicio + 1.0
@@ -1598,7 +1604,7 @@ def _encolar(accion, datos=None, timeout=90, on_progreso=None):
             try:
                 r = json.loads(respuesta.read_text(encoding='utf-8'))
             except Exception:
-                time.sleep(0.2)
+                time.sleep(0.03)                                # (v6.02: el Puente aún la está escribiendo: se relee enseguida; antes 0,2 s)
                 continue
             limpiar(respuesta, sidecar, sidecar_free)
             return (bool(r.get('ok')), r.get('mensaje') or '')
@@ -1615,8 +1621,9 @@ def _encolar(accion, datos=None, timeout=90, on_progreso=None):
             except OSError:
                 pass
         if not puente_activo() and not JOB_TOMADO.exists():
-            sin_latido += 1
-            if sin_latido >= SIN_LATIDO_MAXIMO:
+            if sin_latido_desde is None:
+                sin_latido_desde = time.time()
+            if time.time() - sin_latido_desde >= SIN_LATIDO_MAXIMO * 0.25:
                 # v5.4.40: sin latido NO es todavía «el Puente se perdió»: si Resolve está colgado o cerrado la ventana tarda unos segundos en marcarse «No responde». Se espera hasta 30 s a
                 # saber cuál de las dos cosas es: Resolve atascado (el GO lo reinicia y repite) o el latido que vuelve.
                 t_dudoso = time.time()
@@ -1630,20 +1637,24 @@ def _encolar(accion, datos=None, timeout=90, on_progreso=None):
                         break
                     time.sleep(1.0)
                 if volvio:
-                    sin_latido = 0
+                    sin_latido_desde = None
                     continue
                 limpiar(JOB_PENDIENTE, sidecar, sidecar_free, JOB_TOMADO)
                 if est_r != 'ok':
                     return (False, _err_de_estado(est_r))
                 return (False, tr('El puente dejó de responder. Vuelve a correrlo en Resolve: Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Puente.'))
         else:
-            sin_latido = 0
-        if on_progreso:
+            sin_latido_desde = None
+        if on_progreso and time.time() >= proximo_progreso:
+            proximo_progreso = time.time() + 0.25
             try:
                 on_progreso(time.time() - inicio)
             except Exception:
                 pass
-        time.sleep(0.25)
+        t_espera = time.time()
+        esperar(0.25)
+        if time.time() - t_espera < 0.02:
+            time.sleep(0.02)                                    # (la carpeta cambiando sin parar —latido, señales— no hace girar el bucle en vacío)
     limpiar(JOB_PENDIENTE, sidecar, sidecar_free, JOB_TOMADO)
     return (False, tr('El puente no respondió en {timeout} segundos. Revisa la ventana de la consola de scripts en Resolve.',
                       timeout=timeout))

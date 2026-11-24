@@ -32,6 +32,7 @@ import shutil
 import random
 import os
 import threading
+import time
 from pathlib import Path
 
 import edicion_pro_ograf as OG
@@ -1402,15 +1403,127 @@ def bloques_de_cues(cues):
 
 
 _DETECCIONES = {}
+_DET_EN_CURSO = {}                    # v6.02: clave → threading.Event de una detección que otro hilo (precalentar) ya está haciendo
+_DET_LOCK = threading.Lock()
+_FPS_FUENTE = {}
+
+
+def _fps_fuente(ruta):
+    """(cuadros por segundo, segundo del primer fotograma) del video, una vez por archivo; (0.0, 0.0) si no se sabe."""
+    r = str(ruta)
+    if r not in _FPS_FUENTE:
+        fps, s0 = 0.0, 0.0
+        try:
+            import av
+            with av.open(r) as c:
+                vs = c.streams.video[0]
+                fps = float(vs.average_rate or 0)
+                if vs.start_time is not None and vs.time_base is not None:
+                    s0 = float(vs.start_time * vs.time_base)
+        except Exception:
+            fps, s0 = 0.0, 0.0
+        _FPS_FUENTE[r] = (fps, s0)
+    return _FPS_FUENTE[r]
+
+
+def _clave_det(ruta, t):
+    """v6.02: la clave de la caché es el FOTOGRAMA que lee edicion_pro_persona.fotograma (el primero con tiempo ≥ t − medio cuadro, contando
+    desde el inicio del stream), no t redondeado: dos instantes del mismo fotograma dan la misma detección y lo adelantado en precalentar
+    sirve aunque t no coincida al céntimo."""
+    fps, s0 = _fps_fuente(ruta)
+    if fps > 0:
+        import math
+        return (str(ruta), 'f', int(math.ceil((float(t) - s0) * fps - 0.5 - 1e-6)))
+    return (str(ruta), round(float(t), 2))
 
 
 def _personas(ruta, t):
-    """edicion_pro_persona.personas con caché por fotograma (los captions detrás y la regla de la cara miran los mismos)."""
-    k = (str(ruta), round(float(t), 2))
-    if k not in _DETECCIONES:
+    """edicion_pro_persona.personas con caché por fotograma (los captions detrás y la regla de la cara miran los mismos).
+    v6.02: segura entre hilos; si precalentar ya la está calculando, se espera a esa en vez de repetirla."""
+    k = _clave_det(ruta, t)
+    with _DET_LOCK:
+        if k in _DETECCIONES:
+            return _DETECCIONES[k]
+        ev = _DET_EN_CURSO.get(k)
+        mio = ev is None
+        if mio:
+            ev = _DET_EN_CURSO[k] = threading.Event()
+    if not mio:
+        ev.wait(120)
+        with _DET_LOCK:
+            if k in _DETECCIONES:
+                return _DETECCIONES[k]
+    try:
         import edicion_pro_persona as PE
-        _DETECCIONES[k] = PE.personas(ruta, t)
-    return _DETECCIONES[k]
+        d = PE.personas(ruta, t)
+        with _DET_LOCK:
+            _DETECCIONES[k] = d
+        return d
+    finally:
+        if mio:
+            with _DET_LOCK:
+                _DET_EN_CURSO.pop(k, None)
+            ev.set()
+
+
+def instantes_a_detectar(plan):
+    """v6.02: los (video, segundo) que aplicar() pedirá a _personas con V1 = el video entero desde su inicio (lo normal en GO): el principio y
+    el final de cada bloque de captions (captions detrás de ti y la regla de la cara) y tres instantes de cada escena a pantalla completa."""
+    video = str((plan or {}).get('video') or '')
+    if not video:
+        return []
+    if ((plan or {}).get('_recorte') or {}).get('segmentos'):
+        return []                                    # («quitar pausas»: los tiempos son del timeline ya cortado, no del video: se detectaría otra cosa)
+    ts = []
+    for b in _bloques_captions():
+        a, z = float(b['ini']), float(b['fin'])
+        ts += [a + 0.12, max(a + 0.12, z - 0.15)]
+    for p in (plan or {}).get('piezas') or []:
+        if isinstance(p, dict) and p.get('escena_mg'):
+            try:
+                a, z = float(p['ini']), float(p['fin'])
+                ts += [a + 0.3, (a + z) / 2.0, z - 0.3]
+            except (KeyError, TypeError, ValueError):
+                pass
+    return [(video, t) for t in ts if t >= 0]
+
+
+def precalentar(plan, hilos=3, tope_s=90.0):
+    """v6.02 (el usuario: «más rápido el armado, baja los tiempos de espera»): MEDIDO, la primera detección de personas tarda 4-7 s (arrancar el
+    motor de IA 3.14 ~2,7 s + cargar MODNet ~1 s + abrir el video) y luego ~50 ms cada una (con 3-4 hilos, la mitad). Todo eso iba EN SERIE al
+    final del armado, tras los captions. Esto lo hace mientras Resolve coloca los captions (que no usa el motor): arranca el motor, carga los
+    modelos y deja en la caché las detecciones que aplicar() va a pedir. Lo que no se adelante (V1 recortado, otra marca de entrada) se calcula
+    como antes. Devuelve cuántas dejó listas; nunca lanza."""
+    try:
+        video = str((plan or {}).get('video') or '')
+        if not video or not Path(video).is_file():
+            return 0
+        import edicion_pro_persona as PE
+        if not PE.disponible():
+            return 0
+        pedidos, vistos = [], set()
+        for ruta, t in instantes_a_detectar(plan):
+            k = _clave_det(ruta, t)
+            if k not in vistos:
+                vistos.add(k)
+                pedidos.append((ruta, t))
+        if not pedidos:
+            pedidos = [(video, 0.5)]                 # (sin captions de bloque: al menos el motor y los modelos quedan cargados)
+        _personas(*pedidos[0])                       # (el primero solo: arranca el motor y carga los modelos una vez)
+        fin = time.time() + float(tope_s)
+        from concurrent.futures.thread import ThreadPoolExecutor      # (Python 3.15: nunca `from concurrent.futures import ThreadPoolExecutor`)
+
+        def uno(par):
+            if time.time() < fin:
+                try:
+                    _personas(*par)
+                except Exception:
+                    pass
+        with ThreadPoolExecutor(max(1, int(hilos)), thread_name_prefix='pro-personas') as ex:
+            list(ex.map(uno, pedidos[1:]))
+        return sum(1 for r, t in pedidos if _clave_det(r, t) in _DETECCIONES)
+    except Exception:
+        return 0
 
 
 def _cabeza(det):

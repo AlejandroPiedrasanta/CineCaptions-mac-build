@@ -595,6 +595,11 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('6.02', [
+        'GO arma más rápido con la Edición PRO: la IA busca a la persona del video mientras Resolve coloca los subtítulos (hasta 10 s menos).',
+        'Resolve Free: el programa se entera al momento de cada paso que termina el Puente.',
+        'Instaladores renovados: en Windows 11 esquinas y sombra del sistema, botones nuevos y todos los pasos a la vista; en Mac, fondo de vidrio.',
+    ]),
     ('6.01', [
         'Mac con DaVinci Resolve Free: arreglado el fallo que impedía a GO abrir el Puente y traer el audio de tu timeline.',
         'Mac: el Registro ya no muestra el aviso de la letra «Consolas».',

@@ -737,7 +737,7 @@ class Instalacion
             pScripts = Nuevo("Scripts de DaVinci Resolve", "Instalando los scripts en Resolve...", 1);
             pFuentes = Nuevo("Tipografías de las plantillas", "Instalando las tipografías...", 1);
             pModelo = Nuevo("Voz de respaldo: Whisper turbo (1,6 GB)", "Descargando el modelo de voz...", 8);
-            pMotorIA = Nuevo("Motor de voz e IA: Qwen3-ASR + Gemma 4 E4B (4-40 GB)", "Instalando Qwen3-ASR y la IA de texto (Gemma 4 E4B, Qwen3.5-4B)...", 20);
+            pMotorIA = Nuevo("Voz e IA: Qwen3-ASR + Gemma 4 E4B (4-40 GB)","Instalando Qwen3-ASR y la IA de texto (Gemma 4 E4B, Qwen3.5-4B)...", 20);
             pAccesos = Nuevo("Accesos directos", "Creando los accesos directos...", 1);
         }
     }
@@ -909,7 +909,7 @@ class Instalacion
             // v5.5.8: ya instalado, la tarea solo pone al día las librerías que cambiaron en requisitos_motor_qwen.txt
             // (sin torch ni modelos: segundos); si falla, el motor sigue con las que tenía
             // v5.47: y descarga las IA de texto que falten (Gemma 4 E4B 16 GB + Qwen3.5-4B 9 GB en GPUs de 15 GB o más): con 30 min se cortaba
-            pMotorIA.Titulo = "Motor de voz e IA: Qwen3-ASR + Gemma 4 E4B";
+            pMotorIA.Titulo = "Voz e IA: Qwen3-ASR + Gemma 4 E4B";
             omitirModelo = false;
             Empezar(pMotorIA, "Ya estaba instalado: revisando sus librerías y la IA de texto (Gemma 4 E4B, Qwen3.5-4B)");
             if (ventana != null) ventana.MostrarOmitir(true);
@@ -1775,6 +1775,14 @@ static class Tema
     public static readonly Color Ok = Color.FromArgb(98, 209, 150);
     public static readonly Color Aviso = Color.FromArgb(255, 184, 107);
     public static readonly Color Error = Color.FromArgb(255, 107, 107);
+    // v6.02: los iconos de Windows 11 (Segoe Fluent Icons) si están; si no, los de Windows 10 (mismos códigos)
+    public static readonly string FuenteIconos = HayFuente("Segoe Fluent Icons") ? "Segoe Fluent Icons" : "Segoe MDL2 Assets";
+    static bool HayFuente(string nombre)
+    {
+        try { foreach (FontFamily f in FontFamily.Families) if (string.Equals(f.Name, nombre, StringComparison.OrdinalIgnoreCase)) return true; }
+        catch { }
+        return false;
+    }
 }
 
 static class Dibujo
@@ -1940,14 +1948,20 @@ class BotonCirculo : Control
         Graphics g = e.Graphics;
         g.SmoothingMode = SmoothingMode.AntiAlias;
         g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
-        Color c = (Marcable && !Marcado) ? Color.FromArgb(125, 140, 160) : Tono;
-        float m = Width * 0.09f;
-        RectangleF r = new RectangleF(m, m, Width - 2 * m - 1, Height - 2 * m - 1);
-        using (SolidBrush b = new SolidBrush(Color.FromArgb(hover || (Marcable && Marcado) ? 80 : 30, c))) g.FillEllipse(b, r);
-        using (Pen p = new Pen(Color.FromArgb(235, c), 1.6f)) g.DrawEllipse(p, r);
+        // v6.02 (el usuario: «instaladores más modernos»): botones de título como los de Windows 11 (Fluent): sin aro de color; un fondo
+        // de cristal oscuro que se aclara al pasar el ratón y, en Cerrar, el rojo de Windows; la chincheta marcada lleva su tono suave
+        bool cerrar = Tono.R > 200 && Tono.G < 140;
+        RectangleF r = new RectangleF(1f, 1f, Width - 3f, Height - 3f);
+        Color fondo = hover ? (cerrar ? Color.FromArgb(235, 196, 43, 28) : Color.FromArgb(70, 255, 255, 255))
+                            : (Marcable && Marcado ? Color.FromArgb(70, Tono) : Color.FromArgb(105, 8, 12, 20));
+        using (GraphicsPath gp = Dibujo.Redondeado(r, Height * 0.24f))
+        {
+            using (SolidBrush b = new SolidBrush(fondo)) g.FillPath(b, gp);
+            using (Pen p = new Pen(Color.FromArgb(hover ? 0 : 38, 255, 255, 255), 1f)) g.DrawPath(p, gp);
+        }
         string gl = (Marcable && Marcado && GlifoMarcado != null) ? GlifoMarcado : Glifo;
-        using (Font f = new Font("Segoe MDL2 Assets", 9f))
-        using (SolidBrush b = new SolidBrush(Color.FromArgb(240, 245, 248)))
+        using (Font f = new Font(Tema.FuenteIconos, 9f))
+        using (SolidBrush b = new SolidBrush(Color.FromArgb(Marcable && !Marcado && !hover ? 170 : 245, 245, 248, 250)))
         {
             StringFormat sf = new StringFormat();
             sf.Alignment = StringAlignment.Center;
@@ -2261,10 +2275,12 @@ class ListaPasos : Control
         using (Font fp = new Font("Segoe UI", 9f, FontStyle.Bold))
             TextRenderer.DrawText(g, "PASOS", fp, new Point((int)(4 * Esc), 0), Tema.Suave, TextFormatFlags.NoPadding);
         if (Pasos == null) return;
-        using (Font f = new Font("Segoe UI", 10.5f))
-        using (Font fb = new Font("Segoe UI", 10.5f, FontStyle.Bold))
+        // v6.02: las filas se ajustan al alto que hay (10 pasos de 32 px no cabían: el último salía cortado y tapaban la firma)
+        int y = (int)(26 * Esc), alto = Math.Min((int)(32 * Esc), (Height - y) / Math.Max(1, Pasos.Count));
+        float tam = alto >= (int)(30 * Esc) ? 10.5f : 10f;
+        using (Font f = new Font("Segoe UI", tam))
+        using (Font fb = new Font("Segoe UI", tam, FontStyle.Bold))
         {
-            int y = (int)(26 * Esc), alto = (int)(32 * Esc);
             foreach (Paso p in Pasos)
             {
                 Color c;
@@ -2276,7 +2292,7 @@ class ListaPasos : Control
                     case EstadoPaso.Error: c = Tema.Error; break;
                     default: c = Tema.Pendiente; break;
                 }
-                float cx = 13 * Esc, cy = y + alto / 2f, rad = 8.5f * Esc;
+                float cx = 13 * Esc, cy = y + alto / 2f, rad = Math.Min(8.5f * Esc, alto * 0.3f);
                 float pop = 0f;
                 if (popup.ContainsKey(p)) pop = (float)Math.Sin(popup[p] * Math.PI) * 0.35f;
                 rad *= 1f + pop;
@@ -2475,6 +2491,34 @@ class Ventana : Form
 
     int E(float v) { return (int)Math.Round(v * esc); }
 
+    // v6.02 (el usuario: «instaladores más modernos»): en Windows 11 las esquinas, el borde y la sombra los pone el propio Windows (DWM):
+    // esquinas suavizadas de verdad (la Region de antes las dejaba dentadas) y la sombra de las ventanas del sistema. Windows 10 sigue igual.
+    [DllImport("dwmapi.dll")] static extern int DwmSetWindowAttribute(IntPtr h, int atributo, ref int valor, int tamano);
+    static readonly bool Win11 = Programa.BuildDeWindows() >= 22000;
+    bool esquinasDwm;
+    protected override CreateParams CreateParams
+    {
+        get
+        {
+            CreateParams cp = base.CreateParams;
+            if (Win11 && !SystemInformation.TerminalServerSession) cp.ClassStyle |= 0x20000;        // CS_DROPSHADOW
+            return cp;
+        }
+    }
+    protected override void OnHandleCreated(EventArgs e)
+    {
+        base.OnHandleCreated(e);
+        if (!Win11 || SystemInformation.TerminalServerSession) return;     // (por Escritorio remoto Windows acepta el atributo y no redondea: ventana cuadrada sin borde)
+        try
+        {
+            int redondo = 2, oscuro = 1, borde = 48 | (80 << 8) | (130 << 16);       // DWMWCP_ROUND · modo oscuro · COLORREF del borde de siempre
+            esquinasDwm = DwmSetWindowAttribute(Handle, 33, ref redondo, 4) == 0;
+            DwmSetWindowAttribute(Handle, 20, ref oscuro, 4);
+            if (esquinasDwm) DwmSetWindowAttribute(Handle, 34, ref borde, 4);
+        }
+        catch { esquinasDwm = false; }
+    }
+
     static Image Recurso(string nombre)
     {
         try { return Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream(nombre)); } catch { return null; }
@@ -2522,7 +2566,7 @@ class Ventana : Form
         lista = new ListaPasos();
         lista.Esc = esc;
         lista.Pasos = ins.Pasos;
-        lista.SetBounds(E(36), E(16), E(372), E(30 + 32 * ins.Pasos.Count));
+        lista.SetBounds(E(36), E(16), E(372), E(Math.Min(30 + 32 * ins.Pasos.Count, 292)));     // v6.02: acaba antes de la firma (y = 314)
         cuerpo.Controls.Add(lista);
 
         sep = new Panel();
@@ -2532,12 +2576,13 @@ class Ventana : Form
 
         // v5.41 (diseño A elegido por el usuario): el % TOTAL en grande junto al título, la barra justo debajo, «99 de 1021 MB · quedan unos 2 min»
         // y el archivo en una segunda línea; el botón grande se encoge mientras trabaja y vuelve al final
-        lblEstado = Etiqueta(op.Desinstalar ? "Listo para desinstalar" : "Preparando la instalación...", 14f, true, Color.White);
-        lblEstado.SetBounds(E(450), E(24), E(300), E(44));
+        // v6.02: el estado tenía 300 px y frases como «Comprobando que todo funciona...» salían cortadas: más ancho (el % cabe en 80) y 13 pt
+        lblEstado = Etiqueta(op.Desinstalar ? "Listo para desinstalar" : "Preparando la instalación...", 13f, true, Color.White);
+        lblEstado.SetBounds(E(450), E(26), E(322), E(40));
         lblEstado.AutoEllipsis = true;
         lblPct = Etiqueta("", 20f, true, Tema.Cian);
         lblPct.TextAlign = ContentAlignment.MiddleRight;
-        lblPct.SetBounds(E(752), E(20), E(100), E(46));
+        lblPct.SetBounds(E(772), E(20), E(80), E(46));
         barra = new BarraModerna();
         barra.SetBounds(E(452), E(76), E(396), E(14));
         cuerpo.Controls.Add(barra);
@@ -2551,9 +2596,10 @@ class Ventana : Form
         {
             // las dos casillas de la limpieza completa (marcadas: «sin dejar rastro»); los tamaños se calculan aparte, sin frenar la ventana
             // v5.41: sin globos de ayuda (regla del usuario): lo que borran va escrito en la propia casilla
-            chkDatos = Casilla("Borrar mis datos, licencia y ajustes (y liberar la licencia)", E(450), E(118), op.BorrarDatos || !op.Silencioso);
-            chkModelos = Casilla("Borrar los modelos descargados (voz, IA y traducción)", E(450), E(148), op.BorrarModelos || !op.Silencioso);
-            lblInfo.SetBounds(E(450), E(180), E(400), E(24));
+            // v6.02: el aviso de abajo salía cortado («… Lo …») en una sola línea: las casillas suben y el aviso tiene dos líneas
+            chkDatos = Casilla("Borrar mis datos, licencia y ajustes (y liberar la licencia)", E(450), E(100), op.BorrarDatos || !op.Silencioso);
+            chkModelos = Casilla("Borrar los modelos descargados (voz, IA y traducción)", E(450), E(128), op.BorrarModelos || !op.Silencioso);
+            lblInfo.SetBounds(E(450), E(160), E(400), E(44));
         }
 
         boton = new BotonPildora();
@@ -2581,7 +2627,7 @@ class Ventana : Form
         if (marca != null)
         {
             lblFirma = Etiqueta("CineCaptions", 9f, false, Color.FromArgb(78, 96, 126));
-            lblFirma.SetBounds(E(40), E(314), E(74), E(20));
+            lblFirma.SetBounds(E(40), E(314), E(84), E(20));                  // (v6.02: con 74 salía «CineCaption»)
             int altoM = E(15), anchoM = (int)Math.Round(altoM * (double)marca.Width / marca.Height);
             Bitmap tenue = new Bitmap(anchoM, altoM);
             using (Graphics g = Graphics.FromImage(tenue))
@@ -2598,7 +2644,7 @@ class Ventana : Form
             picMarca.Image = tenue;
             picMarca.SizeMode = PictureBoxSizeMode.Normal;
             picMarca.BackColor = Tema.Fondo;
-            picMarca.SetBounds(E(40) + E(74), E(317), anchoM, altoM);
+            picMarca.SetBounds(E(40) + E(84), E(317), anchoM, altoM);
             cuerpo.Controls.Add(picMarca);
         }
         else
@@ -2700,7 +2746,11 @@ class Ventana : Form
         t.Start();
     }
 
-    static string GBtxt(long b) { return b >= 1073741824L ? string.Format("{0:N1} GB", b / 1073741824.0) : string.Format("{0:N0} MB", b / 1048576.0); }
+    static string GBtxt(long b)
+    {
+        if (b >= 1073741824L) return string.Format("{0:N1} GB", b / 1073741824.0);
+        return b < 1048576L ? "menos de 1 MB" : string.Format("{0:N0} MB", b / 1048576.0);       // (v6.02: antes «0 MB»)
+    }
 
     static long Tamano(string dir)
     {
@@ -2737,7 +2787,7 @@ class Ventana : Form
         foreach (BotonCirculo b in new BotonCirculo[] { bPin, bMin, bMax, bCer }) { b.Location = new Point(x, E(14)); x += E(42); }
         cuerpo.Left = Math.Max(0, (ClientSize.Width - cuerpo.Width) / 2);
         cuerpo.Top = banner.Height + Math.Max(0, (ClientSize.Height - banner.Height - cuerpo.Height) / 2);
-        if (WindowState == FormWindowState.Maximized) Region = null;
+        if (WindowState == FormWindowState.Maximized || esquinasDwm) Region = null;
         else using (GraphicsPath p = Dibujo.Redondeado(new RectangleF(0, 0, Width, Height), E(18))) Region = new Region(p);
         Invalidate();
     }
@@ -2745,7 +2795,7 @@ class Ventana : Form
     protected override void OnPaint(PaintEventArgs e)
     {
         base.OnPaint(e);
-        if (WindowState == FormWindowState.Maximized) return;
+        if (WindowState == FormWindowState.Maximized || esquinasDwm) return;
         e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
         using (Pen pen = new Pen(Color.FromArgb(48, 80, 130), 2))
         using (GraphicsPath p = Dibujo.Redondeado(new RectangleF(1, 1, Width - 2, Height - 2), E(18)))

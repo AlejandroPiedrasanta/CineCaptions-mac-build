@@ -13595,6 +13595,37 @@ class SubtitleApp(QWidget):
             registro.excepcion(origen='Tema 1 (respaldo)')
             return False
 
+    def _precalentar_pro(self):
+        """v6.02 (el usuario: «más rápido el armado, baja los tiempos de espera»): si GO va a poner la Edición PRO de ESTE video, en un hilo
+        arranca el motor de IA, carga los modelos y adelanta las detecciones de personas (edicion_pro.precalentar) mientras Resolve coloca los
+        captions; antes eran 4-7 s en serie al final del armado. Sin plan, de otro video o sin nada en el menú de la PRO, no hace nada."""
+        plan = getattr(self, '_pro_plan', None)
+        if not isinstance(plan, dict) or not plan.get('video'):
+            return
+        op = plan.get('opciones') or {}
+        if not (plan.get('piezas') or plan.get('tema5') or plan.get('ligero') or plan.get('broll') or plan.get('tema') == 'neon'
+                or op.get('pro_motions_completo') or str(op.get('pro_mascara') or 'no') != 'no' or op.get('pro_emojis') or op.get('_menu')
+                or op.get('_neon_extras')):
+            return
+        try:
+            actual = self.video_var.get().strip().strip('"')
+            if actual and Path(plan['video']).resolve() != Path(actual).expanduser().resolve():
+                return
+        except Exception:
+            return
+
+        def trabajo():
+            try:
+                import edicion_pro
+                t0 = time.time()
+                n = edicion_pro.precalentar(plan)
+                if n:
+                    registro.info(tr('Edición PRO: {n} detecciones de personas listas antes de tiempo ({s:.1f} s, mientras Resolve colocaba los captions).',
+                                     n=n, s=time.time() - t0), 'edición pro')
+            except Exception:
+                pass
+        threading.Thread(target=trabajo, daemon=True, name='pro-precalentar').start()
+
     def _colocar_pro(self):
         """Pone la Edición PRO en el timeline de Resolve (tras los captions y los efectos). Devuelve un texto corto para el estado, o ''.
         v5.24: `_pro_ok` dice si quedó puesta (el Tema 1 neón ya no deja Text+ de respaldo: sin la PRO, _respaldo_tema1 los pone)."""
@@ -13666,6 +13697,7 @@ class SubtitleApp(QWidget):
         self._go_n = getattr(self, '_go_n', 0) + 1      # v5.56: toda colocación nueva (también desde el editor) cancela la reproducción pendiente del GO anterior
         def worker():
             empezo = time.time()
+            self._precalentar_pro()                    # v6.02: el motor de IA y las detecciones de la PRO, mientras Resolve coloca los captions
             try:
                 import vistas_reales
                 vistas_reales.esperar_libre()          # v5.56: una vista real en curso deja SU timeline temporal como el actual
