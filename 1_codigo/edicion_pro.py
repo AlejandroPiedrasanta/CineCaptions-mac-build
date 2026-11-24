@@ -1479,6 +1479,11 @@ def instantes_a_detectar(plan):
         a, z = float(b['ini']), float(b['fin'])
         ts += [a + 0.12, max(a + 0.12, z - 0.15)]
     for p in (plan or {}).get('piezas') or []:
+        if isinstance(p, dict) and (p.get('ajustar') or p.get('persona')):
+            try:
+                ts.append((float(p['ini']) + float(p['fin'])) / 2.0)          # (el centro de cada gráfico que esquiva caras o va con la persona)
+            except (KeyError, TypeError, ValueError):
+                pass
         if isinstance(p, dict) and p.get('escena_mg'):
             try:
                 a, z = float(p['ini']), float(p['fin'])
@@ -2446,7 +2451,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
         if hay_ia and (p.get('ajustar') or p.get('persona')):
             ruta, t_src, clip = _fuente_de(info, video, (p['ini'] + p['fin']) / 2.0)
             try:
-                det = PE.personas(ruta, t_src)
+                det = _personas(ruta, t_src)          # v6.02: con la caché (antes PE.personas directo: 54 s en un GO real aunque precalentar ya lo tenía)
             except Exception:
                 det = None
         if p.get('ajustar'):

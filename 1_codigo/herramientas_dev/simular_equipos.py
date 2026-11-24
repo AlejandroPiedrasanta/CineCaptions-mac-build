@@ -639,6 +639,12 @@ import licencia  # noqa: E402
 import registro  # noqa: E402
 import telemetria_errores as tel  # noqa: E402
 
+# v6.02: TODA la batería escribe su Registro en una carpeta temporal. Antes los casos sin parche propio (actualizaciones 9.99, el panel de
+# Premiere…) dejaban sus líneas en el cinecaptions.log REAL del equipo («Actualización a 9.99: se instala sola…» sin que nadie actualizara).
+_LOGS_SIMULACION = pathlib.Path(tempfile.mkdtemp(prefix='cc_log_sim_'))
+registro.ARCHIVO = _LOGS_SIMULACION / 'cinecaptions.log'
+registro.ARCHIVO_ERRORES = _LOGS_SIMULACION / 'errores.log'
+
 
 class _ServidorErrores:
     """Como errores.php: formulario normal o (v5.72, con capturas) multipart. `archivos` = [{nombre: bytes}] por petición.
