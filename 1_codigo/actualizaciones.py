@@ -51,9 +51,11 @@ import firma_ed25519
 URL_MANIFIESTO = 'https://github.com/AlejandroPiedrasanta/CineCaptions-releases/releases/latest/download/version.json'
 # v5.52: claves PÚBLICAS que pueden firmar el manifiesto (id → hex). Las privadas NUNCA van al repositorio: ~/CineCaptions_claves
 # (la de reserva, copiada aparte por si se pierde la principal). Perder las dos = los programas instalados ya no aceptan actualizaciones.
+# v6.03: claves NUEVAS. Las privadas de las anteriores (7a4e413e y de5653c3) se perdieron al reinstalar Windows el 2026-11-25 sin copia;
+# por eso los programas hasta la 6.01 NO ven esta versión (hay que instalarla a mano una vez) y las viejas ya no se aceptan.
 CLAVES_FIRMA = {
-    '7a4e413e': '64d8646c1df645cb148402eb08066d45cb6c510508d54588779b294451a9225a',   # principal
-    'de5653c3': 'cb292941636c7b8c59cad39ca499a7795d0a27082d1f614328e9e87b61b66252',   # reserva
+    '984324e2': 'e5eb36ba0c8732614966b7359b30be71a0dce80533c756bccfab7fcf372e0b43',   # principal
+    'abcfab8f': 'ebbc06ee4c52bf6bf79291f2da261740d5b1f1f6136bdb7f7fdb924fda1bf17c',   # reserva
 }
 INTERVALO_AUTO_S = 10                 # el programa mira cada 10 s si hay una versión nueva (con ETag: casi siempre un «304 sin cambios», casi sin tráfico)
 INTERVALO_SIN_RED_S = 60              # tras varios fallos seguidos (sin internet) mira cada minuto, sin llenar el Registro
