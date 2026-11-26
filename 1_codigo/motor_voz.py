@@ -62,12 +62,14 @@ TORCH_ACEPTADOS = {'2.14.1+cpu'}   # lo que pusieron instaladores anteriores: si
 REPOS_ASR = {'1.7B': ('Qwen/Qwen3-ASR-1.7B-hf', 1_000_000_000), '0.6B': ('Qwen/Qwen3-ASR-0.6B-hf', 400_000_000)}
 REPO_ALINEADOR = ('Qwen/Qwen3-ForcedAligner-0.6B-hf', 400_000_000)
 # v5.46: las IA de texto, de la mejor a la más ligera: (clave de motor_texto.REPOS, repo, bytes mínimos descargados, GB libres que necesita, GB
-# que ocupa cargada). Medido el 2026-10-26 en una RTX 5070 Ti con el LOTE de 12: Gemma 4 E4B 8,7 GB (pico 11,1), Qwen3.5-4B 7,8 (pico 12,3).
+# que ocupa cargada). Medido el 2026-10-26 en una RTX 5070 Ti con el LOTE de 12: Gemma 4 E4B 8,7 GB (pico 11,1).
+# v6.02 (el usuario: «tiene muchas IA locales, elimina o unifícalas»): fuera Qwen3.5-4B (9,4 GB de descarga). Era el respaldo de Gemma pero pedía
+# MÁS memoria libre que ella (12,5 GB contra 11,5): cuando Gemma no cabía, tampoco; solo servía si Gemma fallaba al cargar, y para eso está la 1.7B.
 MODELOS_TEXTO = (('gemma4', 'google/gemma-4-E4B-it', 15_000_000_000, 11.5, 9.0),
-                 ('qwen3.5', 'Qwen/Qwen3.5-4B', 8_000_000_000, 12.5, 8.0),
                  ('4B', 'Qwen/Qwen3-4B-Instruct-2507', 3_000_000_000, 10.5, 9.5),
                  ('1.7B', 'Qwen/Qwen3-1.7B', 1_000_000_000, 0.0, 4.0))
-REPOS_VIEJOS = ('Qwen/Qwen3-ASR-1.7B', 'Qwen/Qwen3-ASR-0.6B', 'Qwen/Qwen3-ForcedAligner-0.6B')   # los del motor 1.x (~6 GB)
+# los que ya no se usan y se borran del disco: los del motor 1.x (~6 GB) y, desde la v6.02, Qwen3.5-4B (9,4 GB)
+REPOS_VIEJOS = ('Qwen/Qwen3-ASR-1.7B', 'Qwen/Qwen3-ASR-0.6B', 'Qwen/Qwen3-ForcedAligner-0.6B', 'Qwen/Qwen3.5-4B')
 SIN_VENTANA = 0x08000000 if sys.platform == 'win32' else 0
 # v5.86 (pedido: «en Mac aún no están todos los estilos y funciones»): el motor también en las Mac con Apple Silicon. Su Python es el
 # portátil de python-build-standalone (python.org no publica uno embebible para Mac), en ~/Library/Application Support/CineCaptions/motor_qwen;
@@ -277,8 +279,9 @@ def asegurar_listo():
 
 
 def completar_ia_texto(aviso=None):
-    """v5.46: en un motor YA instalado, baja las IA de texto nuevas que le falten (Gemma 4 E4B y Qwen3.5-4B en GPUs de 15 GB o más; motor_texto
-    --descargar decide y se salta lo que ya está). Devuelve la mejor que quedó. No lanza: si falla, el motor sigue con la que tenía."""
+    """v5.46: en un motor YA instalado, baja las IA de texto que le falten (Gemma 4 E4B y Qwen3-1.7B en GPUs de 15 GB o más; motor_texto
+    --descargar decide y se salta lo que ya está). Devuelve la mejor que quedó. No lanza: si falla, el motor sigue con la que tenía.
+    v6.02: al terminar borra del disco las que ya no se usan (limpiar_ia_viejas: Qwen3.5-4B, 9,4 GB…)."""
     estado = {}
 
     def linea(tipo, texto):
@@ -291,6 +294,7 @@ def completar_ia_texto(aviso=None):
     except Exception as e:
         if aviso:
             aviso(f'IA de texto: {e}')
+    limpiar_ia_viejas(aviso)
     return estado.get('modelo')
 
 
@@ -299,7 +303,7 @@ def modelos_texto_descargados():
     return [clave for clave, repo, minimo, _gb, _usa in MODELOS_TEXTO if modelo_descargado(repo, minimo)]
 
 
-NOMBRES_TEXTO = {'gemma4': 'Gemma 4 E4B', 'qwen3.5': 'Qwen3.5-4B', '4B': 'Qwen3-4B', '1.7B': 'Qwen3-1.7B'}
+NOMBRES_TEXTO = {'gemma4': 'Gemma 4 E4B', '4B': 'Qwen3-4B', '1.7B': 'Qwen3-1.7B'}
 
 
 def ia_texto_preferida():
@@ -309,12 +313,12 @@ def ia_texto_preferida():
 
 
 def ia_texto_para_esta_gpu():
-    """v5.47: las IA de texto que este equipo DEBERÍA tener (lo que baja motor_texto --descargar): GPU de 15 GB o más → Gemma 4 E4B, Qwen3.5-4B y
+    """v5.47: las IA de texto que este equipo DEBERÍA tener (lo que baja motor_texto --descargar): GPU de 15 GB o más → Gemma 4 E4B y
     Qwen3-1.7B; 9,5 o más → Qwen3-4B; si no, Qwen3-1.7B. v5.86, Mac: con lo que la tarjeta de Apple puede usar de la memoria (Gemma entera)."""
     total = vram_total_gb() or 0
     if ES_MAC:
-        return ['gemma4', 'qwen3.5', '1.7B'] if total >= 20 else ['4B'] if total >= 12 else ['1.7B']
-    return ['gemma4', 'qwen3.5', '1.7B'] if total >= 15 else ['4B'] if total >= 9.5 else ['1.7B']
+        return ['gemma4', '1.7B'] if total >= 20 else ['4B'] if total >= 12 else ['1.7B']
+    return ['gemma4', '1.7B'] if total >= 15 else ['4B'] if total >= 9.5 else ['1.7B']
 
 
 def estado_ia_texto(preferida=None):
@@ -327,7 +331,7 @@ def estado_ia_texto(preferida=None):
 def modelo_texto(info=None, preferida=None):
     """v5.5.3: la IA de texto mejor que haya descargada; v5.5.4: solo si CABE en lo que de verdad queda libre (`vram_para_ia_gb`: con Resolve
     abierto en una GPU de 16 GB la grande no cabe y se va a la ligera; antes se desbordaba a la RAM y tardaba más de 100 s).
-    v5.46: Gemma 4 E4B (≥ 11,5 GB libres) → Qwen3.5-4B (≥ 12,5) → Qwen3-4B de antes (≥ 10,5) → Qwen3-1.7B. Sin una más ligera, la mejor igual.
+    v5.46: Gemma 4 E4B (≥ 11,5 GB libres) → Qwen3-4B de antes (≥ 10,5) → Qwen3-1.7B. Sin una más ligera, la mejor igual.
     v5.47: empieza por la que eligió el usuario en Ajustes (ia_texto_preferida)."""
     hay = modelos_texto_descargados()
     if hay:
@@ -398,10 +402,47 @@ def _python_al_dia():
     return (carpeta() / 'python' / PYTHON_DLL).exists()
 
 
+def ia_viejas():
+    """v6.03: los repos de IA que este equipo tiene en el disco y esta versión YA NO usa: los de REPOS_VIEJOS (ninguna versión actual los carga) y
+    Qwen3-4B cuando ya están Gemma 4 E4B y Qwen3-1.7B (era la IA de texto de antes de la 5.46; en las tarjetas medianas, sin Gemma, sigue en uso)."""
+    repos = list(REPOS_VIEJOS)
+    por_clave = {clave: (repo, minimo) for clave, repo, minimo, _gb, _usa in MODELOS_TEXTO}
+    if all(modelo_descargado(*por_clave[c]) for c in ('gemma4', '1.7B')):
+        repos.append(por_clave['4B'][0])
+    return [r for r in repos if (_cache_hf() / ('models--' + r.replace('/', '--'))).is_dir()]
+
+
+def limpiar_ia_viejas(aviso=None):
+    """v6.03 (el usuario: «que los instaladores desinstalen las IA viejas»): borra del disco las de ia_viejas() y devuelve [(repo, GB)]. La llaman
+    la instalación del motor, la tarea motor_ia del instalador y el chequeo de CADA arranque (vigilancia): las actualizaciones silenciosas van con
+    /sinmodelo y no pasan por motor_ia, y en la Mac el motor ya instalado tampoco. No lanza."""
+    hechas = []
+    try:
+        viejas = ia_viejas()
+    except Exception:
+        return hechas
+    for repo in viejas:
+        nombre = 'models--' + repo.replace('/', '--')
+        ruta = _cache_hf() / nombre
+        try:
+            gb = sum(a.stat().st_size for a in ruta.rglob('*') if a.is_file() and not a.is_symlink()) / 1024 ** 3
+        except OSError:
+            gb = 0.0
+        shutil.rmtree(ruta, ignore_errors=True)
+        shutil.rmtree(_cache_hf() / '.locks' / nombre, ignore_errors=True)
+        if not ruta.exists():
+            hechas.append((repo, round(gb, 1)))
+            if aviso:
+                try:
+                    aviso(f'IA que ya no se usa, borrada del disco: {repo} ({gb:.1f} GB)')
+                except Exception:
+                    pass
+    return hechas
+
+
 def _borrar_modelos_viejos():
-    """v5.5.8: los modelos del motor 1.x (qwen-asr, ~6 GB) no los usa el 2.x (los «-hf»): fuera, ya con el nuevo listo."""
-    for repo in REPOS_VIEJOS:
-        shutil.rmtree(_cache_hf() / ('models--' + repo.replace('/', '--')), ignore_errors=True)
+    """v5.5.8: los modelos del motor 1.x (qwen-asr, ~6 GB) no los usa el 2.x (los «-hf»): fuera, ya con el nuevo listo. v6.03: limpiar_ia_viejas."""
+    limpiar_ia_viejas()
 
 
 def _leer_preferencia():
@@ -706,6 +747,7 @@ class _ServidorVoz:
         entorno = dict(os.environ)
         entorno['PYTHONIOENCODING'] = 'utf-8'
         entorno['PYTHONUNBUFFERED'] = '1'
+        entorno['CINECAPTIONS_PADRE'] = str(os.getpid())     # v6.02: programa cerrado = motor cerrado (motor_texto.vigilar_padre)
         entorno.pop('PYTHONPATH', None)
         _sin_dyld(entorno).pop('PYTHONHOME', None)
         self.modelo = modelo
@@ -843,6 +885,7 @@ def _lanzar_script(script, argumentos, on_linea, timeout=None, sin_senal=None, c
     entorno = dict(os.environ)
     entorno['PYTHONIOENCODING'] = 'utf-8'
     entorno['PYTHONUNBUFFERED'] = '1'
+    entorno['CINECAPTIONS_PADRE'] = str(os.getpid())         # v6.02: si este programa se cierra, el script también (vigilar_padre)
     entorno.pop('PYTHONPATH', None)
     _sin_dyld(entorno).pop('PYTHONHOME', None)
     # v5.5.8: -s = sin la carpeta de paquetes del USUARIO (%APPDATA%\Python\Python314): con el Python 3.14 del motor, lo que otro
@@ -1376,7 +1419,7 @@ def _instalar(pr, aviso, modelo):
         'torch': info.get('torch'), 'cuda': info.get('cuda'), 'gpu': info.get('gpu'),
         'instalado': time.strftime('%Y-%m-%d %H:%M'),
     }, ensure_ascii=False, indent=1), encoding='utf-8')
-    _borrar_modelos_viejos()
+    limpiar_ia_viejas(aviso)
     if texto_listo.get('modelo'):
         pr(1.0, tr('Motor Qwen3-ASR listo'))
     else:

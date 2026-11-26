@@ -625,7 +625,7 @@ def _tarea_motor_ia(estado):
             estado.progreso(100)
             estado.error(f'{ya}; no pude poner al día sus librerías ({e}): sigue con las que tenía')
             return
-        estado.progreso(40, 'Comprobando la IA de texto (Gemma 4 E4B y Qwen3.5-4B)')
+        estado.progreso(40, 'Comprobando la IA de texto (Gemma 4 E4B)')
         mejor = motor_voz.completar_ia_texto(aviso=estado.info)          # (v5.46: los modelos nuevos también a quien ya lo tenía)
         if mejor:
             ya += f'; IA de texto: {mejor}'

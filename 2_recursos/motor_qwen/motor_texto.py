@@ -32,11 +32,12 @@ import unicodedata
 os.environ.setdefault('HF_HUB_DISABLE_SYMLINKS_WARNING', '1')
 os.environ.setdefault('TOKENIZERS_PARALLELISM', 'false')
 
-REPOS = {'gemma4': 'google/gemma-4-E4B-it', 'qwen3.5': 'Qwen/Qwen3.5-4B', '4B': 'Qwen/Qwen3-4B-Instruct-2507', '1.7B': 'Qwen/Qwen3-1.7B'}
-# v5.46 (pedido del usuario: «Gemma 4 E4B y de respaldo Qwen3.5-4B… que reciban lo mejor»; banco del 2026-10-26 con 4 videos en español: elige
-# mejores palabras clave y emojis y se equivoca menos al corregir): en GPUs de 15 GB o más se bajan Gemma 4 E4B (16 GB, Apache-2.0), Qwen3.5-4B
-# (9,3 GB, Apache-2.0) y Qwen3-1.7B (para cuando Resolve deja poca VRAM); en las más pequeñas, como antes. El 4B de antes sigue valiendo si ya está.
-DESCARGAS_GRANDES = ('gemma4', 'qwen3.5', '1.7B')
+REPOS = {'gemma4': 'google/gemma-4-E4B-it', '4B': 'Qwen/Qwen3-4B-Instruct-2507', '1.7B': 'Qwen/Qwen3-1.7B'}
+# v5.46 (banco del 2026-10-26 con 4 videos en español: elige mejores palabras clave y emojis y se equivoca menos al corregir): en GPUs de 15 GB o
+# más se bajan Gemma 4 E4B (16 GB, Apache-2.0) y Qwen3-1.7B (para cuando Resolve deja poca VRAM); en las más pequeñas, como antes. El 4B de antes
+# sigue valiendo si ya está. v6.02 (el usuario: «tiene muchas IA locales, elimina o unifícalas»): fuera el respaldo Qwen3.5-4B (9,4 GB; pedía más
+# VRAM libre que Gemma, así que casi nunca entraba); motor_voz.REPOS_VIEJOS lo borra del disco.
+DESCARGAS_GRANDES = ('gemma4', '1.7B')
 # v5.3 (medido con 96 palabras en una RTX 5070 Ti): tramos de 90 palabras -> 23,4 s; de 40 -> 10,1 s; de 28 -> 8,2 s; de 20 -> 6,8 s,
 # con casi las mismas correcciones, pesos y emojis. La GPU decodifica varios tramos a la vez casi al precio de uno: el tiempo
 # lo manda lo que tarda el tramo MAS LARGO, asi que tramos cortos en lote = mucho mas rapido.
@@ -124,8 +125,49 @@ def decir(tipo, texto=''):
         sys.stdout.flush()
 
 
+def vigilar_padre():
+    """v6.02 (el usuario: «si está cerrado, ninguna IA local debe ejecutarse»): el programa deja su número de proceso en CINECAPTIONS_PADRE;
+    si ese proceso deja de existir, este motor sale YA. Antes solo se enteraba al leer stdin, y eso no pasa mientras carga el modelo (Gemma: 15 GB)
+    ni mientras analiza: cerrar el programa a mitad de GO dejaba la IA en la GPU hasta terminar. Sin la variable (pruebas a mano) no hace nada."""
+    try:
+        pid = int(os.environ.get('CINECAPTIONS_PADRE') or 0)
+    except ValueError:
+        pid = 0
+    if pid <= 0 or pid == os.getpid():
+        return
+    import threading
+
+    def mirar():
+        try:
+            if os.name == 'nt':
+                import ctypes
+                k = ctypes.windll.kernel32
+                k.OpenProcess.restype = ctypes.c_void_p
+                k.OpenProcess.argtypes = [ctypes.c_uint32, ctypes.c_int, ctypes.c_uint32]
+                k.WaitForSingleObject.argtypes = [ctypes.c_void_p, ctypes.c_uint32]
+                k.WaitForSingleObject.restype = ctypes.c_uint32
+                h = k.OpenProcess(0x00100000, 0, pid)            # SYNCHRONIZE: solo para esperar a que termine
+                if not h:
+                    return                                        # (no se pudo mirar: queda el aviso de siempre por stdin)
+                if k.WaitForSingleObject(h, 0xFFFFFFFF) != 0:     # 0 = el programa terminó
+                    return
+            else:
+                while True:
+                    try:
+                        os.kill(pid, 0)
+                    except ProcessLookupError:
+                        break
+                    except OSError:
+                        pass
+                    time.sleep(2)
+        except Exception:
+            return
+        os._exit(0)
+    threading.Thread(target=mirar, daemon=True, name='vigilar-padre').start()
+
+
 # v5.64: lo que ocupa cada IA de texto al bajarla (GB), para no empezar una descarga que no cabe en el disco
-TAMANO_GB = {'gemma4': 16.1, 'qwen3.5': 9.4, '4B': 8.1, '1.7B': 4.1}
+TAMANO_GB = {'gemma4': 16.1, '4B': 8.1, '1.7B': 4.1}
 
 
 def _completo(ruta):
@@ -841,13 +883,14 @@ def main():
     ap.add_argument('--servidor', action='store_true')
     ap.add_argument('--inactivo', type=float, default=180.0)
     a = ap.parse_args()
+    vigilar_padre()
     try:
         if a.servidor:
             servidor(a.modelo, a.inactivo)
         elif a.descargar:
             from huggingface_hub import snapshot_download
             clave, _, _ = elegir(a.modelo)
-            # v5.46: con GPU grande, Gemma 4 E4B + el respaldo Qwen3.5-4B + el ligero 1.7B; si uno falla, sigue con los demás
+            # v5.46: con GPU grande, Gemma 4 E4B + el ligero 1.7B (v6.02: sin Qwen3.5-4B); si uno falla, sigue con los demás
             claves = list(DESCARGAS_GRANDES) if clave == 'gemma4' and a.modelo == 'auto' else [clave]
             listas = []
             for c in claves:

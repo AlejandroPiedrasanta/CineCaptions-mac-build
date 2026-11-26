@@ -737,7 +737,7 @@ class Instalacion
             pScripts = Nuevo("Scripts de DaVinci Resolve", "Instalando los scripts en Resolve...", 1);
             pFuentes = Nuevo("Tipografías de las plantillas", "Instalando las tipografías...", 1);
             pModelo = Nuevo("Voz de respaldo: Whisper turbo (1,6 GB)", "Descargando el modelo de voz...", 8);
-            pMotorIA = Nuevo("Voz e IA: Qwen3-ASR + Gemma 4 E4B (4-40 GB)","Instalando Qwen3-ASR y la IA de texto (Gemma 4 E4B, Qwen3.5-4B)...", 20);
+            pMotorIA = Nuevo("Voz e IA: Qwen3-ASR + Gemma 4 E4B (4-30 GB)","Instalando Qwen3-ASR y la IA de texto (Gemma 4 E4B)...", 20);
             pAccesos = Nuevo("Accesos directos", "Creando los accesos directos...", 1);
         }
     }
@@ -908,10 +908,10 @@ class Instalacion
             // v5.2 (pedido: «que revise si las IAs ya están instaladas y no haga ese paso»)
             // v5.5.8: ya instalado, la tarea solo pone al día las librerías que cambiaron en requisitos_motor_qwen.txt
             // (sin torch ni modelos: segundos); si falla, el motor sigue con las que tenía
-            // v5.47: y descarga las IA de texto que falten (Gemma 4 E4B 16 GB + Qwen3.5-4B 9 GB en GPUs de 15 GB o más): con 30 min se cortaba
+            // v5.47: y descarga las IA de texto que falten (Gemma 4 E4B 16 GB + Qwen3-1.7B 4 GB en GPUs de 15 GB o más): con 30 min se cortaba
             pMotorIA.Titulo = "Voz e IA: Qwen3-ASR + Gemma 4 E4B";
             omitirModelo = false;
-            Empezar(pMotorIA, "Ya estaba instalado: revisando sus librerías y la IA de texto (Gemma 4 E4B, Qwen3.5-4B)");
+            Empezar(pMotorIA, "Ya estaba instalado: revisando sus librerías y la IA de texto (Gemma 4 E4B)");
             if (ventana != null) ventana.MostrarOmitir(true);
             Tarea(pMotorIA, "motor_ia", 6 * 3600, EstadoPaso.Aviso);
             if (ventana != null) ventana.MostrarOmitir(false);
@@ -1006,7 +1006,7 @@ class Instalacion
                              Nota = tam > 0 ? "ocupa ~" + GB(tam) : "", Libre = "libres " + GB(EspacioLibre(op.Dir)) });
         string motor = CarpetaMotorIA();
         l.Add(new RutaInfo { Titulo = "Motor de voz e IA (Qwen3-ASR + Gemma 4 E4B: Python + PyTorch)", Ruta = motor,
-                             Nota = MotorIAYaInstalado() ? "ya instalado" : "4-40 GB al instalarlo", Libre = "libres " + GB(EspacioLibre(motor)) });
+                             Nota = MotorIAYaInstalado() ? "ya instalado" : "4-30 GB al instalarlo", Libre = "libres " + GB(EspacioLibre(motor)) });
         string hub = Path.GetDirectoryName(CarpetaModelo());
         l.Add(new RutaInfo { Titulo = "Modelos de IA (Whisper, Qwen3, Gemma 4: cache de Hugging Face)", Ruta = hub,
                              Nota = ModeloYaDescargado() ? "Whisper ya descargado" : "Whisper 1,6 GB", Libre = "libres " + GB(EspacioLibre(hub)) });
@@ -1065,9 +1065,8 @@ class Instalacion
             bool voz = TieneSnapshot(Path.Combine(hub, "models--Qwen--Qwen3-ASR-1.7B-hf"), 1000000000L)
                     || TieneSnapshot(Path.Combine(hub, "models--Qwen--Qwen3-ASR-0.6B-hf"), 400000000L);
             bool alineador = TieneSnapshot(Path.Combine(hub, "models--Qwen--Qwen3-ForcedAligner-0.6B-hf"), 400000000L);
-            // v5.46: Gemma 4 E4B y Qwen3.5-4B (los que faltan los baja la tarea motor_ia del programa: motor_voz.completar_ia_texto)
+            // v5.46: Gemma 4 E4B (v6.02: Qwen3.5-4B ya no cuenta ni se descarga; los que faltan los baja la tarea motor_ia del programa: motor_voz.completar_ia_texto)
             bool texto = TieneSnapshot(Path.Combine(hub, "models--google--gemma-4-E4B-it"), 15000000000L)
-                      || TieneSnapshot(Path.Combine(hub, "models--Qwen--Qwen3.5-4B"), 8000000000L)
                       || TieneSnapshot(Path.Combine(hub, "models--Qwen--Qwen3-4B-Instruct-2507"), 3000000000L)
                       || TieneSnapshot(Path.Combine(hub, "models--Qwen--Qwen3-1.7B"), 1000000000L);
             return voz && alineador && texto;
@@ -1588,7 +1587,7 @@ class Instalacion
         "models--Qwen--Qwen3-ASR-1.7B", "models--Qwen--Qwen3-ASR-0.6B", "models--Qwen--Qwen3-ForcedAligner-0.6B",
         "models--Qwen--Qwen3-ASR-1.7B-hf", "models--Qwen--Qwen3-ASR-0.6B-hf", "models--Qwen--Qwen3-ForcedAligner-0.6B-hf",
         "models--Qwen--Qwen3-4B-Instruct-2507", "models--Qwen--Qwen3-1.7B",
-        "models--google--gemma-4-E4B-it", "models--Qwen--Qwen3.5-4B" };                // (v5.46: la IA de texto nueva y su respaldo)
+        "models--google--gemma-4-E4B-it", "models--Qwen--Qwen3.5-4B" };                // (Qwen3.5-4B ya no se usa desde la v6.02: sigue aquí para que desinstalar lo borre)
 
     public static List<string> RutasDeModelos()
     {

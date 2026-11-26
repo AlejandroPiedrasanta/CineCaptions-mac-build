@@ -697,7 +697,45 @@ def servidor():
         _MODELOS.clear()
 
 
+def vigilar_padre():
+    """v6.02 (el usuario: «si está cerrado, ninguna IA local debe ejecutarse»): gemelo de motor_qwen/motor_texto.vigilar_padre. Si el programa
+    (CINECAPTIONS_PADRE) deja de existir, este motor sale YA: antes solo se enteraba al leer stdin, no en mitad de una transcripción de Whisper."""
+    try:
+        pid = int(os.environ.get('CINECAPTIONS_PADRE') or 0)
+    except ValueError:
+        pid = 0
+    if pid <= 0 or pid == os.getpid():
+        return
+
+    def mirar():
+        try:
+            if os.name == 'nt':
+                import ctypes
+                k = ctypes.windll.kernel32
+                k.OpenProcess.restype = ctypes.c_void_p
+                k.OpenProcess.argtypes = [ctypes.c_uint32, ctypes.c_int, ctypes.c_uint32]
+                k.WaitForSingleObject.argtypes = [ctypes.c_void_p, ctypes.c_uint32]
+                k.WaitForSingleObject.restype = ctypes.c_uint32
+                h = k.OpenProcess(0x00100000, 0, pid)            # SYNCHRONIZE
+                if not h or k.WaitForSingleObject(h, 0xFFFFFFFF) != 0:
+                    return
+            else:
+                while True:
+                    try:
+                        os.kill(pid, 0)
+                    except ProcessLookupError:
+                        break
+                    except OSError:
+                        pass
+                    time.sleep(2)
+        except Exception:
+            return
+        os._exit(0)
+    threading.Thread(target=mirar, daemon=True, name='vigilar-padre').start()
+
+
 if __name__ == '__main__':
+    vigilar_padre()
     if '--versiones' in sys.argv:
         print(json.dumps(_versiones(), ensure_ascii=False))
     elif '--servidor' in sys.argv:

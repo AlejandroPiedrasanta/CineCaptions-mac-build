@@ -543,7 +543,7 @@ def ia_vuelve_tras_un_fallo():
 # ---------------------------------------------------------------------------------------------------------------------------------------
 # E. Qué IA de texto y qué torch le tocan a cada equipo
 # ---------------------------------------------------------------------------------------------------------------------------------------
-TODOS = ['gemma4', 'qwen3.5', '1.7B']
+TODOS = ['gemma4', '1.7B']
 
 
 def elegir(total, libre, hay=TODOS):
@@ -560,6 +560,73 @@ def gpu_24gb_libre_usa_la_mejor():
 @caso('Equipo y GPU')
 def gpu_16gb_con_resolve_baja_a_la_ligera():
     esperar(elegir(16, 7) == '1.7B', elegir(16, 7))
+
+
+@caso('Equipo y GPU')
+def programa_cerrado_motores_cerrados():
+    """v6.02 (el usuario: «si está cerrado, ninguna IA local debe ejecutarse»): un motor que «trabaja» sin leer stdin (como cargando Gemma) sale
+    solo en cuanto el proceso que lo lanzó muere de golpe; y los tres lanzadores dejan su pid en CINECAPTIONS_PADRE."""
+    import subprocess
+    raiz = pathlib.Path(CODIGO).parent
+    for archivo in ('motor_voz.py', 'ia_texto.py', 'motor_compat.py'):
+        esperar("entorno['CINECAPTIONS_PADRE'] = str(os.getpid())" in (pathlib.Path(CODIGO) / archivo).read_text(encoding='utf-8'), f'{archivo} no deja su pid')
+    for carpeta, modulo in (('motor_qwen', 'motor_texto'), ('motor_compat', 'worker')):
+        ruta = str(raiz / '2_recursos' / carpeta)
+        hijo = f'import sys,time,os; sys.path.insert(0,{ruta!r}); import {modulo} as m; m.vigilar_padre(); print(os.getpid(),flush=True); time.sleep(40)'
+        padre = ("import os,subprocess,sys,time; e=dict(os.environ); e['CINECAPTIONS_PADRE']=str(os.getpid()); "
+                 f"p=subprocess.Popen([sys.executable,'-c',{hijo!r}],stdin=subprocess.PIPE,stdout=subprocess.PIPE,env=e); "
+                 'print(p.stdout.readline().decode().strip(),flush=True); time.sleep(40)')
+        dueno = subprocess.Popen([getattr(sys, '_base_executable', sys.executable), '-c', padre], stdout=subprocess.PIPE, text=True)
+        pid = int(dueno.stdout.readline())
+        dueno.kill()
+        dueno.wait()
+        fin = time.time() + 8
+        while _pid_vivo(pid) and time.time() < fin:
+            time.sleep(0.1)
+        vivo = _pid_vivo(pid)
+        if vivo:
+            subprocess.run(['taskkill', '/F', '/PID', str(pid)] if sys.platform == 'win32' else ['kill', '-9', str(pid)], capture_output=True)
+        esperar(not vivo, f'{modulo}: el motor siguió vivo con el programa cerrado')
+
+
+@caso('Equipo y GPU')
+def instalar_borra_las_ia_viejas():
+    """v6.03 (el usuario: «que los instaladores desinstalen las IA viejas»): Qwen3.5-4B y los del motor 1.x se borran siempre; Qwen3-4B solo si
+    ya están Gemma y la 1.7B (en una tarjeta mediana es la que se usa); las que sí se usan no se tocan."""
+    def armar(base, repos):
+        for repo in repos:
+            d = pathlib.Path(base) / ('models--' + repo.replace('/', '--')) / 'blobs'
+            d.mkdir(parents=True)
+            (d / 'peso').write_bytes(b'x' * 2048)
+    todos = ['Qwen/Qwen3.5-4B', 'Qwen/Qwen3-ASR-1.7B', 'Qwen/Qwen3-4B-Instruct-2507', 'google/gemma-4-E4B-it', 'Qwen/Qwen3-1.7B',
+             'Qwen/Qwen3-ASR-1.7B-hf', 'Qwen/Qwen3-ForcedAligner-0.6B-hf', 'mobiuslabsgmbh/faster-whisper-large-v3-turbo']
+    for hay_gemma, borra in ((True, {'Qwen/Qwen3.5-4B', 'Qwen/Qwen3-ASR-1.7B', 'Qwen/Qwen3-4B-Instruct-2507'}),
+                             (False, {'Qwen/Qwen3.5-4B', 'Qwen/Qwen3-ASR-1.7B'})):
+        with tempfile.TemporaryDirectory() as base:
+            armar(base, [r for r in todos if hay_gemma or 'gemma' not in r])
+            existe = lambda repo, minimo=0: (pathlib.Path(base) / ('models--' + repo.replace('/', '--'))).is_dir()   # noqa: E731
+            avisos = []
+            with parches((motor_voz, '_cache_hf', lambda: pathlib.Path(base)), (motor_voz, 'modelo_descargado', existe)):
+                hechas = motor_voz.limpiar_ia_viejas(avisos.append)
+                otra = motor_voz.limpiar_ia_viejas()
+            quedan = {r for r in todos if existe(r)}
+            esperar({r for r, _gb in hechas} == borra, f'gemma={hay_gemma}: borró {hechas}')
+            esperar(quedan == {r for r in todos if hay_gemma or 'gemma' not in r} - borra, f'gemma={hay_gemma}: quedan {quedan}')
+            esperar(len(avisos) == len(borra) and otra == [], f'avisos {avisos}; la segunda pasada {otra}')
+    fuente = (pathlib.Path(CODIGO) / 'vigilancia.py').read_text(encoding='utf-8')
+    esperar('motor_voz.limpiar_ia_viejas()' in fuente, 'el chequeo de arranque no limpia (las actualizaciones silenciosas van con /sinmodelo)')
+
+
+def _pid_vivo(pid):
+    import subprocess
+    if sys.platform == 'win32':
+        r = subprocess.run(['tasklist', '/FI', f'PID eq {pid}', '/NH'], capture_output=True, text=True, errors='replace', creationflags=0x08000000)
+        return str(pid) in (r.stdout or '')
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
 
 
 @caso('Equipo y GPU')
@@ -3796,7 +3863,7 @@ def motor_qwen_en_mac_con_apple_silicon():
         motor_voz.python_motor().write_bytes(b'')
         (base / 'listo.json').write_text(json.dumps({'version': motor_voz.VERSION_ENTORNO, 'modelo': '1.7B', 'modelo_texto': '1.7B'}))
         esperar((motor_voz.info_instalado() or {}).get('modelo') == '1.7B', 'no lee el listo.json de la Mac')
-        for gb, quiere in ((10.7, ['1.7B']), (16.0, ['4B']), (24.0, ['gemma4', 'qwen3.5', '1.7B'])):
+        for gb, quiere in ((10.7, ['1.7B']), (16.0, ['4B']), (24.0, ['gemma4', '1.7B'])):
             motor_voz._VRAM['gb'] = gb
             esperar(motor_voz.ia_texto_para_esta_gpu() == quiere, f'{gb} GB: {motor_voz.ia_texto_para_esta_gpu()} (quería {quiere})')
         with parches((motor_voz, 'modelos_texto_descargados', lambda: ['gemma4', '1.7B']), (motor_voz, 'vram_para_ia_gb', lambda: 12.0)):

@@ -322,6 +322,7 @@ class _Servidor:
     def __init__(self):
         entorno = _entorno_proceso()
         entorno['PYTHONHASHSEED'] = '0'
+        entorno['CINECAPTIONS_PADRE'] = str(os.getpid())     # v6.02: programa cerrado = motor cerrado (worker.vigilar_padre)
         entorno.setdefault('HF_HUB_DISABLE_SYMLINKS', '1')
         entorno.setdefault('HF_HUB_DISABLE_XET', '1')
         entorno.setdefault('HF_HUB_ETAG_TIMEOUT', '20')

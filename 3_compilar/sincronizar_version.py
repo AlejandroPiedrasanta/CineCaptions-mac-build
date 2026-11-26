@@ -42,7 +42,8 @@ def subir():
     if not m:
         raise SystemExit('No encontré APP_VERSION en 1_codigo/version.py')
     partes = m.group(2).split('.')
-    nueva = '.'.join(partes[:-1] + [str(int(partes[-1]) + 1)])
+    # v6.03: conservando los ceros («6.02» -> «6.03»; antes salía «6.3», que parece un salto de versión)
+    nueva = '.'.join(partes[:-1] + [str(int(partes[-1]) + 1).zfill(len(partes[-1]))])
     texto = texto[:m.start()] + f"{m.group(1)}{nueva}{m.group(3)}" + texto[m.end():]
     VERSION_PY.write_text(texto, encoding='utf-8', newline='')
     return nueva

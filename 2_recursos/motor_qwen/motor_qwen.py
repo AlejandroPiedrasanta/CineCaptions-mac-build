@@ -361,6 +361,11 @@ def main():
     ap.add_argument('--inactivo', type=float, default=120.0)
     ap.add_argument('--contexto', default='')
     a = ap.parse_args()
+    try:                                   # v6.02: si el programa se cierra, este motor sale ya (motor_texto.vigilar_padre)
+        from motor_texto import vigilar_padre
+        vigilar_padre()
+    except Exception:
+        pass
     try:
         if a.servidor:
             servidor(a.modelo, a.dispositivo, a.inactivo)

@@ -122,7 +122,7 @@ def _fila_motor_qwen(mv):
             while not casa.exists() and casa.parent != casa:
                 casa = casa.parent
             libre = shutil.disk_usage(str(casa)).free / 1024 ** 3
-            hace_falta = {'gemma4': 16.1, 'qwen3.5': 9.4, '4B': 8.1, '1.7B': 4.1}.get(quiere[-1], 4.1) + 2   # (= motor_texto.TAMANO_GB + 2 GB)
+            hace_falta = {'gemma4': 16.1, '4B': 8.1, '1.7B': 4.1}.get(quiere[-1], 4.1) + 2   # (= motor_texto.TAMANO_GB + 2 GB)
             if libre < hace_falta:
                 detalle += f' (necesita unos {hace_falta:.0f} GB libres en el disco y quedan {libre:.0f} GB)'
         except Exception:

@@ -595,6 +595,11 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('6.03', [
+        'Menos descarga: la instalación ya no baja la IA de texto Qwen3.5-4B (9 GB menos); Gemma 4 E4B sigue siendo la principal.',
+        'Instalar o actualizar borra del disco las IA que el programa ya no usa.',
+        'Al cerrar el programa, los motores de voz y de IA se apagan al instante y dejan libre la tarjeta gráfica.',
+    ]),
     ('6.02', [
         'GO arma más rápido con la Edición PRO: la IA busca a la persona del video mientras Resolve coloca los subtítulos (hasta 10 s menos).',
         'Resolve Free: el programa se entera al momento de cada paso que termina el Puente.',
@@ -2839,7 +2844,7 @@ class VentanaAjustes(_Panel):
         f_motor.hide()                                   # cae solo a Whisper; la tarjeta se sigue armando oculta (_pintar_motor la lee)
         self._pintar_motor()
         # v5.69: quitadas «IA de texto», «Otras IA (análisis, sonido y efectos)» y «GPU para la voz» (el usuario lo pidió): la IA de texto es
-        # siempre la recomendada (Gemma 4 E4B, que baja sola a Qwen3.5-4B / Qwen3-1.7B si no cabe) y la GPU se repara sola al abrir
+        # siempre la recomendada (Gemma 4 E4B, que baja sola a Qwen3-1.7B si no cabe) y la GPU se repara sola al abrir
         # (vigilancia.preparar_gpu_voz)
         # v5.82 (el usuario: «elimina esto»): sin la tarjeta «Espacio de las cachés» (v5.4.8). Las cachés siguen con su tope y se recortan solas
         # (lo menos usado primero), como antes; solo se quita la tarjeta y su botón «Limpiar ahora».

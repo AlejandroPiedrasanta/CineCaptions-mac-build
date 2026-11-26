@@ -508,6 +508,12 @@ def revisar_salud_al_arrancar():
     if any(f.get('cuda') == 'faltan' for f in filas):
         preparar_gpu_voz()
     poner_motores_al_dia()
+    try:                                              # v6.03: las IA que esta versión ya no usa (Qwen3.5-4B, 9 GB…) no se quedan en el disco
+        import motor_voz
+        for repo, gb in motor_voz.limpiar_ia_viejas():
+            r.info(f'IA que ya no se usa, borrada del disco: {repo} ({gb} GB).', 'arranque')
+    except Exception:
+        pass
     try:                                              # v5.87: el instalador de la última actualización (0,6-1,2 GB) no se queda en la carpeta temporal
         import actualizaciones
         quitados = actualizaciones.limpiar_descargas_viejas()

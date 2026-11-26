@@ -96,6 +96,7 @@ class _Servidor:
         entorno = dict(os.environ)
         entorno['PYTHONIOENCODING'] = 'utf-8'
         entorno['PYTHONUNBUFFERED'] = '1'
+        entorno['CINECAPTIONS_PADRE'] = str(os.getpid())     # v6.02: programa cerrado = IA cerrada (motor_texto.vigilar_padre)
         entorno.pop('PYTHONPATH', None)
         motor_voz._sin_dyld(entorno).pop('PYTHONHOME', None)        # (v5.86: en la Mac, sin las DYLD_* del programa empaquetado)
         motor_voz.esperar_puesta_al_dia()      # v5.72: no arrancar mientras pip pone al día sus librerías
@@ -208,7 +209,7 @@ def _rango(modelo):
 
 
 def _respaldos(modelo):
-    """v5.46: si `modelo` falla, las de debajo que estén descargadas (Gemma 4 E4B → Qwen3.5-4B → Qwen3-1.7B); antes solo la 1.7B."""
+    """v5.46: si `modelo` falla, las de debajo que estén descargadas (Gemma 4 E4B → Qwen3-1.7B; v6.02: sin Qwen3.5-4B)."""
     hay = motor_voz.modelos_texto_descargados()
     return [m for m in hay if _rango(m) > _rango(modelo) and m != '4B'] or (['1.7B'] if modelo != '1.7B' else [])
 
@@ -379,7 +380,7 @@ def analizar(palabras, idioma='es', progreso=None, estado=None, modo=None):
                             'Si el motor está dañado, CineCaptions lo repara solo.' % _FALLOS['n'], 'IA de texto')
             raise RuntimeError('la IA de texto está desactivada en esta sesión tras fallar varias veces')
         # v5.11: si el modelo grande falla, se cambia SOLO al ligero (1.7B) antes de rendirse; cada intento queda en el Registro
-        modelos = [modelo] + _respaldos(modelo)              # (v5.46: Gemma 4 E4B → Qwen3.5-4B → Qwen3-1.7B)
+        modelos = [modelo] + _respaldos(modelo)              # (v5.46: Gemma 4 E4B → Qwen3-1.7B)
         if _PREFERIDO['m'] and _PREFERIDO['m'] != modelo:
             modelos = [_PREFERIDO['m']]
         ok, texto = False, ''
